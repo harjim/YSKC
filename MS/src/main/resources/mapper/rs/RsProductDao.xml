@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.rs.RsProductDao">
+    <insert id="insertList">
+        insert into t_product
+        (addressCode,`year`,pType,pLevel,productName,govName,address,creatorId,createTime,lastUpdatorId,lastUpdateTime)
+        values
+        <foreach collection="products" item="item" separator=",">
+            (#{item.addressCode},#{item.year},#{item.pType},#{item.pLevel},#{item.productName},
+            #{item.govName},#{item.address},#{item.creatorId},#{item.createTime},#{item.lastUpdatorId},#{item.lastUpdateTime})
+        </foreach>
+    </insert>
+    <update id="updateManager">
+        update t_product set managerId=#{managerId},lastUpdatorId=#{userId},lastUpdateTime=#{date}
+        where id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+    <select id="queryList" resultType="com.yskc.ms.models.rs.RsProductModel">
+        select tp.id,tp.addressCode,tp.year,tp.pType,tp.pLevel,tp.productName,tp.govName,tp.address,tp.managerId
+        from t_product tp
+        where 1=1
+        <if test="query.productName!=null and query.productName!=''">
+            and productName like "%"#{query.productName}"%"
+        </if>
+        <if test="query.year!=null and query.year>0">
+            and `year`=#{query.year}
+        </if>
+        <if test="query.addressCode!=null and query.addressCode!=''">
+            and addressCode like "%"#{query.addressCode}"%"
+        </if>
+        <if test="query.pType!=null and query.pType!=''">
+            and pType=#{query.pType}
+        </if>
+        <if test="query.pLevel !=null and query.pLevel !=''">
+            and pLevel=#{query.pLevel}
+        </if>
+        <if test="msUserIds != null">
+            and managerId in
+            <foreach collection="msUserIds" open="(" separator="," close=")" item="mId">
+                #{mId}
+            </foreach>
+        </if>
+    </select>
+    <select id="getProductList" resultType="com.yskc.ms.models.rs.RsProductListModel">
+        select id,productName,addressCode,`year` from t_product
+        where 1=1
+        <if test="addressCode!=null and addressCode!=''">
+            and addressCode like "%"#{addressCode}"%"
+        </if>
+        <if test="year!=null and year>0">
+            and `year`=#{year}
+        </if>
+    </select>
+    <select id="checkExist" resultType="com.yskc.ms.entity.rs.RsProductEntity">
+        select id,addressCode,productName,`year` from t_product
+        where addressCode=#{addressCode} and productName=#{productName} and `year`=#{year}
+        <if test="id!=null">
+            and id !=#{id}
+        </if>
+    </select>
+    <select id="getProductName" resultType="java.lang.String">
+        select productName from t_product where id=#{id}
+    </select>
+</mapper>

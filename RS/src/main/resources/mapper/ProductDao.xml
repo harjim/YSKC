@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.ProductDao">
+
+    <select id="checkPcode" resultType="com.yskc.rs.models.product.ProductModel">
+        select id from c_product
+        where companyId = #{companyId} and pcode = #{query.pcode}
+        <if test="query.productId!=null">
+            and id != #{query.productId}
+        </if>
+    </select>
+    <select id="getProduct" resultType="com.yskc.rs.models.product.ProductModel">
+        select id, companyId, pname, pcode, creationDate, model, unit, `parameter`,
+               features, mainRaw, comparison, `output`, outputValue
+        from c_product
+        where companyId = #{companyId}
+            <if test="query.pname!=null and query.pname!=''">
+                and pname like "%"#{query.pname}"%"
+            </if>
+            <if test="query.pcode!=null and query.pcode!=''">
+                and pcode like "%"#{query.pcode}"%"
+            </if>
+            <if test="query.model!=null and query.model!=''">
+                and model like "%"#{query.model}"%"
+            </if>
+    </select>
+    <select id="getOutputValues" resultType="java.math.BigDecimal">
+        select sum(outputValue) from c_product
+        where companyId = #{companyId}
+        <if test="query.pname!=null and query.pname!=''">
+            and pname like "%"#{query.pname}"%"
+        </if>
+        <if test="query.pcode!=null and query.pcode!=''">
+            and pcode like "%"#{query.pcode}"%"
+        </if>
+        <if test="query.model!=null and query.model!=''">
+            and model like "%"#{query.model}"%"
+        </if>
+    </select>
+</mapper>

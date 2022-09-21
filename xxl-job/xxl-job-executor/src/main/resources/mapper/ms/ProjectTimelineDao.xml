@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xxl.job.executor.dao.ms.ProjectTimelineDao">
+    <insert id="inertList">
+        insert into project_timeline (projectId,itemType,beginTime,endTime,createTime,updateTime,result)
+        values
+        <foreach collection="insertList" item="item" separator=",">
+            (#{item.projectId},#{item.itemType},#{item.beginTime},#{item.endTime},#{item.createTime},#{item.updateTime},#{item.result})
+        </foreach>
+    </insert>
+    <update id="updateList">
+        update project_timeline
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="beginTime =case" suffix="end,">
+                <foreach collection="updateList" item="i" index="index">
+                    <if test="i.beginTime!=null">
+                        when id=#{i.id} then #{i.beginTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="endTime =case" suffix="end,">
+                <foreach collection="updateList" item="i" index="index">
+                    <if test="i.endTime!=null">
+                        when id=#{i.id} then #{i.endTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="updateTime =case" suffix="end,">
+                <foreach collection="updateList" item="i" index="index">
+                    <if test="i.updateTime!=null">
+                        when id=#{i.id} then #{i.updateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="result =case" suffix="end,">
+                <foreach collection="updateList" item="i" index="index">
+                    <if test="i.result!=null">
+                        when id=#{i.id} then #{i.result}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="updateList" separator="or" item="i" index="index">
+            id=#{i.id}
+        </foreach>
+    </update>
+    <select id="getByProjectId" resultType="com.xxl.job.executor.entity.ms.ProjectTimelineEntity">
+        select id,projectId,itemType,beginTime,endTime,createTime,updateTime,result
+        from project_timeline
+        where itemType=#{itemType}
+    </select>
+    <select id="getDocByStage" resultType="com.xxl.job.executor.entity.ms.ProjectTimelineEntity">
+        select id,projectId,itemType,beginTime,endTime,createTime,updateTime,result
+        from project_timeline
+        where itemType in (100,200,300,400,500,600,700,800,900,9999)
+    </select>
+</mapper>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yskc.rs.dao.tech.InvestmentContractDao">
+
+<!--    <insert id="insertList">-->
+<!--        insert into t_investment_contract (creatorId,lastUpdatorId,createTime,lastUpdateTime,msCreatorId,-->
+<!--            msLastUpdatorId,investmentId,contactDetailId)-->
+<!--            values-->
+<!--            <foreach collection="contracts" item="item" separator=",">-->
+<!--                (#{item.creatorId},#{item.lastUpdatorId},#{item.createTime},#{item.lastUpdateTime},#{item.msCreatorId},#{item.msLastUpdatorId},-->
+<!--                #{item.investmentId},#{item.contactDetailId})-->
+<!--            </foreach>-->
+<!--    </insert>-->
+
+    <insert id="insertList">
+        insert into t_investment_contract (creatorId,lastUpdatorId,createTime,lastUpdateTime,msCreatorId,
+        msLastUpdatorId,investmentId,contactDetailId)
+        values
+        <foreach collection="contractDetailIds" item="contractDetailId"  separator=",">
+            (#{userId},#{userId},#{date},#{date},#{msUserId},#{msUserId},#{investmentId},#{contractDetailId})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        lastUpdatorId = values(lastUpdatorId),
+        msLastUpdatorId = values(msLastUpdatorId),
+        lastUpdateTime = values(lastUpdateTime)
+    </insert>
+    <delete id="delByInvestmentId">
+        delete from t_investment_contract
+        where investmentId=#{id} and contactDetailId in
+        <foreach collection="contractDetailIds" item="contractDetailId" open="(" separator="," close=")">
+            #{contractDetailId}
+        </foreach>
+    </delete>
+    <delete id="delContract">
+        delete from t_investment_contract
+        where investmentId in
+        <foreach collection="investmentIds" item="investmentId" open="(" separator="," close=")">
+            #{investmentId}
+        </foreach>
+    </delete>
+    <select id="getByInvestment" resultType="java.lang.Integer">
+        select contactDetailId
+        from t_investment_contract
+        where investmentId=#{investmentId}
+    </select>
+</mapper>

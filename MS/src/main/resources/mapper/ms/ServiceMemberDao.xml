@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.ServiceMemberDao">
+    <insert id="addMemberList">
+        insert into service_apply_member (serviceApplyId,userId,mtype,
+        `creatorId`, `createTime`, `lastUpdateTime`, `lastUpdatorId`)
+        values <foreach collection="list" separator="," item="item">
+        (#{item.serviceApplyId},#{item.userId},#{item.mtype},#{item.creatorId},#{item.createTime},
+        #{item.lastUpdateTime},#{item.lastUpdatorId})
+            </foreach>
+    </insert>
+    <delete id="delByUserIds">
+        delete from service_apply_member
+        where serviceApplyId = #{serviceApplyId}
+        <if test="ids!=null and ids.size>0">
+            and (id not in (<foreach collection="ids" separator="," item="item">
+            #{item}
+        </foreach>))
+        </if>
+        <if test="mtypes!=null and mtypes.size>0">
+            and (mtype not in (<foreach collection="mtypes" item="item" separator=",">
+            #{item}
+            </foreach>))
+        </if>
+    </delete>
+    <delete id="delByApplyIds">
+        delete from service_apply_member
+        where serviceApplyId in (<foreach collection="ids" separator="," item="item">
+        #{item}
+    </foreach>)
+    </delete>
+
+    <select id="getMemberList" resultType="com.yskc.ms.models.serviceApply.ServiceMemberModel">
+        select sam.id, sam.serviceApplyId, sam.mtype,sam.userId,yu.realName userName
+        from service_apply_member sam
+        left join ys_user yu on yu.id = sam.userId
+        where sam.serviceApplyId in
+        (<foreach collection="serviceIds" item="item" separator=",">
+            #{item}
+        </foreach>)
+    </select>
+</mapper>

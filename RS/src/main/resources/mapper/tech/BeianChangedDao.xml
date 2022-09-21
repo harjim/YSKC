@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yskc.rs.dao.tech.BeianChangedDao">
+    <insert id="insertList">
+        insert into t_beian_changed (creatorId, lastUpdatorId, createTime, lastUpdateTime, msCreatorId, msLastUpdatorId, 
+                                     companyId, beianId, changeLetterDate, changeContent, changeFilePath) 
+        values <foreach collection="list" item="item" separator=",">
+        (#{item.creatorId},#{item.lastUpdatorId},#{item.createTime},#{item.lastUpdateTime},#{item.msCreatorId},#{item.msLastUpdatorId},
+        #{item.companyId},#{item.beianId},#{item.changeLetterDate},#{item.changeContent},#{item.changeFilePath})
+    </foreach>
+    </insert>
+    <update id="updateList">
+        <foreach collection="list" separator=";" item="item">
+            update t_beian_changed set lastUpdatorId = #{item.lastUpdatorId}, lastUpdateTime = #{item.lastUpdateTime}, msLastUpdatorId = #{item.msLastUpdatorId},
+            changeLetterDate = #{item.changeLetterDate}, changeContent = #{item.changeContent}, changeFilePath = #{item.changeFilePath}
+            where id = #{item.id}
+        </foreach>
+    </update>
+
+    <select id="getByBeianId" resultType="com.yskc.rs.models.tech.BeianChangedModel">
+        select id,companyId, beianId, changeLetterDate, changeContent, changeFilePath
+        from t_beian_changed
+        where beianId =#{beianId} and companyId = #{companyId}
+    </select>
+</mapper>

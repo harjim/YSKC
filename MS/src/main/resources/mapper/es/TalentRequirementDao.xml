@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.es.TalentRequirementDao">
+    <select id="getList" resultType="com.yskc.ms.models.newexpert.talentrequirement.TalentRequirementModel">
+        select t.id,t.job,t.customerName,t.eduLevel,t.workYear,t.jobType,t.status,t.minSalary,t.maxSalary,t.negotiation,t.closeDate,u.realName as creatorName,t.createTime,COUNT(td.userId) as num
+        from esdb.talent_requirement as t
+        left join talent_delivery as td on t.id = td.talentId
+        left join msdb.ys_user as u on t.msCreatorId = u.id
+        <where>
+            <if test="null != query.job and query.job !=''">
+                and t.job like "%"#{query.job}"%"
+            </if>
+            <if test="null != query.eduLevel">
+                and t.eduLevel = #{query.eduLevel}
+            </if>
+            <if test="null != query.workYear">
+                and t.workYear = #{query.workYear}
+            </if>
+            <if test="null != query.jobType">
+                and t.jobType = #{query.jobType}
+            </if>
+            <if test="null != query.recruitment">
+                and t.recruitment = #{query.recruitment}
+            </if>
+            <if test="null != query.msCreatorId">
+                and t.msCreatorId = #{query.msCreatorId}
+            </if>
+        </where>
+        GROUP BY t.id
+    </select>
+
+    <select id="getData" resultType="com.yskc.ms.models.newexpert.talentrequirement.TalentRequirementModel">
+        select recruitment,keywords,linkName,linkTel,linkEmail,position,addressCode,address,duty,requirement
+        from talent_requirement
+        where id = #{id}
+    </select>
+
+    <update id="changeStatus">
+        update talent_requirement
+        set status = #{status},msLastUpdatorId = #{updatorId},lastUpdateTime = #{updateTime}
+        where id = #{id}
+    </update>
+
+    <select id="getStatusList" resultType="com.yskc.ms.models.newexpert.talentrequirement.TalentRequirementModel">
+        select status
+        from talent_requirement
+        where id in (
+        <foreach collection="ids" separator="," item="id">
+            #{id}
+        </foreach>
+        )
+    </select>
+
+    <select id="getDeliveryList" resultType="com.yskc.ms.models.newexpert.talentdelivery.TalentDeliveryModel">
+        select t.id,t.createTime,t.lastUpdateTime,t.talentId,ui.eduLevel,ui.graduatedSchool,ui.workExperience,u.realName,u.mobile,u.email,u.birthday,u.gender
+        from talent_delivery as t
+        left join user_info as ui on t.userId = ui.userId
+        left join user as u on t.userId = u.id
+        where t.talentId = #{query.talentId}
+            <if test="null != query.eduLevel">
+                and ui.eduLevel = #{query.eduLevel}
+            </if>
+            <if test="null != query.name and query.name !=''">
+                and u.realName like "%"#{query.name}"%"
+            </if>
+    </select>
+</mapper>

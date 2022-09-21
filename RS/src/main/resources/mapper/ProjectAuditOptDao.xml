@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.project.ProjectAuditOptDao">
+
+    <update id="updateBatch">
+        update p_audit_opt set lastUpdatorId=#{info.userId},lastUpdateTime=#{now},msLastUpdatorId=#{info.msUserId}
+                <if test="null != model.ftyTech and model.ftyTech !=''">
+                    ,ftyTech=#{model.ftyTech}
+                </if>
+                <if test="null != model.ftyFina and model.ftyFina !=''">
+                    ,ftyFina=#{model.ftyFina}
+                </if>
+                <if test="null != model.areaTech and model.areaTech !=''">
+                    ,areaTech=#{model.areaTech}
+                </if>
+                <if test="null != model.areaFina and model.areaFina !=''">
+                    ,areaFina=#{model.areaFina}
+                </if>
+        where
+        <foreach collection="model.projectIds" separator="OR" item="projectId">
+            (projectId=#{projectId} and `year`=#{model.year})
+        </foreach>
+    </update>
+</mapper>

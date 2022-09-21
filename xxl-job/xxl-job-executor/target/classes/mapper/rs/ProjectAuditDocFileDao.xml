@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xxl.job.executor.dao.rs.ProjectAuditDocFileDao">
+    <update id="updateStatus">
+        update p_audit_docFile set status = #{status} where docFileId in
+        <foreach collection="docFileIds" open="(" separator="," close=")" item="docId">
+            #{docId}
+        </foreach>
+    </update>
+    <update id="updateDocFileAudit">
+         update p_audit_docFile
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="suggestion =case" suffix="end,">
+                <foreach collection="list" item="i" index="index">
+                        when docFileId=#{i.docFileId} then #{i.suggestion}
+                </foreach>
+            </trim>
+            <trim prefix="status =case" suffix="end,">
+                <foreach collection="list" item="i" index="index">
+                    <if test="i.status!=null">
+                        when docFileId=#{i.docFileId} then #{i.status}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        ,lastUpdateTime=#{now}
+        where
+        <foreach collection="list" separator="or" item="i" index="index">
+            docFileId=#{i.docFileId}
+        </foreach>
+    </update>
+    <select id="getAuditDocFile" resultType="com.xxl.job.executor.models.flowInstance.DocFileAuditInfoModel">
+        select id,moduleId,companyId,docFileId,projectId,msLastUpdatorId from p_audit_docFile
+        where status = #{status}
+    </select>
+    <select id="getDocFileInfos" resultType="com.xxl.job.executor.models.flowInstance.AuditDocFileModel">
+        select pdf.id,pdf.docFileId,p.rdTitle,c.companyName,pd.docFileName from p_audit_docFile pdf
+        inner join p_docFile pd on pd.id = pdf.docFileId
+        inner join p_project p on p.id = pdf.projectId
+        inner join company c on c.id = pdf.companyId
+        where pdf.docFileId in
+        <foreach collection="docFileIds" open="(" separator="," close=")" item="docId">
+            #{docId}
+        </foreach>
+    </select>
+    <select id="getLastProjectIds" resultType="java.lang.Integer">
+        select distinct projectId from p_audit_docFile where lastUpdateTime >= #{lastTime}
+    </select>
+    <select id="getDocAuditCnt" resultType="com.xxl.job.executor.models.audit.ProjectAuditCntModel">
+        select pdf.companyId,ps.year,
+        count(case when pdf.status = 0 then 1 else null end) ongoingCnt,
+        count(case when pdf.status = 1 then 1 else null end) doneCnt
+        from p_audit_docFile pdf
+        inner join p_docFile pd on pd.id = pdf.docFileId and pd.deleted=false
+        inner join (select projectId,stageKey,year(beginDate) as `year` from p_stage
+        where projectId in (<foreach collection="projectIds" item="pId" separator=",">#{pId}</foreach>)
+        ) ps on ps.projectId = pd.projectId and ps.stageKey= pd.stage
+        where pdf.projectId in (<foreach collection="projectIds" item="pId" separator=",">#{pId}</foreach>)
+        group by pdf.companyId,ps.year
+    </select>
+    <select id="getList" resultType="com.xxl.job.executor.models.hightechprogress.ProjectDeliverModel">
+        select padf.companyId,padf.projectId,pd.month,dft.docType as deliverType
+        from p_audit_docFile padf
+        inner join p_docFile pd on padf.docFileId = pd.id and pd.deleted=false
+        inner join docFileType dft on dft.docFileId = pd.docFileId
+        where padf.companyId in (<foreach collection="model.companyIds" item="companyId" separator=",">
+        #{companyId}
+        </foreach> )
+        and padf.createTime >=#{model.lastTime}
+    </select>
+</mapper>

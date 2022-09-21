@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.FlowCurNodeDao">
+
+    <update id="updateList">
+        <foreach collection="list" item="item" separator=";">
+            update flowInstance_curNode set nodeStatus = #{item.nodeStatus},lastUpdateTime=#{now},lastUpdatorId=#{userId}
+            <if test="closed!=null">
+                ,closed = #{closed}
+            </if>
+            <if test="auditUsers!=''">
+                ,auditUsers = null
+            </if>
+            where instanceId = #{item.instanceId} and curNodeId = #{item.curNodeId}
+        </foreach>
+    </update>
+    <select id="getCancelNode" resultType="com.yskc.ms.entity.ms.FlowInstanceUser">
+        select fc.curNodeId nodeId,f.lastSubmiter,fc.id,fc.instanceId
+        from flowInstance_curNode fc
+        left join flowInstance f on f.id = fc.instanceId
+        where fc.instanceId in
+        (<foreach collection="ids" separator="," item="id">
+         #{id}
+        </foreach>)
+        and fc.nodeStatus in (0,1)
+    </select>
+    <select id="getRecallNode" resultType="com.yskc.ms.entity.ms.FlowInstanceUser">
+        select fc.curNodeId nodeId,f.lastSubmiter,fc.id,fc.instanceId
+        from flowInstance_curNode fc
+        left join flowInstance f on f.id = fc.instanceId
+        where fc.instanceId in
+        (<foreach collection="ids" separator="," item="id">
+        #{id}
+    </foreach>)
+        and fc.nodeStatus = 0 and f.revokable = true and fc.closed = false
+    </select>
+</mapper>

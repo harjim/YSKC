@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.CyCustomerDao">
+
+
+	<insert id="addList">
+		INSERT INTO `h3_customer`
+		(`objectid`,
+		`name`,
+		`createdBy`,
+		`createdTime`,
+		`modifiedBy`,
+		`modifiedTime`,
+		`workflowInstanceId`,
+		`status`,
+		`clientName`,
+		`strategicLevel`,
+		`clientLevel`,
+		`salesRegion`,
+		`contactName`,
+		`mobile`,
+		`f0000003`,
+		`f0000027`,
+		`addr`,
+		`salesOpportunitie`,
+		`f0000022`,
+		`ownerId`,
+		`ownerDeptId`,
+		`origin`,
+		`bank`,
+		`accountNumber`,
+		`address`,
+		`taxID`,
+		`clientFPName`,
+		`f0000038`,
+		`salesAssistant`,
+		`f0000039`,
+		`f0000029`,
+		`f0000033`,
+		`f0000031`,
+		`f0000034`,
+		`f0000036`,
+		`f0000037`,
+		`synDataDateTime`)
+		VALUES
+		<foreach collection="customerList" item="item" index="index"
+			separator=",">
+			(#{item.ObjectId},
+			#{item.Name},
+			#{item.CreatedBy},
+			#{item.CreatedTime},
+			#{item.ModifiedBy},
+			#{item.ModifiedTime},
+			#{item.WorkflowInstanceId},
+			#{item.Status},
+			#{item.ClientName},
+			#{item.StrategicLevel},
+			#{item.ClientLevel},
+			#{item.SalesRegion},
+			#{item.ContactName},
+			#{item.Mobile},
+			#{item.F0000003},
+			#{item.F0000027},
+			#{item.Addr},
+			#{item.SalesOpportunitie},
+			#{item.F0000022},
+			#{item.OwnerId},
+			#{item.OwnerDeptId},
+			#{item.Origin},
+			#{item.Bank},
+			#{item.AccountNumber},
+			#{item.Address},
+			#{item.TaxID},
+			#{item.ClientFPName},
+			#{item.F0000038Name},
+			#{item.SalesAssistant},
+			#{item.F0000039},
+			#{item.F0000029},
+			#{item.F0000033},
+			#{item.F0000031},
+			#{item.F0000034},
+			#{item.F0000036},
+			#{item.F0000037},
+			#{item.synDataDateTime})
+		</foreach>
+		ON DUPLICATE KEY UPDATE
+		synDataDateTime=values(synDataDateTime);
+	</insert>
+
+	<delete id="deleteH3Customer">
+		delete from h3_customer;
+	</delete>
+	<insert id="insertH3Agreement">
+		INSERT INTO `msdb`.`h3_agreement`
+		(`objectId`,
+		`Client`,
+		`clientname`,
+		`SeqNo`,
+		`OwnerId`,
+		`OwnerDeptId`,
+		`Approvers`,
+		`ConStatus`,
+		`F0000022`,
+		`F0000021`,
+		`F0000016`,
+		`F0000018`,
+		`F0000017`,
+		`F0000019`,
+		`CreatedTime`,
+		`ModifiedTime`)
+		VALUES
+		<foreach collection="agreeList" item="item" index="index" separator=",">
+			(#{item.ObjectId},
+			#{item.Client},
+			#{item.clientName},
+			#{item.SeqNo},
+			#{item.OwnerId},
+			#{item.OwnerDeptId},
+			#{item.ApproverName},
+			#{item.ConStatus},
+			#{item.f0000022Name},
+			#{item.F0000021},
+			#{item.F0000016},
+			#{item.F0000018},
+			#{item.F0000017},
+			#{item.F0000019},
+			#{item.CreatedTime},
+			#{item.ModifiedTime})
+		</foreach>
+	</insert>
+
+	<delete id="deleteH3Agreement">
+		delete from h3_agreement;
+	</delete>
+	<delete id="deleteH3Project">
+		delete from h3_project;
+	</delete>
+	<insert id="insertH3Project">
+		INSERT INTO `msdb`.`h3_project`
+		(`objectId`,
+		`F0000006`,
+		`F0000534`,
+		`ProjectYear`,
+		`Sales`,
+		`OwnerDeptId`,
+		`F0000523`,
+		`F0000524`,
+		`F0000111`,
+		`F0000112`,
+		`F0000114`,
+		`F0000115`,
+		`F0000537`,
+		`F0000538`,
+		`F0000539`,
+		`F0000540`,
+		`F0000541`,
+		`F0000542`,
+		`CreatedTime`,
+		`ModifiedTime`)
+		VALUES
+		<foreach collection="projectList" item="item" index="index" separator=",">
+			(#{item.ObjectId},
+			#{item.F0000006},
+			#{item.F0000534},
+			#{item.ProjectYear},
+			#{item.Sales},
+			#{item.OwnerDeptId},
+			#{item.F0000523Name},
+			#{item.F0000524Name},
+			#{item.F0000111},
+			#{item.F0000112},
+			#{item.F0000114},
+			#{item.F0000115},
+			#{item.F0000537},
+			#{item.F0000538},
+			#{item.F0000539},
+			#{item.F0000540},
+			#{item.F0000541},
+			#{item.F0000542},
+			#{item.CreatedTime},
+			#{item.ModifiedTime})
+		</foreach>
+		ON DUPLICATE KEY UPDATE
+		ModifiedTime=values(ModifiedTime);
+	</insert>
+</mapper>

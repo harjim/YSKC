@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xxl.job.executor.dao.rs.CWorkerDao">
+
+    <insert id="insertCWorker">
+        insert into c_worker
+        (`createTime`,`lastUpdateTime`,
+            `companyId`,`year`,`ysTech`,`ysFina`
+        )
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.createTime},#{item.lastUpdateTime},
+            #{item.companyId},#{item.year},#{item.ysTech},#{item.ysFina}
+            )
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+            lastUpdateTime=values(lastUpdateTime),
+            companyId = values(companyId),
+            `year` = values(`year`),
+            ysTech = values(ysTech),
+            ysFina = values(ysFina)
+    </insert>
+</mapper>

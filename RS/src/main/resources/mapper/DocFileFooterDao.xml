@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.DocFileFooterDao">
+    <insert id="insertOrUpdate">
+        insert into p_docFile_footer (companyId,projectId,year,toCompileEnumber,auditEnumber,approvalEnumber,
+                                      `creatorId`, `createTime`, `lastUpdateTime`,`lastUpdatorId`, `msCreatorId`, `msLastUpdatorId`)
+        values (#{entity.companyId},#{entity.projectId},#{entity.year},#{entity.toCompileEnumber},#{entity.auditEnumber},#{entity.approvalEnumber},
+               #{entity.creatorId},#{entity.createTime},#{entity.lastUpdateTime},#{entity.lastUpdatorId},#{entity.msCreatorId},#{entity.msLastUpdatorId})
+        ON DUPLICATE KEY UPDATE
+         lastUpdatorId = values(lastUpdatorId),
+         lastUpdateTime = values(lastUpdateTime),
+         msLastUpdatorId =values(msLastUpdatorId),
+         toCompileEnumber =values(toCompileEnumber),
+         auditEnumber =values(auditEnumber),
+         approvalEnumber =values(approvalEnumber)
+    </insert>
+    <update id="updateFooter">
+        update p_docFile_footer set
+        <if test="toCompileEnumber!=null">
+            toCompileEnumber=#{toCompileEnumber},
+        </if>
+        <if test="auditEnumber!=null">
+            auditEnumber=#{auditEnumber},
+        </if>
+        <if test="approvalEnumber!=null">
+            approvalEnumber=#{approvalEnumber},
+        </if>
+        lastUpdateTime=#{date},lastUpdatorId=#{userId},msLastUpdatorId=#{msUserId}
+        where id=#{id}
+    </update>
+    <select id="getFooter" resultType="com.yskc.rs.entity.DocFileFooterEntity">
+        select id,projectId,companyId,toCompileEnumber,auditEnumber,approvalEnumber
+        from p_docFile_footer
+        where projectId=#{projectId} and `year`=#{year}
+    </select>
+    <select id="getList" resultType="com.yskc.rs.models.docFile.DocFileFooterModel">
+        select pdf.toCompileEnumber,pdf.auditEnumber,pdf.approvalEnumber,
+               pdf.id,p.rdTitle,p.pname,pdf.year,p.id as projectId
+        from p_docFile_footer pdf
+        inner join p_project p on p.id = pdf.projectId and pdf.companyId = p.companyId
+        where pdf.companyId = #{model.companyId}
+        <if test="null != model.year">
+            and pdf.year = #{model.year}
+        </if>
+        <if test="null != rdTitles">
+            and p.rdTitle in
+            <foreach collection="rdTitles" item="rdTitle" separator="," open="(" close=")">
+                #{rdTitle}
+            </foreach>
+        </if>
+    </select>
+</mapper>

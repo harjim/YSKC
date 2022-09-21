@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.InnovationProjectDao">
+    <select id="getList" resultType="com.yskc.ms.models.innovationproject.InnovationProjectModel">
+        SELECT ip.id, c.id as customerId,c.companyId, c.companyName, ip.year,d.fullname deptName,
+        ps.cnt,ps.rdCount,ps.lastRdCnt,ps.patentApplyCnt,ps.buildCnt,ps.operationTime,yu2.realName owerName,
+        pas.doneCnt reportDoneCnt,pas.ongoingCnt reportOngoingCnt,ip.types
+        FROM innovation_project ip
+        INNER JOIN customer c ON c.id = ip.customerId
+        LEFT JOIN project_summary_data ps on ps.customerId = ip.customerId and ps.year=ip.year
+        LEFT JOIN ys_dept d on ip.deptId=d.id
+        LEFT JOIN ys_user yu2 on yu2.id = c.owerId
+        LEFT JOIN project_audit_summary pas on pas.customerId = ip.customerId and pas.year=ip.year and pas.modeType=4
+        WHERE c.companyId != 0
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.project">
+            <property name="tableAlias" value="ip"/>
+            <property name="dataPerm" value="#{dataPerm}"/>
+            <property name="userTable" value="innovation_member"/>
+            <property name="colId" value="innovationId"/>
+        </include>
+        <if test="query.companyName != null and query.companyName != ''">
+            and c.companyName like "%"#{query.companyName}"%"
+        </if>
+        <if test="query.deptId != null and query.deptId != ''">
+            and d.fullPath like CONCAT('%/', #{query.deptId,jdbcType=VARCHAR}, '/%')
+        </if>
+        <if test="query.year != null">
+            and ip.year =#{query.year}
+        </if>
+        <if test="query.tIds != null and query.tIds.length>0">
+            and ip.id in (select innovationId from innovation_member where mType=1 and memberId in
+            <foreach collection="query.tIds" open="(" separator="," close=")" item="tId">
+                #{tId}
+            </foreach>)
+        </if>
+        <if test="query.fIds != null and query.fIds.length>0">
+            and ip.id in (select innovationId from innovation_member where mType=2 and memberId in
+            <foreach collection="query.fIds" open="(" separator="," close=")" item="fId">
+                #{fId}
+            </foreach>)
+        </if>
+        <if test="query.owerId!=null and query.owerId>0">
+            yu2.id= #{query.owerId}
+        </if>
+    </select>
+
+    <select id="getTotal" resultType="com.yskc.ms.models.innovationproject.InnovationProjectModel">
+        SELECT sum(ps.cnt) cnt, sum(ps.rdCount) rdCount, sum(ps.lastRdCnt) lastRdCnt,
+        sum(ps.patentApplyCnt) patentApplyCnt,sum(ps.buildCnt) buildCnt,
+        sum(pas.doneCnt) reportDoneCnt,sum(pas.ongoingCnt) reportOngoingCnt
+        FROM innovation_project ip
+        INNER JOIN customer c ON c.id = ip.customerId
+        LEFT JOIN project_summary_data ps on ps.customerId = ip.customerId and ps.year=ip.year
+        LEFT JOIN ys_dept d on ip.deptId=d.id
+        LEFT JOIN ys_user yu2 on yu2.id = c.owerId
+        LEFT JOIN project_audit_summary pas on pas.customerId = ip.customerId and pas.year=ip.year and pas.modeType=4
+        WHERE c.companyId != 0
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.project">
+            <property name="tableAlias" value="ip"/>
+            <property name="dataPerm" value="#{dataPerm}"/>
+            <property name="userTable" value="innovation_member"/>
+            <property name="colId" value="innovationId"/>
+        </include>
+        <if test="query.companyName != null and query.companyName != ''">
+            and c.companyName like "%"#{query.companyName}"%"
+        </if>
+        <if test="query.deptId != null and query.deptId != ''">
+            and d.fullPath like CONCAT('%/', #{query.deptId,jdbcType=VARCHAR}, '/%')
+        </if>
+        <if test="query.year != null">
+            and ip.year =#{query.year}
+        </if>
+        <if test="query.tIds != null and query.tIds.length>0">
+            and ip.id in (select innovationId from innovation_member where mType=1 and memberId in
+            <foreach collection="query.tIds" open="(" separator="," close=")" item="tId">
+                #{tId}
+            </foreach>)
+        </if>
+        <if test="query.fIds != null and query.fIds.length>0">
+            and ip.id in (select innovationId from innovation_member where mType=2 and memberId in
+            <foreach collection="query.fIds" open="(" separator="," close=")" item="fId">
+                #{fId}
+            </foreach>)
+        </if>
+        <if test="query.owerId!=null and query.owerId>0">
+            yu2.id= #{query.owerId}
+        </if>
+    </select>
+    <select id="queryMemberByIds" resultType="com.yskc.ms.models.innovationproject.InnovationMemberModel">
+        select m.id,m.innovationId,m.mType,m.memberId,u.realName,m.isMaster from innovation_member m
+        left join ys_user u on u.id = m.memberId
+        where innovationId in
+        <foreach item="iId" index="index" collection="ids" open="(" separator="," close=")">
+            #{iId}
+        </foreach>
+        order by isMaster desc
+    </select>
+    <select id="getExistProjectId" resultType="java.lang.Integer">
+        select p.id from project p
+        inner join innovation_project ip on ip.customerId = p.customerId and ip.year=p.year
+        inner join product pt on pt.id=p.productId
+        where ip.id in (<foreach collection="ids" item="id" separator=",">#{id}</foreach> ) and pt.productType in (1,2) limit 1
+    </select>
+    <select id="getInnovationIds" resultType="java.lang.Integer">
+        select distinct ip.id from innovation_project ip
+        inner join project p on p.customerId=ip.customerId and p.year=ip.year
+        inner join product pt on pt.id=p.productId
+        where pt.productType in (1,2) and p.id in (<foreach collection="projectIds" separator="," item="pId">#{pId}</foreach>)
+    </select>
+    <select id="getInnovationProject" resultType="com.yskc.ms.entity.ms.InnovationProject">
+        select * from innovation_project where customerId=#{customerId} and `year`=#{year} limit 1
+    </select>
+    <select id="getTableData" resultType="com.yskc.ms.models.GroupRAndDManagementModel">
+        SELECT
+        psd.customerId id,
+        ip.id innovationId,
+        ct.companyName deptName,
+        d.deptName deptName2,
+        fd2.YEAR `year`,
+        yu.realName owerName,
+        psd.revenueFcst revenueFcst,
+        psd.salesRdFee salesRdFee,
+        psd.rdFee rdFee,
+        psd.cnt rdPlanCount,
+        fd1.amount / 10000 amount,
+        fd2.amount / 10000 amount2,
+        fd1.k20000 / 10000 material,
+        fd2.k20000 / 10000 material2,(
+        fd2.amount - fd2.k20000
+        )/ 10000 aMinusK,
+        fd1.revenue revenue,
+        fd2.revenue revenue2,
+        fd2.amount / 10000 / fd2.revenue aDivideR,(
+        fd2.amount - fd2.k20000
+        )/ 10000 / fd2.revenue aKDivideR,
+        fd1.amount amountTST,
+        fd2.amount amountCompare,
+        psd.employeeAmount employeeAmount,
+        psd.proposalCnt proposalCnt,
+        psd.rdCount rdCount,
+        psd.rdEmployeeCount rdEmployeeCount,
+        psd.lastRdCnt lastRdCnt,
+        psd.nextRdCnt nextRdCnt,
+        psd.docFileCount docFileCount,
+        psd.buildCnt buildCount,
+        psd.patentCnt patentCnt,
+        psd.achievementCnt achievementCnt,
+        psd.levelFileCnt levelFileCnt
+        FROM innovation_project ip
+        LEFT JOIN ys_dept d ON ip.deptId = d.id
+        INNER JOIN customer ct ON ct.id = ip.customerId
+        LEFT JOIN ys_user yu ON yu.id = ct.owerId
+        LEFT JOIN project_summary_data psd ON ip.customerId = psd.customerId AND ip.YEAR = psd.year
+        LEFT JOIN c_rd_funds fd2 ON fd2.companyId = ct.companyId AND fd2.year = psd.year AND fd2.type = 1 AND fd2.month = #{model.month}
+        LEFT JOIN c_rd_funds fd1 ON fd1.companyId = ct.companyId AND fd1.month = fd2.month AND fd1.YEAR = psd.YEAR AND fd1.type = 0
+        WHERE ct.companyId != 0
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.project">
+            <property name="tableAlias" value="ip"/>
+            <property name="dataPerm" value="#{dataPerm}"/>
+            <property name="userTable" value="innovation_member"/>
+            <property name="colId" value="innovationId"/>
+        </include>
+        and ip.year = #{model.year}
+        <if test="null != model.companyName and model.companyName != ''">
+            and ct.companyName like "%"#{model.companyName}"%"
+        </if>
+        <if test="model.deptId != null and model.deptId != ''">
+            and d.fullPath like CONCAT('%/', #{model.deptId,jdbcType=VARCHAR}, '/%')
+        </if>
+        <if test="model.tIds != null and model.tIds.size()>0">
+            and ip.id in (select innovationId from innovation_member where mType=1 and memberId in
+            <foreach collection="model.tIds" open="(" separator="," close=")" item="tId">
+                #{tId}
+            </foreach>)
+        </if>
+        <if test="model.fIds != null and model.fIds.size()>0">
+            and ip.id in (select innovationId from innovation_member where mType=2 and memberId in
+            <foreach collection="model.fIds" open="(" separator="," close=")" item="fId">
+                #{fId}
+            </foreach>)
+        </if>
+        <if test="null != model.ownerId">
+            and ct.owerId = #{model.ownerId}
+        </if>
+    </select>
+    <select id="getRDExpense" resultType="com.yskc.ms.models.GroupRAndDManagementModel">
+        select psd.customerId id,fd2.amount amountCompare,fd1.amount amountTST
+        from project_summary_data psd inner join customer ct on ct.id=psd.customerId
+        LEFT JOIN c_rd_funds fd2 ON fd2.companyId = ct.companyId AND fd2.YEAR = psd.YEAR AND fd2.type = 1
+        LEFT JOIN c_rd_funds fd1 ON fd1.companyId = ct.companyId AND fd1.MONTH = fd2.MONTH AND fd1.YEAR = psd.YEAR AND fd1.type = 0
+        where psd.customerId in (<foreach collection="customerIds" separator="," item="cId">#{cId}</foreach>)
+        and fd2.year = #{model.year} and fd2.month = #{model.month}
+    </select>
+    <select id="getTotalCast" resultType="com.yskc.ms.models.TotalCostModel">
+        select SUM(psd.revenueFcst) totalRevenueFcst,SUM(psd.salesRdFee) totalSalesRdFee,SUM(psd.rdFee) totalRdFee,SUM(psd.cnt) totalRdPlanCount,SUM(fd1.amount)/10000 totalAmount,
+        SUM(fd2.amount)/10000 totalAmount2,SUM(fd1.k20000)/10000 totalMaterial,SUM(fd2.k20000)/10000 totalMaterial2,(SUM(fd2.amount)-SUM(fd2.k20000))/10000 totalAMinusK,SUM(fd1.revenue) totalRevenue,
+        SUM(fd2.revenue) totalRevenue2,SUM(psd.employeeAmount) totalEmployeeAmount,SUM(psd.proposalCnt) totalProposalCnt,SUM(psd.rdCount) totalRdCount, SUM(psd.rdEmployeeCount) totalRdEmployeeCount,
+        SUM(psd.lastRdCnt) totalLastRdCnt,SUM(psd.nextRdCnt) totalNextRdCnt,SUM(psd.docFileCount) totalDocFileCount,SUM(psd.buildCnt) totalBuildCount,SUM(psd.patentCnt) totalPatentCnt,
+        SUM(psd.achievementCnt) totalAchievementCnt,SUM(psd.levelFileCnt) totalLevelFileCnt
+        FROM innovation_project ip
+        LEFT JOIN ys_dept d ON ip.deptId = d.id
+        INNER JOIN customer ct ON ct.id = ip.customerId
+        LEFT JOIN ys_user yu ON yu.id = ct.owerId
+        INNER JOIN project_summary_data psd ON ip.customerId = psd.customerId AND ip.YEAR = psd.YEAR
+        LEFT JOIN c_rd_funds fd2 ON fd2.companyId = ct.companyId AND fd2.YEAR = psd.YEAR AND fd2.type = 1
+        LEFT JOIN c_rd_funds fd1 ON fd1.companyId = ct.companyId AND fd1.MONTH = fd2.MONTH AND fd1.YEAR = psd.YEAR AND fd1.type = 0
+        WHERE ct.companyId != 0
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.project">
+            <property name="tableAlias" value="ip"/>
+            <property name="dataPerm" value="#{dataPerm}"/>
+            <property name="userTable" value="innovation_member"/>
+            <property name="colId" value="innovationId"/>
+        </include>
+        and fd2.year = #{model.year} and fd2.month = #{model.month}
+        <if test="null != model.companyName and model.companyName != ''">
+            and ct.companyName like "%"#{model.companyName}"%"
+        </if>
+        <if test="model.deptId != null and model.deptId != ''">
+            and d.fullPath like CONCAT('%/', #{model.deptId,jdbcType=VARCHAR}, '/%')
+        </if>
+        <if test="model.tIds != null and model.tIds.size()>0">
+            and ip.id in (select innovationId from innovation_member where mType=1 and memberId in
+            <foreach collection="model.tIds" open="(" separator="," close=")" item="tId">
+                #{tId}
+            </foreach>)
+        </if>
+        <if test="model.fIds != null and model.fIds.size()>0">
+            and ip.id in (select innovationId from innovation_member where mType=2 and memberId in
+            <foreach collection="model.fIds" open="(" separator="," close=")" item="fId">
+                #{fId}
+            </foreach>)
+        </if>
+        <if test="null != model.ownerId">
+            and ct.owerId = #{model.ownerId}
+        </if>
+    </select>
+</mapper>

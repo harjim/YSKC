@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.ProjectMemberDao">
+
+    <insert id="addMemberList">
+        INSERT INTO `project_member`
+        ( `projectId`, `mType`, `memberId`, `remark`, `creatorId`, `createTime`, `lastUpdateTime`, `lastUpdatorId`,
+        customerId
+        )
+        VALUES
+        <foreach collection="insertList" item="item" separator=",">
+            ( #{item.projectId}, #{item.mType}, #{item.memberId}, #{item.remark}, #{item.creatorId}, #{item.createTime},
+            #{item.lastUpdateTime}, #{item.lastUpdatorId}, #{item.customerId} )
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        projectId = values(projectId),
+        mType = values(mType),
+        memberId = values(memberId),
+        remark = values(remark),
+        creatorId = values(creatorId),
+        createTime = values(createTime),
+        lastUpdateTime = values(lastUpdateTime),
+        lastUpdatorId = values(lastUpdatorId),
+        customerId = values(customerId)
+    </insert>
+
+    <update id="updateMemberList">
+        update project_member
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="mType =case" suffix="end,">
+                <foreach collection="updateList" item="i" index="index">
+                    <if test="i.mType!=null">
+                        when id=#{i.id} then #{i.mType}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="memberId =case" suffix="end,">
+                <foreach collection="updateList" item="i" index="index">
+                    <if test="i.memberId!=null">
+                        when id=#{i.id} then #{i.memberId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="remark =case" suffix="end,">
+                <foreach collection="updateList" item="i" index="index">
+                    <if test="i.remark!=null">
+                        when id=#{i.id} then #{i.remark}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdatorId =case" suffix="end,">
+                <foreach collection="updateList" item="i" index="index">
+                    <if test="i.lastUpdatorId!=null">
+                        when id=#{i.id} then #{i.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdateTime =case" suffix="end,">
+                <foreach collection="updateList" item="i" index="index">
+                    <if test="i.lastUpdateTime!=null">
+                        when id=#{i.id} then #{i.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="updateList" separator="or" item="i" index="index">
+            id=#{i.id}
+        </foreach>
+    </update>
+    <update id="updateMemberListByMType">
+        update project_member
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="memberId =case" suffix="end,">
+                <foreach collection="updateList" item="i" index="index">
+                    <if test="i.memberId!=null">
+                        when mType=#{i.mType} and projectId=#{i.projectId} then #{i.memberId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdatorId =case" suffix="end,">
+                <foreach collection="updateList" item="i" index="index">
+                    <if test="i.lastUpdatorId!=null">
+                        when mType=#{i.mType} and projectId=#{i.projectId} then #{i.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdateTime =case" suffix="end,">
+                <foreach collection="updateList" item="i" index="index">
+                    <if test="i.lastUpdateTime!=null">
+                        when mType=#{i.mType} and projectId=#{i.projectId} then #{i.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="updateList" separator="or" item="i" index="index">
+            mType=#{i.mType} and projectId=#{i.projectId}
+        </foreach>
+    </update>
+    <delete id="deleteByProjectId">
+        delete from project_member where projectId = #{projectId}
+    </delete>
+    <delete id="deleteByIds">
+        delete from project_member where id in
+        <foreach item="item" index="index" collection="deleteMember" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+    <delete id="deleteMember">
+        delete from project_member where
+        mType in
+        <foreach collection="mTypes" open="(" separator="," close=")" item="mType">
+            #{mType}
+        </foreach>
+        and projectId in
+        <foreach collection="projectIds" open="(" separator="," close=")" item="projectId">
+            #{projectId}
+        </foreach>
+    </delete>
+    <select id="queryMemberByIds" resultType="com.yskc.ms.models.project.ProjectMemberModel">
+        select m.id,m.projectId,m.mType,m.memberId,m.remark,u.realName from project_member m
+        left join ys_user u on u.id = m.memberId
+        where projectId in
+        <foreach item="item" index="index" collection="ids" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+    <select id="getExistUserIds" resultType="java.lang.Integer">
+        select distinct pm.memberId from project as p
+        left join project_member as pm on pm.projectId = p.id
+        where p.customerId = #{customerId} and pm.memberId in
+        <foreach collection="memberIds" open="(" separator="," close=")" item="memberId">
+            #{memberId}
+        </foreach>
+    </select>
+    <select id="getByProjectIdAndType" resultType="com.yskc.ms.entity.ms.ProjectMember">
+        select id,memberId,mType from project_member where projectId = #{projectId}
+        <if test="mTypes != null">
+            and (
+            <foreach collection="mTypes" separator="or" item="type">
+                mType = #{type}
+            </foreach>
+            )
+        </if>
+    </select>
+    <select id="queryTechByProjectId" resultType="com.yskc.ms.entity.ms.ProjectMember">
+        select * from project_member where projectId =#{projectId} and mType = 1
+    </select>
+    <select id="queryFinanceByProjectId" resultType="com.yskc.ms.entity.ms.ProjectMember">
+        select * from project_member where projectId =#{projectId} and mType = 2
+    </select>
+
+    <select id="getMemberList" resultType="com.yskc.ms.models.project.ProjectMemberModel">
+        select a.mType,a.memberId,yu.realName,yu.userName,a.projectId,p.customerId from project_member a inner join
+        ys_user yu on
+        a.memberId = yu.id
+        inner join project p on a.projectId=p.id
+        <where>
+            <if test="customerIds!=null and customerIds.size>0">
+                and p.customerId in
+                <foreach collection="customerIds" open="(" separator="," close=")" item="customerId">
+                    #{customerId}
+                </foreach>
+            </if>
+            <if test="projectIds!=null and projectIds.size>0">
+                and a.projectId in
+                <foreach collection="projectIds" open="(" separator="," close=")" item="projectId">
+                    #{projectId}
+                </foreach>
+            </if>
+            <if test="mTypes!=null and mTypes.size>0 ">
+                and mType in
+                <foreach collection="mTypes" open="(" separator="," close=")" item="mType">
+                    #{mType}
+                </foreach>
+            </if>
+        </where>
+    </select>
+    <update id="batchUpdateMembers">
+        delete from msdb.project_member where projectId=#{projectId}
+        <if test="memberList!=null and memberList.size>0 ">
+            and
+            <foreach collection="memberList" item="item" separator="and">
+                (mType!=#{item.mType} or memberId!=#{item.memberId})
+            </foreach>
+        </if>
+        <if test="mTypes!=null and mTypes.size>0 ">
+            and mType in
+            <foreach collection="mTypes" open="(" separator="," close=")" item="mType">
+                #{mType}
+            </foreach>
+        </if>
+        ;
+        INSERT INTO `project_member`
+        (
+        `projectId`,
+        `mType`,
+        `memberId`,
+        `remark`,
+        `creatorId`,
+        `createTime`,
+        `lastUpdateTime`,
+        `lastUpdatorId`,
+        `customerId`
+        )
+        VALUES
+        <foreach collection="memberList" item="item" separator=",">
+            (#{projectId},
+            #{item.mType},
+            #{item.memberId},
+            #{item.remark},
+            #{item.creatorId},
+            #{item.createTime},
+            #{item.lastUpdateTime},
+            #{item.lastUpdatorId},
+            #{item.customerId}
+            )
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        projectId=values(projectId),
+        mType=values(mType),
+        memberId=values(memberId),
+        lastUpdateTime=values(lastUpdateTime),
+        lastUpdatorId=values(lastUpdatorId),
+        customerId=values(customerId);
+    </update>
+    <select id="getMTypesByCustomerId" resultType="com.yskc.common.model.ProductMtype">
+        select distinct pm.mType, pt.productType
+        from project_member pm
+        inner join project p on pm.projectId=p.id
+        inner join product pt on pt.id = p.productId
+        inner join user_dept ud on pm.memberId=ud.userId
+        inner join ys_dept d on ud.depId = d.id
+        where p.customerId=#{customerId}
+        <if test="dataPerm.permType == 0">
+            AND pm.memberId = ${dataPerm.userId}
+        </if>
+        <if test="dataPerm.permType == 1">
+            AND (
+            <foreach collection="dataPerm.deptPaths" item="path" separator="or">
+                d.fullPath like #{path}"%"
+            </foreach>)
+        </if>
+        group by pm.mType,pt.productType
+    </select>
+    <select id="getByProjectIds" resultType="com.yskc.ms.models.project.ProjectMembersModel">
+        select pm.id,pm.memberId,pm.projectId,pm.mType,yu.realName
+        from project_member pm
+        left join ys_user yu on pm.memberId=yu.id
+        where pm.mType=1 and pm.projectId in
+        <foreach collection="projectIds" item="projectId" open="(" separator="," close=")">
+            #{projectId}
+        </foreach>
+    </select>
+    <select id="getMembers" resultType="com.yskc.ms.entity.ms.ProjectMember">
+        select pm.projectId,pm.mType,pm.memberId from project p
+        inner join product pt on pt.id=p.productId
+        inner join project_member pm on pm.projectId=p.id
+        where p.customerId=#{customerId} and p.year=#{year} and pt.productType in (1,2)
+        order by pm.id
+    </select>
+</mapper>

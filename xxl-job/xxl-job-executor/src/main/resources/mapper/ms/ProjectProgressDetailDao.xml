@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xxl.job.executor.dao.ms.ProjectProgressDetailDao">
+    <insert id="insertOrUpdate">
+        INSERT INTO project_progress_detail
+        (companyId,`year`,userId,stage,operationTime,result,updateTime)
+        VALUES
+        <foreach collection="data" item="d" separator=",">
+            (#{d.companyId},#{d.year},#{d.userId},#{d.stage},#{d.operationTime},#{d.result},#{d.updateTime})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        operationTime = values(operationTime),
+        userId = values(userId),
+        updateTime = values(updateTime),
+        result = values(result)
+    </insert>
+    <select id="getCompanyYear" resultType="com.xxl.job.executor.entity.ms.ProjectProgressDetail">
+        select `year`,companyId from project_progress_detail
+        where stage >= 20000
+        group by companyId,`year`
+    </select>
+    <select id="getLastOperation" resultType="com.xxl.job.executor.models.projectsummary.OperationSummaryModel">
+        select max(operationTime) as operationTime,userId as operationUserId,companyId,`year` from
+        project_progress_detail
+        where
+        <foreach collection="data" item="d" separator=" or ">
+            (companyId = #{d.companyId} and `year` = #{d.year})
+        </foreach>
+        group by companyId,`year`,userId order by operationTime asc
+    </select>
+    <select id="getLastOperationCompanyId" resultType="java.lang.Integer">
+        select distinct companyId
+        from project_progress_detail
+        where updateTime >= #{beforeFive}
+    </select>
+    <select id="getAllCompany" resultType="com.xxl.job.executor.models.projectsummary.BaseSummaryModel">
+        SELECT ppd.companyId,ppd.year, c.id customerId,yd.branchId
+        FROM project_progress_detail ppd
+        INNER JOIN customer c ON c.companyId=ppd.companyId
+        left join ys_dept yd on yd.id=c.deptId
+        WHERE ppd.updateTime &gt;= #{beforeFive} AND ppd.companyId>0
+        GROUP BY ppd.companyId,ppd.year,c.id
+    </select>
+</mapper>

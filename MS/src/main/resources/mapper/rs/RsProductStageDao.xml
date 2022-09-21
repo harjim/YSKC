@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.rs.RsProductStageDao">
+    <insert id="insertList" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id">
+        insert into t_product_stage
+        (stageKey,directionId,seq,expiryDate,creatorId,lastUpdatorId,createTime,lastUpdateTime)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.stageKey},#{item.directionId},#{item.seq},#{item.expiryDate},#{item.creatorId},#{item.lastUpdatorId},#{item.createTime},#{item.lastUpdateTime})
+        </foreach>
+    </insert>
+    <update id="updateList">
+        <foreach collection="models" item="item" separator=";">
+            update t_product_stage set
+            seq=#{item.seq},expiryDate=#{item.expiryDate},lastUpdatorId=#{userId},lastUpdateTime=#{date}
+            where id=#{item.id}
+        </foreach>
+    </update>
+    <delete id="delByDirectionIds">
+        delete from t_product_stage where directionId in
+        <foreach collection="directionIds" item="directionId" open="(" separator="," close=")">
+            #{directionId}
+        </foreach>
+    </delete>
+    <select id="getByDirectionId" resultType="com.yskc.ms.models.rs.RsProductStageModel">
+        select stageKey,id,seq,directionId,expiryDate from t_product_stage
+        where directionId=#{directionId}
+    </select>
+    <select id="getByDirections" resultType="com.yskc.ms.models.rs.RsProductStageModel">
+        select stageKey,id,seq,directionId,expiryDate from t_product_stage
+        where directionId in
+        <foreach collection="directionIds" item="directionId" open="(" separator="," close=")">
+            #{directionId}
+        </foreach>
+    </select>
+</mapper>

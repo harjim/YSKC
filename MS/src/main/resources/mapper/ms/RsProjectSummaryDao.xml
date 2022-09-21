@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.RsProjectSummaryDao">
+    <select id="getList" resultType="com.yskc.ms.models.project.RsProjectSummaryModel">
+        select rps.rsProjectId,rps.year,rps.companyId,c.companyName,rps.pname,rps.rdTitle,rps.memberCnt,
+               rps.equipmentCnt,rps.patentCnt,rps.hasReport,rps.reportStatus,rps.newReportStatus,rps.hasNewReport,
+                rps.docTotal,rps.docSubmitCnt,rps.docDoneCnt,rps.backupDataTotalCnt from rsProject_summary rps
+                inner join customer c on c.companyId=rps.companyId
+                inner join innovation_project ip on ip.customerId=c.id and rps.year=ip.year
+                where c.companyId !=0
+                <include refid="com.yskc.ms.dao.ms.BaseDataDao.project">
+                    <property name="tableAlias" value="ip"/>
+                    <property name="dataPerm" value="#{dataPerm}"/>
+                    <property name="userTable" value="innovation_member"/>
+                    <property name="colId" value="innovationId"/>
+                </include>
+                <if test="query.pname!=null and query.pname!=''">
+                    and rps.pname like "%"#{query.pname}"%"
+                </if>
+                <if test="query.year!=null and query.year>0">
+                    and rps.year=#{query.year}
+                </if>
+                <if test="query.companyName!=null and query.companyName!=''">
+                    and c.companyName like "%"#{query.companyName}"%"
+                </if>
+                <if test="query.tIds != null and query.tIds.size()>0">
+                    and ip.id in (select innovationId from innovation_member where mType=1 and memberId in
+                    <foreach collection="query.tIds" open="(" separator="," close=")" item="tId">
+                        #{tId}
+                    </foreach>)
+                </if>
+                <if test="null != query.groupName and query.groupName !=''">
+                    and c.groupId !=0 and c.groupId in (select companyId from customer where companyType in (1,3) and companyName like "%"#{query.groupName}"%")
+                </if>
+                <if test="asc == null and desc == null">
+                    ORDER BY rps.year DESC,c.companyName ASC ,rps.rdTitle ASC
+                </if>
+    </select>
+    <select id="getExportList" resultType="com.yskc.ms.models.project.RsProjectSummaryModel">
+        select rps.rsProjectId,rps.year,rps.companyId,c.companyName,rps.pname,rps.rdTitle,rps.memberCnt,
+        rps.equipmentCnt,rps.patentCnt,rps.hasReport,rps.reportStatus,rps.newReportStatus,rps.hasNewReport,
+        rps.docTotal,rps.docSubmitCnt,rps.docDoneCnt,rps.backupDataTotalCnt from rsProject_summary rps
+        inner join customer c on c.companyId=rps.companyId
+        inner join innovation_project ip on ip.customerId=c.id and rps.year=ip.year
+        left join customer c2 on c2.companyId > 0 and c.groupId = c2.companyId
+        where c.companyId !=0
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.project">
+            <property name="tableAlias" value="ip"/>
+            <property name="dataPerm" value="#{dataPerm}"/>
+            <property name="userTable" value="innovation_member"/>
+            <property name="colId" value="innovationId"/>
+        </include>
+        <if test="query.pname!=null and query.pname!=''">
+            and rps.pname like "%"#{query.pname}"%"
+        </if>
+        <if test="query.year!=null and query.year>0">
+            and rps.year=#{query.year}
+        </if>
+        <if test="query.companyName!=null and query.companyName!=''">
+            and c.companyName like "%"#{query.companyName}"%"
+        </if>
+        <if test="query.tIds != null and query.tIds.size()>0">
+            and ip.id in (select innovationId from innovation_member where mType=1 and memberId in
+            <foreach collection="query.tIds" open="(" separator="," close=")" item="tId">
+                #{tId}
+            </foreach>)
+        </if>
+        <if test="null != query.groupName and query.groupName !=''">
+            and c.groupId !=0 and c.groupId in (select companyId from customer where companyType in (1,3) and companyName like "%"#{query.groupName}"%")
+        </if>
+        ORDER BY rps.year DESC,c.companyName ASC ,rps.rdTitle ASC
+    </select>
+    <select id="getTotal" resultType="com.yskc.ms.models.project.RsProjectSummaryModel">
+        select sum(rps.memberCnt)memberCnt,sum(rps.equipmentCnt)equipmentCnt,sum(rps.patentCnt)patentCnt,
+        sum(rps.docTotal)docTotal,sum(rps.docSubmitCnt)docSubmitCnt,sum(rps.docDoneCnt)docDoneCnt,
+        sum(rps.backupDataTotalCnt)backupDataTotalCnt
+        from innovation_project ip
+        inner join customer c on c.id=ip.customerId
+        inner join rsProject_summary rps on rps.companyId=c.companyId and rps.year=ip.year
+        where c.companyId !=0
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.project">
+            <property name="tableAlias" value="ip"/>
+            <property name="dataPerm" value="#{dataPerm}"/>
+            <property name="userTable" value="innovation_member"/>
+            <property name="colId" value="innovationId"/>
+        </include>
+        <if test="query.pname!=null and query.pname!=''">
+            and rps.pname like "%"#{query.pname}"%"
+        </if>
+        <if test="query.year!=null and query.year>0">
+            and rps.year=#{query.year}
+        </if>
+        <if test="query.companyName!=null and query.companyName!=''">
+            and c.companyName like "%"#{query.companyName}"%"
+        </if>
+        <if test="query.tIds != null and query.tIds.size()>0">
+            and ip.id in (select innovationId from innovation_member where mType=1 and memberId in
+            <foreach collection="query.tIds" open="(" separator="," close=")" item="tId">
+                #{tId}
+            </foreach>)
+        </if>
+    </select>
+</mapper>

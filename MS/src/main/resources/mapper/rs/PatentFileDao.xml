@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.rs.PatentFileDao">
+    <insert id="addBatch">
+        insert into p_patent_file
+        (`creatorId`,
+        `lastUpdatorId`,
+        `createTime`,
+        `lastUpdateTime`,
+        `msCreatorId`,
+        `msLastUpdatorId`,
+        `patentPlanId`,
+        `filepath`,
+        `fileType`,
+        `fileName`,
+        `patentNo`)
+        values
+        <foreach collection="files" item="item" separator=",">
+            (#{item.creatorId},#{item.lastUpdatorId},#{item.createTime},#{item.lastUpdateTime},#{item.msCreatorId},
+            #{item.msLastUpdatorId},#{item.patentPlanId},#{item.filepath},#{item.fileType},#{item.fileName},#{item.patentNo})
+        </foreach>
+    </insert>
+    <update id="updatePatentNo">
+        update p_patent_file set
+        lastUpdatorId=#{userId},msLastUpdatorId=#{msUserId},lastUpdateTime=#{date},patentNo=#{patentNo}
+        where 1=1
+        <if test="patentPlanId!=null and patentPlanId>0">
+            and patentPlanId=#{patentPlanId}
+        </if>
+    </update>
+    <update id="updatePatent">
+        update p_patent_file set
+        lastUpdatorId=#{userId},msLastUpdatorId=#{msUserId},lastUpdateTime=#{date},patentNo=#{patentNo}
+        where patentPlanId is null
+        <if test="existPatentNo!=null and existPatentNo!=''">
+            and patentNo=#{existPatentNo}
+        </if>
+    </update>
+    <delete id="delFile">
+        delete from p_patent_file
+        where fileType=#{fileType} and patentPlanId=#{patentPlanId}
+        <if test="existIds != null and existIds.size()>0">
+            and id not in (<foreach collection="existIds" item="id" separator=",">#{id}</foreach>)
+        </if>
+    </delete>
+    <select id="getPatentFiles" resultType="com.yskc.ms.models.patentPlan.PatentFileModel">
+        select id,fileType,filepath as filePath,fileName,patentPlanId,patentNo
+        from p_patent_file
+        where 1=1
+        <if test="patentNo!=null and patentNo!=''">
+            and patentNo=#{patentNo}
+        </if>
+
+        <if test="patentNo==null or patentNo==''">
+            <if test="patentId!=null and patentId>0">
+                and patentPlanId=#{patentId}
+            </if>
+        </if>
+
+    </select>
+    <select id="getPatentByType" resultType="com.yskc.ms.models.patentPlan.PatentFileModel">
+        select id,fileType,filepath as filePath,fileName,patentPlanId,lastUpdateTime
+        from p_patent_file
+        where patentPlanId = #{patentId} and fileType = #{type}
+        order by lastUpdateTime
+    </select>
+    <select id="getFiles" resultType="com.yskc.ms.models.patentPlan.PatentFileModel">
+        select id,fileType,filepath as filePath,fileName,patentPlanId,patentNo
+        from p_patent_file
+        where fileType=0 and patentPlanId in (<foreach collection="patentPlanIds" item="patentPlanId" separator=",">
+        #{patentPlanId}
+    </foreach> )
+    </select>
+</mapper>

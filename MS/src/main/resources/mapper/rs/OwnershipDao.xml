@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.rs.OwnershipDao">
+    <insert id="insertList">
+        insert into c_ownership
+        (creatorId,lastUpdatorId,createTime,lastUpdateTime,msCreatorId,msLastUpdatorId,companyId,shareholder,
+        capitalContribution,contributionType,proportion
+        ) values
+        <foreach collection="insertList" item="item" separator=",">
+            (#{item.creatorId},#{item.lastUpdatorId},#{item.createTime},#{item.lastUpdateTime},#{item.msCreatorId},
+            #{item.msLastUpdatorId},#{item.companyId},
+            #{item.shareholder},#{item.capitalContribution},#{item.contributionType},#{item.proportion})
+        </foreach>
+    </insert>
+    <update id="updateList">
+        <foreach collection="updateList" item="item" separator=";">
+            update c_ownership set lastUpdatorId=#{item.lastUpdatorId},lastUpdateTime=#{item.lastUpdateTime},
+            msLastUpdatorId=#{item.msLastUpdatorId},
+            shareholder=#{item.shareholder},capitalContribution=#{item.capitalContribution},contributionType=#{item.contributionType},
+            proportion=#{item.proportion}
+            where id=#{item.id}
+        </foreach>
+    </update>
+    <select id="getByCompanyId" resultType="com.yskc.ms.models.company.OwnershipModel">
+          select id,companyId,shareholder,capitalContribution,contributionType,proportion from c_ownership
+        where companyId=#{companyId}
+        order by capitalContribution desc limit 5
+    </select>
+</mapper>

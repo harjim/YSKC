@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.rs.RsAchievementDao">
+    <select id="getList" resultType="com.yskc.ms.models.rs.achievement.AchievementModel">
+        select a.id,a.achievementName,a.year,p.rdTitle,p.pname,a.lastUploadTime,a.fileCnt,paa.status,a.type,
+               a.converType,a.source,a.description
+        from p_achievement a
+        inner join p_project p on a.projectId=p.id
+        left join p_audit_achievement paa on paa.achievementId=a.id
+        where a.companyId=#{query.companyId} and a.year=#{query.year}
+        <if test="query.achievementName != null and query.achievementName!=''">
+            and a.achievementName like "%"#{query.achievementName}"%"
+        </if>
+    </select>
+    <select id="getFiles" resultType="com.yskc.ms.models.rs.achievement.AchievementFileModel">
+        select paf.id,paf.achievementId,paf.filepath,paf.fileName,paf.stageKey,paf.listId,sd.docName,
+               paf.lastUpdateTime,paf.converResult
+        from p_achievement_file paf
+        left join sys_docList sd on paf.listId=sd.id
+        where paf.achievementId=#{achievementId}
+    </select>
+    <select id="getInfo" resultType="com.yskc.ms.models.rs.achievement.AchievementModel">
+        select a.id,a.achievementName,p.rdTitle,p.pname,a.lastUploadTime,a.fileCnt
+        from p_achievement a
+        inner join p_project p on a.projectId=p.id
+        where a.id=#{id}
+    </select>
+    <select id="getAchievementIds" resultType="java.lang.Integer">
+        select pa.id from p_achievement pa
+        inner join p_audit_achievement paa on paa.achievementId=pa.id
+        where pa.companyId=#{companyId} and pa.year=#{year}
+    </select>
+    <select id="getAchievements" resultType="com.yskc.ms.entity.rs.RsAchievementEntity">
+        select companyId,`year` from p_achievement where id in (<foreach collection="ids" separator="," item="id">#{id}</foreach>)
+    </select>
+</mapper>

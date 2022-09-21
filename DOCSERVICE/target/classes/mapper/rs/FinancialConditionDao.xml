@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.docservice.dao.rs.FinancialConditionDao">
+
+    <select id="getDataByTerm" resultType="com.yskc.docservice.entity.rs.FinancialConditionEntity">
+        select * from c_financialCondition a where a.companyId=#{companyId} and a.year in
+        <foreach collection="years" open="(" separator="," close=")" item="year">
+            #{year}
+        </foreach>
+        order by year desc
+    </select>
+
+    <insert id="batchInsert">
+        INSERT INTO c_financialCondition(creatorId,createTime,lastUpdatorId,lastUpdateTime,companyId,`year`,businessIncome,mainBusinessIncome,
+           netProfit,grossOfIndustrial,addedOfIndustrial,totalAssets,totalFixedAssets,netAssets,fixedAssetsOfInvestment,netTotalCashFlow,netCashFlowOfOperating,
+           assetLiabilityRatio,totalExpenditureOfRD,loanAmountOfGovernment,dueLoanOfGovernment,totalTax,corporateIncomeTax,totalProfit,msCreatorId,msLastUpdatorId)
+           values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.creatorId},#{item.createTime},#{item.lastUpdatorId},#{item.lastUpdateTime},#{item.companyId},#{item.year},#{item.businessIncome},
+            #{item.mainBusinessIncome},#{item.netProfit},#{item.grossOfIndustrial},#{item.addedOfIndustrial},#{item.totalAssets},
+            #{item.totalFixedAssets},#{item.netAssets},#{item.fixedAssetsOfInvestment},#{item.netTotalCashFlow},#{item.netCashFlowOfOperating},
+            #{item.assetLiabilityRatio},#{item.totalExpenditureOfRD},#{item.loanAmountOfGovernment},#{item.dueLoanOfGovernment},#{item.totalTax},
+            #{item.corporateIncomeTax},#{item.totalProfit},#{item.msCreatorId},#{item.msLastUpdatorId})
+        </foreach>
+    </insert>
+
+    <update id="batchUpdate">
+        <foreach collection="list" separator=";" item="item">
+            UPDATE c_financialCondition SET lastUpdatorId=#{item.lastUpdatorId},lastUpdateTime=#{item.lastUpdateTime},businessIncome=#{item.businessIncome},
+                mainBusinessIncome=#{item.mainBusinessIncome},netProfit=#{item.netProfit},grossOfIndustrial=#{item.grossOfIndustrial},addedOfIndustrial=#{item.addedOfIndustrial},
+                totalAssets=#{item.totalAssets},totalFixedAssets=#{item.totalFixedAssets},netAssets=#{item.netAssets},fixedAssetsOfInvestment=#{item.fixedAssetsOfInvestment},
+                netTotalCashFlow=#{item.netTotalCashFlow},netCashFlowOfOperating=#{item.netCashFlowOfOperating},assetLiabilityRatio=#{item.assetLiabilityRatio},
+                totalExpenditureOfRD=#{item.totalExpenditureOfRD},loanAmountOfGovernment=#{item.loanAmountOfGovernment},dueLoanOfGovernment=#{item.dueLoanOfGovernment},
+                dueLoanOfGovernment=#{item.dueLoanOfGovernment},totalTax=#{item.totalTax},corporateIncomeTax=#{item.corporateIncomeTax},totalProfit=#{item.totalProfit},
+                msLastUpdatorId=#{item.msLastUpdatorId}
+                WHERE id = #{item.id}
+        </foreach>
+    </update>
+</mapper>

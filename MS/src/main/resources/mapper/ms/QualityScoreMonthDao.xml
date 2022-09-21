@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.QualityScoreMonthDao">
+
+    <select id="getList" resultType="com.yskc.ms.models.qualityscore.QualityScoreMonthModel">
+        select qsm.id,qsm.months,qs.engineerId,qs.scoreCount,qs.isFinal,qs.weight,
+               qs.id as qualityId,qs.month,qs.year,qs.totalScore,qs.scoresDetail
+        from quality_score_month qsm
+        left join (select qus.scoreCount,qus.engineerId,qus.monthsId,qus.isFinal,qus.weight,qus.id,qus.`month`,qus.`year`,
+                          qus.totalScore,qsl.scores scoresDetail from quality_score qus
+        inner join quality_score_log qsl on qsl.qualityId = qus.id and qsl.scoreCount = qus.scoreCount
+                    <where>
+                        <if test="null != model.companyId">
+                            and qus.companyId = #{model.companyId}
+                        </if>
+                        <if test="null != model.rsProjectId">
+                            and qus.rsProjectId = #{model.rsProjectId}
+                        </if>
+<!--                        <if test="null != model.year and model.year != 0">-->
+<!--                            and `year` = #{model.year}-->
+<!--                        </if>-->
+                        <if test="null !=model.type">
+                            and qus.`type` = #{model.type}
+                        </if>
+                    </where>
+                order by qus.scoreCount desc
+                    ) qs on qs.monthsId = qsm.id
+        where qsm.rsProjectId = #{model.rsProjectId}
+    </select>
+</mapper>

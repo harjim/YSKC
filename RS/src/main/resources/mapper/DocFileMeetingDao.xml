@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.project.DocFileMeetingDao">
+    <select id="getFilesByFileIds" resultType="java.util.Map">
+        select docFileId,COUNT(id) as `count` from p_docFile_meeting where docFIleId in
+            <foreach collection="fileIds" open="(" item="fileId" separator="," close=")">
+                #{fileId}
+            </foreach>
+        group by docFileId
+    </select>
+    <resultMap id="meetingFromModel" type="com.yskc.rs.models.docFile.MeetingFromModel">
+        <result column="docFileId" property="pdocFileId"/>
+        <collection property="files" ofType="com.yskc.rs.entity.project.DocFileMeetingEntity">
+            <id column="id" property="id"/>
+            <result column="fileName" property="fileName"/>
+            <result column="filePath" property="filePath"/>
+        </collection>
+    </resultMap>
+    <select id="getMeetingModel" resultMap="meetingFromModel">
+        select docFileId,id,fileName,filePath from p_docFile_meeting where docFIleId in
+        <foreach collection="fileIds" open="(" item="fileId" separator="," close=")">
+            #{fileId}
+        </foreach>
+    </select>
+    <select id="getMeetingFromData" resultType="com.yskc.rs.models.docFile.MeetingFromModel">
+        SELECT pp.rdTitle as rd,pd.id as pdocFileId,pdd.`data`,pd.projectId FROM p_project pp
+        inner join p_docFile pd on pd.projectId = pp.id and pd.docFileId = 2 and pd.`month` is not null
+        left join p_docFile_data pdd on pdd.pdocFileId = pd.id
+        WHERE pp.companyId = #{companyId} AND pp.parentId = 0
+        and pd.`month`=#{month}
+        order by pp.beginYear, pp.rdIndex
+    </select>
+    <select id="getAnnualData" resultType="com.yskc.rs.models.docFile.MeetingCountModel">
+        SELECT pdf.month,count(distinct pdf.id) as idCount,count(distinct pdm.docFileId) as docFileIdCount FROM rsdb.p_docFile pdf
+        inner join p_project p on pdf.projectId=p.id and pdf.month is not null and pdf.docFileId = 2
+        left join p_docFile_meeting  pdm on pdf.id=pdm.docFileId
+        where p.companyId=#{companyId} and pdf.`month` >= #{openMonth} and pdf.`month` &lt;= #{endMonth}
+        group by pdf.month
+    </select>
+    <select id="getStatByMonth" resultType="com.yskc.rs.models.docFile.MeetingCountModel">
+        SELECT pdf.month,count(distinct pdf.id) as idCount,count(distinct pdm.docFileId) as docFileIdCount FROM rsdb.p_docFile pdf
+        inner join p_project p on pdf.projectId=p.id and pdf.month is not null and pdf.docFileId = 2
+        left join p_docFile_meeting  pdm on pdf.id=pdm.docFileId
+        where p.companyId=#{companyId} and pdf.`month` = #{month}
+        group by pdf.month
+    </select>
+</mapper>

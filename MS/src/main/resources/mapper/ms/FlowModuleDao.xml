@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.FlowModuleDao">
+    <select id="getByProject" resultType="com.yskc.ms.models.projectAudit.AuditStatusModel">
+        select fm.id,fm.moduleId,fm.flowId,fm.modeName,fm.seq,fi.status,fic.nodeStatus,fic.curNodeId,fi.id instanceId,fn.nodeName
+        from flowModule fm
+        left join flowInstance_project fp on fp.moduleId=fm.moduleId and fp.projectId=#{projectId}
+        left join flowInstance fi on fp.instanceId=fi.id and fm.flowId=fi.flowId and fi.moduleId=fm.moduleId
+        left join flowInstance_curNode fic on fic.instanceId=fi.id
+        left join flowNode fn on fn.id = fic.curNodeId
+        where fm.auditType=0
+    </select>
+</mapper>

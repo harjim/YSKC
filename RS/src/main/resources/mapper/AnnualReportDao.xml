@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.AnnualReportDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.yskc.rs.entity.AnnualReportEntity" id="annualReportMap">
+        <result property="id" column="id"/>
+        <result property="creatorId" column="creatorId"/>
+        <result property="createTime" column="createTime"/>
+        <result property="lastUpdatorId" column="lastUpdatorId"/>
+        <result property="lastUpdateTime" column="lastUpdateTime"/>
+        <result property="companyId" column="companyId"/>
+        <result property="year" column="year"/>
+        <result property="type" column="type"/>
+        <result property="reportName" column="reportName"/>
+        <result property="filePath" column="filePath"/>
+    </resultMap>
+    <select id="queryDocument" resultType="com.yskc.rs.models.sysDocument.SysDocumentModel">
+        select
+        d.id,
+        d.reportName,
+        d.creatorId,
+        d.createTime,
+        d.year,
+        d.month,
+        u.userName,
+        d.filePath
+        from c_annualReport d
+        left join user u on d.creatorId = u.id
+        where d.companyId = #{companyId} and d.type = #{fileType}
+        <if test="fileName != null and fileName != ''">
+            and d.reportName like "%"#{fileName}"%"
+        </if>
+        <if test="year != null and year > 0">
+            and d.year = #{year}
+        </if>
+        order by d.year desc, d.month desc, d.createTime desc
+    </select>
+
+
+</mapper>

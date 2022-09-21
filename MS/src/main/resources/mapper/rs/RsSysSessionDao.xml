@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.rs.RsSysSessionDao">
+
+    <select id="getTokenList" resultType="java.lang.String">
+        select s.token from sys_session as s
+          join app_user_role as aur on aur.userId=s.userId
+          join app_role as ar on ar.id=aur.roleId
+          where ar.id=#{roleId};
+    </select>
+    <select id="getTokenListByRoleIds" resultType="java.lang.String">
+          select s.token from sys_session as s
+          join app_user_role as aur on aur.userId=s.userId
+          join app_role as ar on ar.id=aur.roleId
+          where ar.id in
+         <foreach item="item" index="index" collection="roleIds" open="(" separator="," close=")">
+            #{item}
+         </foreach>
+    </select>
+</mapper>

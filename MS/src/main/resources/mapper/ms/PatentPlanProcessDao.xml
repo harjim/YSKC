@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.PatentPlanProcessDao">
+    <select id="getByPatent" resultType="com.yskc.ms.entity.ms.PatentPlanProcess">
+        select * from patent_plan_process
+        where patentPlanId in (<foreach collection="patentPlanIds" item="patentPlanId" separator=",">
+        #{patentPlanId}</foreach>)
+        order by patentPlanId,process
+    </select>
+    <insert id="insertBatch">
+        insert into patent_plan_process (patentPlanId,process,userId,createTime,remark) values
+        <foreach collection="planProcesses" separator="," item="planProcess">
+            (#{planProcess.patentPlanId},#{planProcess.process},#{planProcess.userId},#{planProcess.createTime},#{planProcess.remark})
+        </foreach>
+    </insert>
+</mapper>

@@ -1,0 +1,648 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>RSDB</name>
+    </assembly>
+    <members>
+        <member name="T:RSDB.Models.app_menu">
+            <summary>
+            功能菜单表
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.app_menu.name">
+            <summary>
+            功能菜单名
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.app_menu.type">
+            <summary>
+            类型，0:菜单 1：目录 2：按钮
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.app_menu.level">
+            <summary>
+            级别
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.app_menu.url">
+            <summary>
+            菜单地址
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.app_menu.icon">
+            <summary>
+            图标
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.app_menu.perms">
+            <summary>
+            权限标识，形如：user:list,user:create
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.app_menu.status">
+            <summary>
+            功能状态，0：不可见，1：可见 
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.app_menu.seq">
+            <summary>
+            排序
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.app_menu.remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.app_menu.fullPath">
+            <summary>
+            全路径
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.company.companyName">
+            <summary>
+            公司名
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.company.companyAddress">
+            <summary>
+            公司地址
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.company.addressCode">
+            <summary>
+            所在地，代码
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.company.taxpayerId">
+            <summary>
+            纳税人识别号
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.company.creditCode">
+            <summary>
+            统一社会码
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.company.invoiceTitle">
+            <summary>
+            发票抬头
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.company.industryCode">
+            <summary>
+            所属行业
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.company.mainIndustry">
+            <summary>
+            主行业
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.company.linkTel">
+            <summary>
+            联系电话
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.company.domain">
+             <summary>
+            域名
+             </summary>
+        </member>
+        <member name="P:RSDB.Models.company.email">
+            <summary>
+            邮箱
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.company.owner">
+            <summary>
+            法人
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.company.capital">
+            <summary>
+            注册资金
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.company.members">
+            <summary>
+            员工人数
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.company.depts">
+            <summary>
+            部门数
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.company.registerTime">
+            <summary>
+            公司注册时间
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.company.firstDevFee">
+            <summary>
+            首次发生研发费时间
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.company.accountSystem">
+            <summary>
+            会计制度
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.company.taxAuthorities">
+            <summary>
+            所属税务机关
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.company.realTaxAuthorities">
+            <summary>
+            办理税务机关
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.company.hasDevAccount">
+            <summary>
+            是否有研发专用帐
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.company.highTecIndustry">
+            <summary>
+            高新技术领域
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.company.businessLicense">
+            <summary>
+            营业执照url
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.company.logo">
+            <summary>
+            logo
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.dept.id">
+            <summary>
+            部门Id
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.dept.deptName">
+            <summary>
+            部门名称
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.dept.parentId">
+            <summary>
+            父id
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.dept.level">
+            <summary>
+            部门级别
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.dept.identity">
+            <summary>
+            部门标识, 通过id自动生成
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.dept.remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.dept.creatorId">
+            <summary>
+            创建id
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.dept.createTime">
+            <summary>
+            创建时间
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.dept.fullPath">
+            <summary>
+            全路径
+            </summary>
+        </member>
+        <member name="T:RSDB.Models.d_attendance">
+            <summary>
+            员工考勤
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_attendance.enumber">
+            <summary>
+            员工编号/标识
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_attendance.ename">
+            <summary>
+            姓名
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_attendance.month">
+            <summary>
+            考勤月份
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_attendance.attData">
+            <summary>
+            考勤数据(小时)
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_attendance.creatorId">
+            <summary>
+            创建人
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_attendance.createTime">
+            <summary>
+            创建时间
+            </summary>
+        </member>
+        <member name="T:RSDB.Models.d_design">
+            <summary>
+            设计费用
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_design.dname">
+            <summary>
+            设计名称
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_design.designDate">
+            <summary>
+            设计日期
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_design.dFee">
+            <summary>
+            设计费用
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_design.creatorId">
+            <summary>
+            创建人
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_design.createTime">
+            <summary>
+            创建时间
+            </summary>
+        </member>
+        <member name="T:RSDB.Models.d_energy">
+            <summary>
+            能源损耗表
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_energy.ename">
+            <summary>
+            能源名称
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_energy.type">
+            <summary>
+            能源类型，1:动力 2：燃料
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_energy.occDate">
+            <summary>
+            发生日期
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_energy.unitPrice">
+            <summary>
+            单价
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_energy.quantity">
+            <summary>
+            数量，考虑会有0.5吨之类的情况
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_energy.unit">
+            <summary>
+            单位
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_energy.creatorId">
+            <summary>
+            创建人
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_energy.createTime">
+            <summary>
+            创建时间
+            </summary>
+        </member>
+        <member name="T:RSDB.Models.d_equipment">
+            <summary>
+            设备使用记录
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_equipment.ecode">
+            <summary>
+            设备编码
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_equipment.ename">
+            <summary>
+            设备名称
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_equipment.month">
+            <summary>
+            使用月份
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_equipment.equData">
+            <summary>
+            使用数据(小时)
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_equipment.creatorId">
+            <summary>
+            创建人
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_equipment.createTime">
+            <summary>
+            创建时间
+            </summary>
+        </member>
+        <member name="T:RSDB.Models.d_inspection">
+            <summary>
+            检测维修表
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_inspection.accDate">
+            <summary>
+            记帐日期
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_inspection.accNumber">
+            <summary>
+            凭证字号
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_inspection.expense">
+            <summary>
+            检测维修费用
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_inspection.summary">
+            <summary>
+            摘要
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_inspection.type">
+            <summary>
+            0：检测，1：维修
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_inspection.creatorId">
+            <summary>
+            创建人
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_inspection.createTime">
+            <summary>
+            创建时间
+            </summary>
+        </member>
+        <member name="T:RSDB.Models.d_material">
+            <summary>
+            物料清单
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_material.mcode">
+            <summary>
+            物料编码
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_material.mname">
+            <summary>
+            物料名称
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_material.acqDate">
+            <summary>
+            领用日期
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_material.unitPrice">
+            <summary>
+            单价
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_material.quantity">
+            <summary>
+            数量，考虑会有0.5公斤之类的情况
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_material.unit">
+            <summary>
+            单位
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_material.creatorId">
+            <summary>
+            创建人
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_material.createTime">
+            <summary>
+            创建时间
+            </summary>
+        </member>
+        <member name="T:RSDB.Models.d_salary">
+            <summary>
+            员工薪资
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_salary.enumber">
+            <summary>
+            员工编号/标识
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_salary.ename">
+            <summary>
+            姓名
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_salary.month">
+            <summary>
+            工资月份
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_salary.workDays">
+            <summary>
+            工作天数(考虑会有0.5天的数据)
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_salary.pay">
+            <summary>
+            应发工资
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_salary.insuranceFund">
+            <summary>
+            五险一金，公司付的部分
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_salary.creatorId">
+            <summary>
+            创建人
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_salary.createTime">
+            <summary>
+            创建时间
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.d_salary.remark">
+            <summary>
+            备注
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.employee.enumber">
+            <summary>
+            员工编号/标识
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.employee.ename">
+            <summary>
+            姓名
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.employee.deptId">
+            <summary>
+            部门id
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.employee.position">
+            <summary>
+            职位
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.employee.idNumber">
+            <summary>
+            身份证号
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.employee.edate">
+            <summary>
+            入职时间
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.employee.eduLevel">
+            <summary>
+            学历， 0:无，1：高中及以下，2：中专，3：大专，4：本科 5：硕士，6：博士
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.employee.etype">
+            <summary>
+            员工类型，0：普通员工， 1： 研发人员， 2：专员
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.equipment.ename">
+            <summary>
+            设备名称
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.equipment.ecode">
+            <summary>
+            设备编码
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.equipment.emodal">
+            <summary>
+            设备型号
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.equipment.unitPrice">
+            <summary>
+            单价
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.equipment.unit">
+            <summary>
+            单位
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.equipment.quantity">
+            <summary>
+            数量
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.equipment.usefullife">
+            <summary>
+            使用年限
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.equipment.purchaseDate">
+            <summary>
+            采购日期
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.equipment.deptId">
+            <summary>
+            部门id
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.sys_session.updateTime">
+            <summary>
+            更新时间
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.sys_session.expireTime">
+            <summary>
+            到期时间
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.user.userName">
+            <summary>
+            用户名
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.user.password">
+            <summary>
+            密码
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.user.realName">
+            <summary>
+            姓名
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.user.gender">
+            <summary>
+            0: 未知 1： 男 2： 女
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.user.tel">
+            <summary>
+            电话
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.user.status">
+            <summary>
+            0,禁用 1,启用
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.user.avatar">
+            <summary>
+            用户头像
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.user.creatorId">
+            <summary>
+            创建id
+            </summary>
+        </member>
+        <member name="P:RSDB.Models.user.createTime">
+            <summary>
+            创建时间
+            </summary>
+        </member>
+    </members>
+</doc>

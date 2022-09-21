@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.docservice.dao.rs.ICRegistrationDao">
+    <select id="getListByCompany" resultType="com.yskc.docservice.entity.rs.ICRegistrationEntity">
+        select registerNo,certificateNo from ICRegistration
+        where companyId=#{companyId}
+    </select>
+    <update id="updateICs">
+        <foreach collection="icRegistrations" item="item" index="index" open="" close="" separator=";">
+            update ICRegistration set
+            lastUpdatorId=#{item.lastUpdatorId},
+            lastUpdateTime=#{item.lastUpdateTime},
+            msLastUpdatorId=#{item.msLastUpdatorId},
+            desginName=#{item.desginName},
+            ownerName=#{item.ownerName},
+            ownerAddress=#{item.ownerAddress},
+            applyDate=#{item.applyDate},
+            issueDate=#{item.issueDate},
+            certificateNo=#{item.certificateNo},
+            `source`=#{item.source}
+            where registerNo=#{item.registerNo} and companyId=#{companyId}
+        </foreach>
+    </update>
+    <insert id="insertICs">
+        insert into ICRegistration
+        (`creatorId`,
+        `lastUpdatorId`,
+        `createTime`,
+        `lastUpdateTime`,
+        `msCreatorId`,
+        `msLastUpdatorId`,
+        `companyId`,
+        `desginName`,
+        `ownerName`,
+        `ownerAddress`,
+        `issueDate`,
+        `applyDate`,
+        `registerNo`,
+        `certificateNo`,
+        `source`)
+        VALUES
+        <foreach collection="icRegistrations" item="item" separator=",">
+            (
+            #{item.creatorId},
+            #{item.lastUpdatorId},
+            #{item.createTime},
+            #{item.lastUpdateTime},
+            #{item.msCreatorId},
+            #{item.msLastUpdatorId},
+            #{companyId},
+            #{item.desginName},
+            #{item.ownerName},
+            #{item.ownerAddress},
+            #{item.issueDate},
+            #{item.applyDate},
+            #{item.registerNo},
+            #{item.certificateNo},
+            #{item.source}
+            )
+        </foreach>
+    </insert>
+</mapper>

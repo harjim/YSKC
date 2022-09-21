@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.rs.RsDocFileDao">
+    <update id="updateDocFile" parameterType="com.yskc.ms.models.rs.RsDocFileTemplateModel">
+        update docFile a set
+        a.msLastUpdatorId = #{model.msLastUpdatorId},
+        a.lastUpdateTime = #{model.lastUpdateTime}
+        <if test="model.enabled!=null">
+            ,a.enabled = #{model.enabled}
+        </if>
+        <if test="model.owner!=null">
+            ,a.owner = #{model.owner}
+        </if>
+        <if test="model.required!=null">
+            ,a.required = #{model.required}
+        </if>
+        <if test="model.multiple!=null">
+            ,a.multiple = #{model.multiple}
+        </if>
+        <if test="model.needEdit!=null">
+            ,a.needEdit=#{model.needEdit}
+        </if>
+        <if test="model.uniqueness!=null">
+            ,a.uniqueness=#{model.uniqueness}
+        </if>
+        WHERE a.id=#{model.id}
+    </update>
+</mapper>

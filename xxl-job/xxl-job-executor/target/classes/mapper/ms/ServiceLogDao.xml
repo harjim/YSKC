@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xxl.job.executor.dao.ms.ServiceLogDao">
+    <select id="getServiceCnt" resultType="com.xxl.job.executor.models.monthlyreport.MonthlyReportDetailModel">
+        select su.userId,count(distinct su.serviceId) serviceCnt,DATE_FORMAT(sl.endDate,'%Y-%m') workMonth from serviceLog sl
+        inner join serviceUser su on su.serviceId=sl.id
+        where sl.status=3 and sl.endDate>=#{begin} group by userId,workMonth
+    </select>
+</mapper>

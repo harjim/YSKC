@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.data.DataAttendanceDao">
+    <insert id="addBatch" parameterType="java.util.List" >
+        INSERT INTO d_attendance (`enumber`,`ename`,`month`,`attData`,`companyId`,`creatorId`,`createTime`,`remark`,`remainAttData`)
+        VALUES
+        <foreach  collection="attendances" item="item" index="index" separator=",">
+            (#{item.enumber},#{item.ename},#{item.month},#{item.attData},#{item.companyId},#{item.creatorId},#{item.createTime},#{item.remark},#{item.remainAttData})
+        </foreach>
+    </insert>
+    <update id="updateFinishByIds">
+        update d_attendance set remainAttData='0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0' where id in
+        <foreach item="item" index="index" collection="ids" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+    <update id="updateBatch">
+        UPDATE `d_attendance`
+        set remainAttData=
+        <foreach collection="list" item="item" index="index"
+                 separator=" " open="case id" close="end">
+            when #{item.id} then
+            #{item.remainAttData}
+        </foreach>
+        where id in
+        <foreach collection="list" item="item" index="index"
+                 separator="," open="(" close=")">
+            #{item.id}
+        </foreach>
+    </update>
+    <select id="getAttendanceList" resultType="com.yskc.rs.models.attendance.DataAttendanceModel">
+        select * from d_attendance
+        <where>
+            <if test="companyId != null">
+                companyId=#{companyId}
+            </if>
+            <if test="month != null">
+              and  month=#{month}
+            </if>
+            <if test="ename != null and ename.length()>0">
+              and  ename like "%"#{ename}"%"
+            </if>
+        </where>
+        order by month desc,enumber
+    </select>
+    <select id="checkRecordByMonth" resultType="java.lang.Integer">
+        select count(1) from d_attendance where  companyId=#{companyId} and  month=#{month} and enumber=#{enumber}
+    </select>
+    <select id="selectAttendanceByMonth" resultType="com.yskc.rs.entity.data.DataAttendanceEntity">
+         select * from d_attendance where  companyId=#{companyId} and  month=#{month} and enumber=#{enumber}  limit 1
+    </select>
+</mapper>

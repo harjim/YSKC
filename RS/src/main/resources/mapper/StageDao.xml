@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.StageDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.yskc.rs.entity.StageEntity" id="stageMap">
+        <result property="id" column="id"/>
+        <result property="projectId" column="projectId"/>
+        <result property="stageName" column="stageName"/>
+        <result property="beginDate" column="beginDate"/>
+        <result property="endDate" column="endDate"/>
+        <result property="remark" column="remark"/>
+        <result property="companyId" column="companyId"/>
+        <result property="creatorId" column="creatorId"/>
+        <result property="createTime" column="createTime"/>
+        <result property="lastUpdatorId" column="lastUpdatorId"/>
+        <result property="lastUpdateTime" column="lastUpdateTime"/>
+    </resultMap>
+    <delete id="deleteByTypeList">
+        delete from p_stage where projectId = #{projectId} and
+        stageKey in
+        <foreach item="item" index="index" collection="delKey" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <select id="queryStage" resultType="com.yskc.rs.models.stage.StageModel">
+        select p.*  from p_stage p
+        where companyId = #{companyId} and projectId = #{projectId}
+        order by p.stageKey ASC
+    </select>
+
+    <select id="getByProjectIds" resultType="com.yskc.rs.models.stage.StageModel">
+        select p.* from p_stage p
+        where companyId = #{companyId} and projectId in
+        <foreach collection="projectIds" item="projectId" open="(" separator="," close=")">
+            #{projectId}
+        </foreach>
+        order by p.stageKey ASC
+    </select>
+
+    <select id="queryStageList" resultType="com.yskc.rs.models.stage.StageModel">
+        select p.* from p_stage p
+        where companyId = #{companyId} and projectId = #{query.projectId}
+    </select>
+
+    <select id="getCStage" resultType="java.util.Map">
+        select cs.stageKey, cs.stageName
+        from c_stage as cs
+        where companyId in(
+        <if test="companyId!=null and companyId >= 0">
+            #{companyId},
+        </if>0)
+        order by companyId desc, stageKey
+        limit 0,9
+    </select>
+
+    <select id="getStageList" resultType="com.yskc.rs.entity.company.CompanyStageEntity">
+        select cs.*
+        from c_stage as cs
+        where companyId in(
+        <if test="companyId!=null and companyId >= 0">
+            #{companyId},
+        </if>0)
+        order by companyId desc, stageKey
+    </select>
+
+    <insert id="savaStage">
+        INSERT INTO `c_stage`
+        (
+            `creatorId`,
+            `lastUpdatorId`,
+            `createTime`,
+            `lastUpdateTime`,
+            `msCreatorId`,
+            `msLastUpdatorId`,
+            `companyId`,
+            `stageKey`,
+            `stageName`
+        )
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.creatorId},
+            #{item.lastUpdatorId},
+            #{item.createTime},
+            #{item.lastUpdateTime},
+            #{item.msCreatorId},
+            #{item.msLastUpdatorId},
+            #{companyId},
+            #{item.stageKey},
+            #{item.stageName}
+            )
+        </foreach>
+    </insert>
+
+    <update id="updateStage">
+        update `c_stage`
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="stageName =case" suffix="end,">
+                <foreach collection="list" item="i" index="index">
+                    <if test="i.stageName!=null">
+                        when stageKey=#{i.stageKey} then #{i.stageName}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdatorId =case" suffix="end,">
+                <foreach collection="list" item="i" index="index">
+                    <if test="i.lastUpdatorId!=null">
+                        when stageKey=#{i.stageKey} then #{i.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdateTime =case" suffix="end,">
+                <foreach collection="list" item="i" index="index">
+                    <if test="i.lastUpdateTime!=null">
+                        when stageKey=#{i.stageKey} then #{i.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="msLastUpdatorId =case" suffix="end,">
+                <foreach collection="list" item="i" index="index">
+                    <if test="i.msLastUpdatorId!=null">
+                        when stageKey=#{i.stageKey} then #{i.msLastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where companyId = #{companyId}
+    </update>
+
+    <update id="updateProjectStage">
+        update `p_stage`
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="stageName =case" suffix="end,">
+                <foreach collection="list" item="i" index="index">
+                    <if test="i.stageName!=null">
+                        when stageKey=#{i.stageKey} then #{i.stageName}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdatorId =case" suffix="end,">
+                <foreach collection="list" item="i" index="index">
+                    <if test="i.lastUpdatorId!=null">
+                        when stageKey=#{i.stageKey} then #{i.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdateTime =case" suffix="end,">
+                <foreach collection="list" item="i" index="index">
+                    <if test="i.lastUpdateTime!=null">
+                        when stageKey=#{i.stageKey} then #{i.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="msLastUpdatorId =case" suffix="end,">
+                <foreach collection="list" item="i" index="index">
+                    <if test="i.msLastUpdatorId!=null">
+                        when stageKey=#{i.stageKey} then #{i.msLastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where companyId = #{companyId} and projectId = #{projectId}
+    </update>
+
+    <select id="getStageByName" resultType="com.yskc.rs.entity.StageEntity">
+        select * from p_stage e where e.companyId=#{companyId} and e.projectId = #{projectId} and e.stageName in
+        <foreach collection="stageNames" open="(" separator="," close=")" item="stageName">
+            #{stageName}
+        </foreach>
+    </select>
+    <select id="queryStageByTypeList" resultType="com.yskc.rs.entity.StageEntity">
+        select * from p_stage where projectId = #{projectId} and
+        stageKey in
+        <foreach collection="queryList" open="(" separator="," close=")" item="type">
+            #{type}
+        </foreach>
+    </select>
+
+    <insert id="addBatch">
+        INSERT INTO `p_stage`
+        (
+        `projectId`,
+        `stageName`,
+        `beginDate`,
+        `endDate`,
+        `remark`,
+        `companyId`,
+        `workDesc`,
+        `stageKey`,
+        `creatorId`,
+        `createTime`,
+        `lastUpdateTime`,
+        `lastUpdatorId`,
+        `msCreatorId`,
+        `msLastUpdatorId`
+        )
+        VALUES
+        <foreach collection="entities" item="item" separator=",">
+            (
+            #{item.projectId},
+            #{item.stageName},
+            #{item.beginDate},
+            #{item.endDate},
+            #{item.remark},
+            #{item.companyId},
+            #{item.workDesc},
+            #{item.stageKey},
+            #{item.creatorId},
+            #{item.createTime},
+            #{item.lastUpdateTime},
+            #{item.lastUpdatorId},
+            #{item.msCreatorId},
+            #{item.msLastUpdatorId}
+            )
+        </foreach>
+
+    </insert>
+
+
+    <update id="updateBatch">
+        update p_stage
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="projectId =case" suffix="end,">
+                <foreach collection="entities" item="i" index="index">
+                    <if test="i.projectId!=null">
+                        when id=#{i.id} then #{i.projectId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="stageName =case" suffix="end,">
+                <foreach collection="entities" item="i" index="index">
+                    <if test="i.stageName!=null">
+                        when id=#{i.id} then #{i.stageName}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="beginDate =case" suffix="end,">
+                <foreach collection="entities" item="i" index="index">
+                    <if test="i.beginDate!=null">
+                        when id=#{i.id} then #{i.beginDate}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="endDate =case" suffix="end,">
+                <foreach collection="entities" item="i" index="index">
+                    <if test="i.endDate!=null">
+                        when id=#{i.id} then #{i.endDate}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="remark =case" suffix="end,">
+                <foreach collection="entities" item="i" index="index">
+                    <if test="i.remark!=null">
+                        when id=#{i.id} then #{i.remark}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="workDesc =case" suffix="end,">
+                <foreach collection="entities" item="i" index="index">
+                    <if test="i.workDesc!=null">
+                        when id=#{i.id} then #{i.workDesc}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdatorId =case" suffix="end,">
+                <foreach collection="entities" item="i" index="index">
+                    <if test="i.lastUpdatorId!=null">
+                        when id=#{i.id} then #{i.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdateTime =case" suffix="end,">
+                <foreach collection="entities" item="i" index="index">
+                    <if test="i.lastUpdateTime!=null">
+                        when id=#{i.id} then #{i.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="msLastUpdatorId =case" suffix="end,">
+                <foreach collection="entities" item="i" index="index">
+                    <if test="i.msLastUpdatorId!=null">
+                        when id=#{i.id} then #{i.msLastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="entities" separator="or" item="i" index="index">
+            id=#{i.id}
+        </foreach>
+    </update>
+
+
+    <select id="queryEntityByKey" resultType="com.yskc.rs.entity.StageEntity">
+        select * from p_stage where projectId=#{projectId} and stageKey=#{stageKey}
+    </select>
+    <select id="getBeginDate" resultType="com.yskc.rs.models.project.ProjectModel">
+        select ps.beginDate,p.beginYear as `year` from p_project p
+        left join p_stage ps on p.id = ps.projectId
+        where p.id= #{projectId}
+        <if test="stage != null and stage != '9999'">
+            and ps.stageKey = #{stage}
+        </if>
+        limit 1
+    </select>
+    <select id="getStageInfo" resultType="com.yskc.rs.entity.StageEntity">
+        select s.*
+        from p_stage s
+        inner join p_docFile pd on pd.stage=s.stageKey and pd.projectId=s.projectId
+        where pd.id=#{pDocFileId} and s.projectId=#{projectId}
+    </select>
+    <select id="getStagesByProject" resultType="com.yskc.rs.entity.StageEntity">
+        select projectId,stageName,beginDate,endDate,remark,companyId,workDesc,stageKey
+        from p_stage
+        where projectId=#{projectId}
+    </select>
+    <select id="getByDocFile" resultType="com.yskc.rs.entity.StageEntity">
+        select s.*
+        from p_stage s
+        inner join p_docFile pd on s.stageKey=pd.stage and s.projectId=pd.projectId
+        where pd.id=#{pDocFileId} and s.projectId=#{projectId}
+    </select>
+    <select id="getByYears" resultType="com.yskc.rs.entity.StageEntity">
+        select id,projectId,stageKey,beginDate,endDate
+        from p_stage
+        where projectId=#{projectId} and YEAR(beginDate)=#{year}
+        order by beginDate desc
+    </select>
+    <select id="getStageByYear" resultType="com.yskc.rs.entity.StageEntity">
+        select *
+        from p_stage
+        where projectId=#{projectId} and YEAR(beginDate)=#{year}
+        order by beginDate desc
+        limit 1
+    </select>
+
+</mapper>

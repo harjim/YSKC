@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.rs.ExpertDao">
+
+    <select id="queryExpert" resultType="com.yskc.ms.entity.rs.Expert">
+        SELECT * from expert
+        <where>
+            <if test="query.industryCode !=null and query.industryCode !=''">
+                AND industryCode like "%"#{query.industryCode}"%"
+            </if>
+            <if test="beginDate!=null ">
+                AND validDate &gt;= #{beginDate}
+            </if>
+            <if test="endDate !=null ">
+                AND validDate &lt;= #{endDate}
+            </if>
+            <if test="query.realName!=null and query.realName!=''">
+                AND realName like "%"#{query.realName}"%"
+            </if>
+        </where>
+    </select>
+
+    <select id="getExpertByUuid" resultType="com.yskc.ms.entity.rs.Expert">
+         select * from expert where uuid=#{expertUuid}
+    </select>
+
+    <select id="getMaxExpertNumber" resultType="java.lang.String">
+			SELECT
+				expertNumber
+			FROM
+				expert
+			ORDER BY
+				expertNumber DESC
+			LIMIT 1
+	</select>
+
+    <update id="updateStatus">
+     update  expert set status=#{status}, remark=#{remark},lastUpdatorId=#{lastUpdatorId},lastUpdateTime=#{lastUpdateTime} where id=#{id}
+
+	</update>
+</mapper>

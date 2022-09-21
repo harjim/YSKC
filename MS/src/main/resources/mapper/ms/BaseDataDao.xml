@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.BaseDataDao">
+    <sql id="currentData">
+        <if test="perm.permType == 0">
+            AND ${alias}.owerId = ${perm.userId}
+        </if>
+        <if test="perm.permType == 1">
+            AND ${alias}.id in (select cus.id from customer cus
+            LEFT JOIN user_dept ysud ON ysud.userId = cus.owerId
+            INNER JOIN ys_dept ysd on ysd.id = ysud.depId
+            WHERE
+            <foreach collection="perm.deptPaths" item="path" separator=" or ">
+                ysd.fullPath like #{path}"%"
+            </foreach>
+            )
+        </if>
+    </sql>
+    <sql id="projectData">
+        <if test="query.dataType == 0">
+            AND ${alias}.id IN (select projectId from project_member where memberId = ${query.currentUserId})
+        </if>
+        <if test="query.dataType == 1">
+            AND ${alias}.id in
+            (SELECT pm.projectId
+            FROM project_member pm
+            LEFT JOIN ys_user u ON u.id = pm.memberId
+            LEFT JOIN user_dept ud ON ud.userId = u.id
+            LEFT JOIN ys_dept d ON ud.depId = d.id
+            WHERE
+            <foreach collection="query.allFullPath" item="path" separator="or">
+                d.fullPath like #{path}"%"
+            </foreach>)
+        </if>
+    </sql>
+    <!--根据数据权限获取当前用户的客户数据,通过项目成员方式-->
+    <sql id="projectCustomer">
+        <if test="dataPerm.permType == 0">
+            AND ${tableAlias}.id IN (select distinct p.customerId from project_member pm inner join project p on
+            pm.projectId=p.id where pm.memberId = ${dataPerm.userId})
+        </if>
+        <if test="dataPerm.permType == 1">
+            AND ${tableAlias}.id in
+            (SELECT distinct pm.customerId
+            FROM project_member pm
+            <!--             inner JOIN ys_user u ON u.id = pm.memberId-->
+            inner JOIN user_dept ud ON ud.userId = pm.memberId
+            inner JOIN ys_dept d ON ud.depId = d.id
+            WHERE
+            <foreach collection="dataPerm.deptPaths" item="path" separator="or">
+                d.fullPath like #{path}"%"
+            </foreach>)
+        </if>
+    </sql>
+    <!--根据数据权限获取当前用户的项目数据,适合成员表字段为memberId的表的数据权限查询-->
+    <sql id="project">
+        <if test="dataPerm.permType == 0">
+            AND ${tableAlias}.id IN (select ${colId} from ${userTable} where memberId = ${dataPerm.userId}
+            )
+        </if>
+        <if test="dataPerm.permType == 1">
+            AND ${tableAlias}.id in
+            (SELECT pm.${colId}
+            FROM ${userTable} pm
+            <!-- inner JOIN ys_user u ON u.id = -->
+            inner JOIN user_dept ud ON ud.userId = pm.memberId
+            inner JOIN ys_dept d ON ud.depId = d.id
+            WHERE
+            <foreach collection="dataPerm.deptPaths" item="path" separator="or">
+                d.fullPath like #{path}"%"
+            </foreach>
+            )
+        </if>
+    </sql>
+    <sql id="byCreator">
+        <if test="perm.permType == 0">
+            and ${tableAlias}.creatorId=#{perm.userId}
+        </if>
+        <if test="perm.permType == 1">
+            and ${tableAlias}.creatorId in (select ud.userId from user_dept ud
+            inner join ys_dept d on ud.depId=d.id where
+            <foreach collection="perm.deptPaths" item="path" separator="or">
+                d.fullPath like #{path}"%"
+            </foreach>)
+        </if>
+    </sql>
+
+    <sql id="byUser">
+        <if test="perm.permType == 0">
+            and ${tableAlias}.id=#{perm.userId}
+        </if>
+        <if test="perm.permType == 1">
+            and ${tableAlias}.id in (select ud.userId from user_dept ud
+            inner join ys_dept d on ud.depId=d.id where
+            <foreach collection="perm.deptPaths" item="path" separator="or">
+                d.fullPath like #{path}"%"
+            </foreach>)
+        </if>
+    </sql>
+    <!--根据数据权限获取当前用户的可见数据,适合拥有成员表,且字段为memberId的表的数据权限查询-->
+    <sql id="byMember">
+        <if test="dataPerm.permType == 0">
+            AND ${tableAlias}.id IN (select ${colId} from ${userTable} where ${memberId} = ${dataPerm.userId})
+        </if>
+        <if test="dataPerm.permType == 1">
+            AND ${tableAlias}.id in (SELECT pm.${colId} FROM ${userTable} pm
+            inner JOIN user_dept ud ON ud.userId = pm.${memberId}
+            inner JOIN ys_dept d ON ud.depId = d.id
+            WHERE <foreach collection="dataPerm.deptPaths" item="path" open="(" separator="or" close=")">
+                d.fullPath like #{path}"%"
+            </foreach>)
+        </if>
+    </sql>
+    <sql id="memberCondition">
+        <if test="query.memberInfo!=null and query.memberInfo.hasMember()">
+            <if test="query.memberInfo.techIds!=null and query.memberInfo.techIds.length>0">
+                AND ${tableAlias}.id in (select ${colId} from ${userTable} m where m.mType=1 and m.memberId in
+                <foreach collection="query.memberInfo.techIds" open="(" separator="," close=")" item="tId">#{tId}</foreach>)
+            </if>
+            <if test="query.memberInfo.finIds!=null and query.memberInfo.finIds.length>0">
+                AND ${tableAlias}.id in (select ${colId} from ${userTable} m where m.mType=2 and m.memberId in
+                <foreach collection="query.memberInfo.finIds" open="(" separator="," close=")" item="fId">#{fId}</foreach>)
+            </if>
+            <if test="query.memberInfo.ownerId!=null ">
+                AND ${tableAlias}.id in (select ${colId} from ${userTable} m where m.mType=3 and m.memberId = #{query.memberInfo.ownerId})
+            </if>
+            <if test="query.memberInfo.busId!=null">
+                AND ${tableAlias}.id in (select ${colId} from ${userTable} m where m.mType=4 and m.memberId = #{query.memberInfo.busId})
+            </if>
+        </if>
+    </sql>
+    <!--根据数据权限获取当前用户的可见数据,适合通过表自身的人员Id的表的数据权限查询,一个人员字段-->
+    <sql id="byInTable">
+        <if test="dataPerm.permType == 0">
+            and ${userCol}=#{dataPerm.userId}
+        </if>
+        <if test="dataPerm.permType == 1">
+            and ${userCol} in (select ud.userId from user_dept ud
+            inner join ys_dept d on ud.depId=d.id where
+            <foreach collection="dataPerm.deptPaths" item="path" separator="or">
+                d.fullPath like #{path}"%"
+            </foreach>)
+        </if>
+    </sql>
+    <!--根据数据权限获取当前用户的可见数据,适合通过表自身的人员Id的表的数据权限查询,多个人员字段-->
+    <sql id="byInTables">
+        <if test="dataPerm.permType == 0">
+            and #{dataPerm.userId} in (${userCols})
+        </if>
+        <if test="dataPerm.permType == 1">
+            and exists (select ud.userId from user_dept ud
+            inner join ys_dept d on ud.depId=d.id where <foreach collection="dataPerm.deptPaths" open="(" item="path" close=")" separator="or">d.fullPath like #{path}"%"</foreach>
+            and ud.userId in (${userCols}) )
+        </if>
+    </sql>
+    <sql id="selectDept">
+        and ((${userDept}.userId is null) or (${table}.id = (SELECT yd.id FROM ys_dept yd
+		LEFT JOIN user_dept ud2 on ud2.depId = yd.id
+		WHERE ud2.userId = ${userDept}.userId ORDER BY `level` DESC,ud2.id asc  LIMIT 1)))
+    </sql>
+</mapper>

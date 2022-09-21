@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.TechRequirementDao">
+    <update id="updateStatus">
+        update tech_requirement set status = #{status},lastUpdatorId = #{userId},msLastUpdatorId = #{msUserId},
+        lastUpdateTime = #{now}
+        where id in
+        <foreach collection="ids" open="(" separator="," close=")" item="id">
+            #{id}
+        </foreach>
+    </update>
+
+    <select id="getList" resultType="com.yskc.rs.models.techrequirement.TechRequirementModel">
+        select tr.id,tr.linkName,tr.position,tr.linkTel,tr.linkEmail,
+        tr.description,tr.filePath,tr.techName,tr.domain,tr.investment,tr.requirement,tr.cooperateType,
+        tr.otherCooperateType,tr.otherDomain,tr.lastUpdateTime,tr.createTime,tr.status,tr.cooperateSchool
+        from tech_requirement tr
+        where tr.companyId = #{companyId} and tr.year = #{query.year}
+        <if test="query.techName != null and query.techName != ''">
+            and tr.techName like "%"#{query.techName}"%"
+        </if>
+        <if test="query.linkName != null and query.linkName != ''">
+            and tr.linkName like "%"#{query.linkName}"%"
+        </if>
+    </select>
+    <select id="getFilePath" resultType="java.lang.String">
+        select filePath from tech_requirement where id = #{id}
+    </select>
+    <select id="checkExistId" resultType="java.lang.Integer">
+        select id from tech_requirement where id = #{id}
+    </select>
+</mapper>

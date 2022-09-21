@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.tech.TechProjectCostDao">
+    <insert id="addList">
+        insert into t_projectCost
+        (companyId, projectId, ctype, cname, model, fillAmount, payDates, payee, invoiceVoucher, invoiceNumber,
+        invoiceDate, isBankTransfer,bankVoucher, bankTransferDates, contractNumber,quantity,
+        contractDate, auditAmount, creatorId, createTime, lastUpdatorId, lastUpdateTime)
+        values
+        <foreach collection="costList" separator="," item="cost">
+            (#{cost.companyId}, #{cost.projectId}, #{cost.ctype}, #{cost.cname}, #{cost.model}, #{cost.fillAmount},
+            #{cost.payDates}, #{cost.payee}, #{cost.invoiceVoucher}, #{cost.invoiceNumber}, #{cost.invoiceDate},
+            #{cost.isBankTransfer},#{cost.bankVoucher}, #{cost.bankTransferDates}, #{cost.contractNumber},
+            #{cost.quantity},#{cost.contractDate},#{cost.auditAmount}, #{cost.creatorId}, #{cost.createTime},
+            #{cost.lastUpdatorId}, #{cost.lastUpdateTime})
+        </foreach>
+    </insert>
+
+    <select id="getList" resultType="com.yskc.rs.models.tech.cost.TechProjectCostModel">
+        select
+        id, projectId, ctype, cname, model, fillAmount, payDates, payee, invoiceVoucher, invoiceNumber,quantity,
+        invoiceDate, isBankTransfer, bankVoucher, bankTransferDates, contractNumber, contractDate, auditAmount
+        from t_projectCost where companyId =#{companyId}
+        <if test="query.projectId != null and query.projectId > 0">
+            and projectId = #{query.projectId}
+        </if>
+        <if test="query.ctype != null and query.ctype > 0">
+            and ctype = #{query.ctype}
+        </if>
+        <if test="query.cname != null and query.cname != ''">
+            and invoiceNumber like "%"#{query.invoiceNumber}"%"
+        </if>
+        <if test="query.cname != null and query.cname != ''">
+            and cname like "%"#{query.cname}"%"
+        </if>
+        order by ctype,cname
+    </select>
+    <select id="getProjectCost" resultType="com.yskc.rs.models.tech.cost.MinProjectCostModel">
+           select
+        id, ctype, cname, model, auditAmount,quantity
+        from t_projectCost where companyId =#{companyId} and projectId = #{projectId}
+          order by ctype,cname
+    </select>
+</mapper>

@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.rs.RsPatentDao">
+    <select id="queryPatentList" resultType="com.yskc.ms.models.patent.PatentModel">
+        SELECT
+        p.patentNo,p.id,p.patentName,p.applyDateTime,p.mainType,p.mainTypeNo,p.caseStatus, p.caseSubmissionDate,
+        p.inventor,p.expiryDate,p.expiryAmount,p.companyId,c.companyName,p.lastUpdateTime,p.source,
+        p.claimNum,p.usedCnt,p.authDate
+        FROM
+        patent p
+        LEFT JOIN company c ON p.companyId = c.id
+        where 1=1
+        <if test="model.patentNo !=null and model.patentNo!=''">
+            and p.patentNo like "%"#{model.patentNo}"%"
+        </if>
+        <if test="model.patentName !=null and model.patentName!=''">
+            and p.patentName like "%"#{model.patentName}"%"
+        </if>
+        <if test="model.mainType!=null and model.mainType!=''">
+            and p.mainType like "%"#{model.mainType}"%"
+        </if>
+        <if test="model.startTime != null ">
+            AND p.applyDateTime &gt;= #{model.startTime}
+        </if>
+        <if test="model.entTime !=null">
+            AND p.applyDateTime &lt;= #{model.entTime}
+        </if>
+        <if test="model.startDate != null">
+            and p.expiryDate >= #{model.startDate}
+        </if>
+        <if test="model.entDate != null">
+            and p.expiryDate &lt;= #{model.entDate}
+        </if>
+    </select>
+
+    <select id="queryPatentByNo" resultType="com.yskc.ms.entity.rs.RsPatentEntity">
+        select * from patent
+        where patentNo=#{patentNo}
+    </select>
+
+    <select id="queryListByPatentNos" resultType="com.yskc.ms.entity.rs.RsPatentEntity">
+        select * from patent
+        where patentNo in
+        <foreach collection="patentNos" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+    <select id="getAll" resultType="com.yskc.ms.entity.rs.RsPatentEntity">
+        select * from patent where 1 = 1
+        <if test="ids != null">
+            and id in
+            <foreach collection="ids" open="(" separator="," close=")" item="id">
+                #{id}
+            </foreach>
+        </if>
+        <if test="patentNos != null ">
+            and patentNo in
+            <foreach collection="patentNos" open="(" separator="," close=")" item="num">
+                #{num}
+            </foreach>
+        </if>
+
+    </select>
+
+    <insert id="insertPatentList">
+        insert into patent
+        (patentNo,patentName,mainType,applyDateTime,inventor,creatorId,lastUpdatorId,createTime,lastUpdateTime,msCreatorId,msLastUpdatorId,companyId)
+        values
+        <foreach collection="models" item="item" separator=",">
+            (
+            #{item.patentNo},
+            #{item.patentName},
+            #{item.mainType},
+            #{item.applyDateTime},
+            #{item.inventor},
+            #{item.creatorId},
+            #{item.lastUpdatorId},
+            #{item.createTime},
+            #{item.lastUpdateTime},
+            #{item.msCreatorId},
+            #{item.msLastUpdatorId},
+             #{item.companyId}
+            )
+        </foreach>
+    </insert>
+    <insert id="insertPatents">
+        insert into patent
+        (patentNo,patentName,mainType,applyDateTime,inventor,creatorId,
+        lastUpdatorId,createTime,lastUpdateTime,msCreatorId,msLastUpdatorId,companyId)
+        values
+        <foreach collection="patents" item="item" separator=",">
+            (
+            #{item.patentNo},
+            #{item.patentName},
+            #{item.mainType},
+            #{item.applyDateTime},
+            #{item.inventor},
+            #{item.creatorId},
+            #{item.lastUpdatorId},
+            #{item.createTime},
+            #{item.lastUpdateTime},
+            #{item.msCreatorId},
+            #{item.msLastUpdatorId},
+            #{item.companyId}
+            )
+        </foreach>
+    </insert>
+
+    <update id="updatePatentList">
+        <foreach collection="models" item="item" index="index" open="" close="" separator=";">
+            update patent
+            set patentName=#{item.patentName},mainType=#{item.mainType},applyDateTime=#{item.applyDateTime},
+            inventor=#{item.inventor},lastUpdateTime=#{item.lastUpdateTime},msLastUpdatorId=#{item.msLastUpdatorId},companyId = #{item.companyId}
+            where id=#{item.id}
+        </foreach>
+    </update>
+
+    <select id="getPlanByPatentNo" resultType="com.yskc.ms.entity.rs.RsPatentEntity">
+        select * from patent
+        where patentNo=#{patentNo}
+    </select>
+    <select id="getPatentList" resultType="com.yskc.ms.models.patentPlan.PatentAuditModel">
+        select p.id,p.patentNo,p.patentName,p.disclosureParperPath,p.description,p.projectId,p.year,
+        p.filepath,pp.pname,p.inventor,pp.rdTitle,c.companyName,pap.status,p.inventorInfo
+        from p_patent_plan p
+        left join p_project pp on p.projectId=pp.id
+        inner join company c on c.id=p.companyId
+        left join p_audit_patent pap on pap.patentPlanId=p.id
+        where 1=1
+        <if test="type!=null and type=2">
+            and pap.status is not null
+        </if>
+        <if test="query.year!=null and query.year>0">
+            and p.year= #{query.year}
+        </if>
+        <if test="query.companyId!=null and query.companyId>=0">
+            and p.companyId=#{query.companyId}
+        </if>
+        <if test="query.companyName!=null and query.companyName!=''">
+            and c.companyName like "%"#{query.companyName}"%"
+        </if>
+        <if test="query.patentName!=null and query.patentName!=''">
+            and p.patentName like "%"#{query.patentName}"%"
+        </if>
+        <if test="query.inventor!=null and query.inventor!=''">
+            and p.inventor like "%"#{query.inventor}"%"
+        </if>
+    </select>
+    <select id="checkPatentNo" resultType="com.yskc.ms.entity.rs.RsPatentEntity">
+        select id
+        from patent
+        where patentNo=#{patentNo}
+        <if test="patentId!=null and patentId>0">
+            and id !=#{patentId}
+        </if>
+    </select>
+    <select id="getSpecification" resultType="com.yskc.ms.models.patent.PatentSpecificationModel">
+        select id,claimContent,specification from patent where id=#{id}
+    </select>
+
+</mapper>

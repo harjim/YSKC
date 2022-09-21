@@ -1,0 +1,384 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.init.InitMemberDao">
+    <delete id="deleteMaster">
+        delete from i_member where isMaster
+        and projectId in (<foreach collection="projectIds" item="pId" separator=",">#{pId}</foreach>)
+    </delete>
+    <delete id="delMasterByProject">
+        delete from i_member
+        where year=#{year} and
+        <foreach collection="dels" item="l" separator="or">
+        (projectId=#{l.id} and enumber=#{l.masterENumber})
+        </foreach>
+    </delete>
+    <select id="getList" resultType="com.yskc.rs.models.init.member.InitMemberModel">
+        select
+        im.enumber,im.id,im.projectId,e.ename,rde.position,e.title,e.edate,
+        rde.etype,rde.rdDeptId,e.birthday,e.specialities,im.role,im.isMaster,im.entryDate,rd.deptName
+        from i_member as im
+        LEFT JOIN employee as e on e.enumber = im.enumber and e.companyId =im.companyId
+        LEFT JOIN rdEmployee as rde on rde.companyId= e.companyId and rde.year=#{query.year} and rde.enumber=e.enumber
+        LEFT JOIN rdDept as rd on rd.id = rde.rdDeptId
+        where im.companyId = #{companyId} and im.projectId = #{query.projectId} and im.year=#{query.year}
+        <if test="query.enumber != null and query.enumber != '' ">
+            and e.enumber like "%"#{query.enumber}"%"
+        </if>
+        <if test="query.ename != null and query.ename != '' ">
+            and e.ename like "%"#{query.ename}"%"
+        </if>
+        <if test="query.rdDeptPath !=null and query.rdDeptPath != ''">
+            and rd.identity like #{query.rdDeptPath}"%"
+        </if>
+
+        <if test="query.specialities !=null and query.specialities !=''">
+            and e.specialities like "%"#{query.specialities}"%"
+        </if>
+        <if test="query.role !=null and query.role !=''">
+            and im.role like "%"#{query.role}"%"
+        </if>
+    </select>
+
+    <select id="getEmployeeList" resultType="com.yskc.rs.models.init.member.InitMemberModel">
+        select e.enumber,e.id,e.ename,e.position,e.deptName,e.title,rde.etype,rde.rdDeptId,e.edate,e.specialities,
+         e.birthday,e.remark
+        from rdEmployee as rde
+        inner join employee AS e on rde.companyId= e.companyId and rde.enumber=e.enumber
+        LEFT JOIN (SELECT im0.enumber,im0.companyId FROM i_member AS im0 WHERE im0.companyId = #{companyId} and
+        im0.projectId=#{query.projectId} AND `year`=#{query.year}) AS im2
+        ON e.companyId = im2.companyId and e.enumber = im2.enumber
+        WHERE e.companyId = #{companyId} AND im2.enumber IS NULL
+        AND rde.year=#{query.year}
+        <if test="query.etype != null and query.etype >= 0 ">
+            and rde.etype = #{query.etype}
+        </if>
+        <if test="query.ename != null and query.ename != '' ">
+            and e.ename like "%"#{query.ename}"%"
+        </if>
+        <if test="query.enumber != null and query.enumber != '' ">
+            and e.enumber like "%"#{query.enumber}"%"
+        </if>
+        <if test="query.position != null and query.position != '' ">
+            and e.position like "%"#{query.position}"%"
+        </if>
+        <if test="query.title != null and query.title != '' ">
+            and e.title like "%"#{query.title}"%"
+        </if>
+        <if test="query.remark != null and query.remark != '' ">
+            and e.remark like "%"#{query.remark}"%"
+        </if>
+    </select>
+
+    <select id="getByEnumbers" resultType="com.yskc.rs.entity.init.InitMemberEntity">
+        select enumber,id
+        from i_member
+        where companyId = #{companyId} and projectId = #{projectId}
+        <if test="year!=null and year>0">
+            and `year`=#{year}
+        </if>
+        and enumber in
+        <foreach collection="enumbers" open="(" separator="," close=")" item="enumber">
+            #{enumber}
+        </foreach>
+    </select>
+    <select id="queryIMemberByProjectIds" resultType="com.yskc.rs.entity.init.InitMemberEntity">
+        select id from i_member where projectId in
+        <foreach collection="projectIds" item="projectId" open="(" separator="," close=")">
+            #{projectId}
+        </foreach> and !isMaster
+    </select>
+    <select id="queryByProjectIdAndEnumber" resultType="com.yskc.rs.entity.init.InitMemberEntity">
+        select * from i_member where projectId = #{projectId} and enumber = #{masterENumber} and `year`=#{year}
+    </select>
+    <select id="getMemberSelect" resultType="com.yskc.rs.models.employee.EmployeeSelectModel">
+        select i.enumber,e.ename
+        from i_member as i
+        LEFT JOIN employee AS e on i.enumber=e.enumber and e.companyId = i.companyId
+        where e.companyId = #{companyId} and projectId = #{projectId} and i.year=#{year}
+        <if test="ename != null and ename != ''">
+            and (e.ename like "%"#{ename}"%" or e.enumber like "%"#{ename}"%")
+        </if>
+        limit 5
+    </select>
+    <select id="getMemberEname" resultType="com.yskc.rs.models.init.member.InitMemberModel">
+        select e.ename
+        from i_member as i
+        LEFT JOIN employee AS e on i.enumber=e.enumber and e.companyId = i.companyId
+        where i.projectId = #{projectId} and i.year=#{year}
+        order by isMaster DESC limit 20
+    </select>
+
+    <select id="getMemberEnames" resultType="com.yskc.rs.models.init.member.InitMemberModel">
+        select e.ename from i_member as i
+        LEFT JOIN employee AS e on i.enumber=e.enumber and e.companyId = i.companyId
+        where i.year=#{year} and i.projectId in
+        <foreach collection="projectIds" item="projectId" open="(" close=")" separator=",">
+            #{projectId}
+        </foreach>
+        order by isMaster DESC limit 20
+    </select>
+
+    <select id="getStaffInfoList" resultType="com.yskc.rs.models.init.member.InitMemberListModel">
+        select e.ename,im.role,re.position,rd.deptName,im.id,e.gender,
+        re.etype,c.companyName,e.birthday,e.specialities
+        from i_member im
+        left join employee e on e.enumber=im.enumber and e.companyId=im.companyId
+        left join rdEmployee re on re.enumber=im.enumber and im.companyId=re.companyId and re.year=im.year
+        left join rdDept rd on re.rdDeptId=rd.id
+        left join company c on c.id = im.companyId
+        inner join p_project p on p.id = im.projectId
+        where im.companyId = #{companyId} and im.projectId = #{projectId} and im.year=#{year} and (im.entryDate = p.beginDate OR im.entryDate is null)
+        <if test="memberIds!=null and memberIds.size()>0">
+            and im.id in
+            <foreach collection="memberIds" item="memberId" open="(" separator="," close=")">
+                #{memberId}
+            </foreach>
+        </if>
+        order by im.isMaster desc,re.etype, im.enumber desc
+        <!--        select em.ename,-->
+        <!--        case em.gender-->
+        <!--        when 2 then '男'-->
+        <!--        when 1 then '女'-->
+        <!--        else ''-->
+        <!--        end gender,-->
+        <!--        case em.eduLevel-->
+        <!--        when 0 then '无'-->
+        <!--        when 1 then '高中及以下'-->
+        <!--        when 2 then '中专'-->
+        <!--        when 3 then '大专'-->
+        <!--        when 4 then '本科'-->
+        <!--        when 5 then '硕士'-->
+        <!--        when 6 then '博士'-->
+        <!--        when 7 then '初中' end eduLevel,-->
+        <!--        em.specialities,em.title,-->
+        <!--        em.edate,em.deptName,im.role,em.position-->
+        <!--        from employee em-->
+        <!--        left join i_member im on em.enumber=im.enumber-->
+        <!--        where em.companyId = #{companyId} and im.projectId in-->
+        <!--        <foreach collection="projectIds" item="projectId" open="(" close=")" separator=",">-->
+        <!--            #{projectId}-->
+        <!--        </foreach>-->
+        -- order by im.isMaster,im.enumber desc
+    </select>
+    <select id="getExportDatas" resultType="com.yskc.rs.models.employee.ExportEmployeeModel">
+        SELECT t.rdTitle RD,e.enumber,t.isMaster
+        master,rde.etype,e.position,e.gender,e.edate,e.ename,rd.deptName FROM
+        (SELECT p.rdTitle,im.companyId,p.beginYear,im.enumber,im.isMaster
+        FROM i_member im
+        INNER JOIN p_project p ON p.id = im.projectId
+        WHERE p.companyId=#{companyId} and im.year=#{year} and p.beginYear &lt;=#{year} and p.endYear >=#{year}) AS t
+        INNER JOIN rdEmployee rde ON rde.enumber = t.enumber AND rde.companyId = t.companyId AND rde.year =#{year}
+        INNER JOIN employee e ON e.enumber = rde.enumber AND e.companyId = rde.companyId
+        Left JOIN rdDept rd on rde.rdDeptId=rd.id
+        ORDER BY t.rdTitle,t.enumber
+    </select>
+    <select id="getEnumbersByIds" resultType="com.yskc.rs.entity.init.InitMemberEntity">
+        select id,enumber from i_member where id in
+        <foreach collection="ids" open="(" separator="," close=")" item="id">
+            #{id}
+        </foreach>
+    </select>
+    <select id="getExist" resultType="com.yskc.rs.entity.init.InitMemberEntity">
+        select projectId,enumber from i_member where companyId = #{companyId} and `year`=#{year} and projectId in
+        <foreach collection="keysAndIds.ids" open="(" separator="," close=")" item="projectId">#{projectId}</foreach>
+        and enumber in
+        <foreach collection="keysAndIds.keys" open="(" separator="," close=")" item="enumber">#{enumber}</foreach>
+
+    </select>
+    <select id="getStaffsInfo" resultType="com.yskc.rs.models.init.member.InitMemberListModel">
+        select e.ename,im.role,re.position,rd.deptName,im.id
+        from i_member im
+        left join employee e on e.enumber=im.enumber and e.companyId=im.companyId
+        left join rdEmployee re on re.enumber=im.enumber and im.companyId=re.companyId and re.year=#{year}
+        left join rdDept rd on re.rdDeptId=rd.id
+        inner join p_project p on p.id = im.projectId
+        where im.companyId = #{companyId} and im.projectId = #{projectId} and (im.entryDate = p.beginDate OR im.entryDate is null)
+        <if test="year!=null and year>0">
+        and im.year=#{year}
+        </if>
+        <if test="memberIds!=null and memberIds.length>0">
+            and im.id not in
+            <foreach collection="memberIds" item="memberId" open="(" separator="," close=")">
+                #{memberId}
+            </foreach>
+        </if>
+        order by im.isMaster desc,re.etype, im.enumber desc
+    </select>
+    <select id="getAllStaff" resultType="com.yskc.rs.models.init.member.InitMemberModel">
+        select
+        e.enumber,im.id,e.ename,e.position,e.deptName,e.title,rde.etype,rde.rdDeptId,e.edate,
+        e.specialities,e.birthday,im.role,im.entryDate,im.isMaster
+        from i_member im
+        inner join p_project pp on pp.id=im.projectId
+        inner join rdEmployee as rde on im.enumber=rde.enumber and rde.year=im.year and rde.companyId=im.companyId
+        inner join employee AS e on im.companyId= e.companyId and im.enumber=e.enumber
+        where im.companyId=#{companyId} and im.projectId=#{query.projectId} and im.year=#{year}
+        <if test="query.etype != null and query.etype >= 0 ">
+            and rde.etype = #{query.etype}
+        </if>
+        <if test="query.ename != null and query.ename != '' ">
+            and e.ename like "%"#{query.ename}"%"
+        </if>
+        <if test="query.enumber != null and query.enumber != '' ">
+            and e.enumber like "%"#{query.enumber}"%"
+        </if>
+        <if test="query.role != null and query.role != '' ">
+            and im.role like "%"#{query.role}"%"
+        </if>
+        <if test="existIds!=null and existIds.size()>0">
+            and im.id not in
+            <foreach collection="existIds" item="id" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+        </if>
+    </select>
+    <select id="getInitMemberByType" resultType="com.yskc.rs.models.init.member.InitMemberModel">
+        select e.enumber,e.ename
+        from i_member im
+        inner join p_project pp on pp.id=im.projectId
+        inner join rdEmployee as rde on im.enumber=rde.enumber and rde.year=pp.beginYear and rde.companyId=im.companyId
+        inner join employee AS e on im.companyId= e.companyId and im.enumber=e.enumber
+        where im.projectId=#{projectId} and rde.etype in (1,2)
+    </select>
+    <select id="getMembers" resultType="com.yskc.rs.entity.init.InitMemberEntity">
+        select * from i_member
+        where projectId=#{projectId} and `year`=#{sourceYear}
+    </select>
+    <select id="getAddMembers" resultType="com.yskc.rs.entity.init.InitMemberEntity">
+        select i.*
+        from i_member i
+        inner join rdEmployee r on i.enumber=r.enumber and r.year=#{targetYear}
+        where i.projectId=#{projectId} and i.year=#{sourceYear} and r.companyId=#{companyId}
+    </select>
+    <select id="getAggMembers" resultType="com.yskc.rs.models.init.member.InitMemberModel">
+        select i.enumber,i.projectId,re.etype from i_member i
+        inner join rdEmployee re on re.companyId=i.companyId and re.year=i.year and re.enumber=i.enumber
+        inner join p_project p on p.id=i.projectId
+        where i.companyId=#{companyId} and i.year=#{year}
+          and i.enumber in(<foreach collection="enumbers" item="enumber" separator=",">#{enumber}</foreach>)
+          and (i.entryDate&lt;=#{monthLastDay} or i.entryDate is null)
+          and p.beginDate &lt;=#{monthLastDay} and p.endDate >=#{month}
+        order by p.rdTitle
+    </select>
+    <select id="getYears" resultType="java.lang.Integer">
+        select `year`
+        from i_member
+        where projectId=#{projectId} and `year`!=#{year}
+        group by `year`
+    </select>
+    <select id="getMasterByYear" resultType="com.yskc.rs.entity.init.InitMemberEntity">
+        select * from i_member where isMaster and projectId=#{projectId} and `year`=#{year}
+    </select>
+    <select id="getMasterNameByYear" resultType="java.lang.String">
+        select e.ename from i_member im
+        inner join employee e on e.enumber = im.enumber and e.companyId = im.companyId
+        where isMaster and im.projectId=#{projectId} and im.`year`=#{year} limit 1
+    </select>
+    <insert id="addbatch">
+        INSERT INTO
+        i_member(projectId,enumber,companyId,creatorId,createTime,lastUpdateTime,
+        lastUpdatorId,msCreatorId,msLastUpdatorId,`role`,isMaster,entryDate,`year`)
+        VALUES
+        <foreach collection="initMemberList" separator="," item="im">
+            (#{im.projectId},#{im.enumber},#{im.companyId},#{im.creatorId},#{im.createTime},#{im.lastUpdateTime},
+            #{im.lastUpdatorId},#{im.msCreatorId},#{im.msLastUpdatorId},#{im.role},#{im.isMaster},#{im.entryDate},#{im.year})
+        </foreach>
+    </insert>
+    <update id="updateInitMemberRole">
+        update i_member set role=#{role} where id in
+        <foreach collection="ids" separator="," open="(" close=")" item="id">
+            #{id}
+        </foreach>
+    </update>
+    <update id="cleanProjectMaster">
+        update i_member set isMaster = false,lastUpdateTime = #{now},lastUpdatorId = #{userId},msLastUpdatorId = #{msUserId}
+         where projectId = #{projectId} and isMaster = true
+         <if test="year!=null and year>0">
+         and `year`=#{year}
+         </if>
+    </update>
+    <update id="updateProjectMaster">
+        update i_member set isMaster = true,lastUpdateTime = #{now},lastUpdatorId = #{userId},msLastUpdatorId = #{msUserId}
+         where id = #{id} and `year`=#{year}
+    </update>
+    <update id="updateEntryDate">
+        update i_member set lastUpdateTime = #{now},lastUpdatorId = #{userId},msLastUpdatorId = #{msUserId},
+        entryDate = #{entryDate} where id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+    <update id="updateBatch">
+        update i_member
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="lastUpdateTime =case" suffix="end,">
+                <foreach collection="list" item="l" index="index">
+                    <if test="l.lastUpdateTime!=null">
+                        when id=#{l.id} then #{l.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdatorId =case" suffix="end,">
+                <foreach collection="list" item="l" index="index">
+                    <if test="l.lastUpdatorId!=null">
+                        when id=#{l.id} then #{l.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="msLastUpdatorId =case" suffix="end,">
+                <foreach collection="list" item="l" index="index">
+                    <if test="l.msLastUpdatorId!=null">
+                        when id=#{l.id} then #{l.msLastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="role =case" suffix="end,">
+                <foreach collection="list" item="l" index="index">
+                    <if test="l.role!=null">
+                        when id=#{l.id} then #{l.role}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="entryDate =case" suffix="end,">
+                <foreach collection="list" item="l" index="index">
+                    <if test="l.entryDate!=null">
+                        when id=#{l.id} then #{l.entryDate}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="list" item="l" separator="or">
+            id = #{l.id}
+        </foreach>
+    </update>
+    <update id="updateMasters">
+         update i_member set isMaster=true,lastUpdateTime=#{date},lastUpdatorId=#{userId},msLastUpdatorId=#{msUserId}
+        where id in (<foreach collection="updateIds" item="id" separator=",">#{id}</foreach>)
+    </update>
+    <update id="cleanMasters">
+        update i_member set isMaster=false,lastUpdateTime=#{date},lastUpdatorId=#{userId},msLastUpdatorId=#{msUserId}
+        where `year`=#{year} and isMaster and  projectId in (<foreach collection="projectIds" item="projectId" separator=",">#{projectId}</foreach>)
+    </update>
+    <select id="getMemberByProAndYear" resultType="java.util.Map">
+        SELECT projectId, count(id) as members FROM `i_member` where projectId in
+        <foreach collection="projectIds" item="projectId" open="(" separator="," close=")">
+            #{projectId}
+        </foreach>
+        and `year` = #{year}
+        group by projectId;
+    </select>
+    <select id="getExistYear" resultType="java.lang.Integer">
+        select distinct `year` from i_member where projectId=#{projectId} and `year`>=#{beginYear} and `year` &lt; #{endYear}
+        union
+        select distinct `year` from i_equipment where projectId=#{projectId} and `year`>=#{beginYear} and `year`&lt;  #{endYear}
+        limit 1
+
+    </select>
+    <select id="getByEtypes" resultType="com.yskc.rs.models.init.member.ProjectEmployeeModel">
+        select im.projectId,im.enumber from i_member im
+        inner join rdEmployee re on re.companyId=im.companyId and re.year=im.year and re.enumber=im.enumber
+        where im.companyId=#{companyId} and im.year=#{year} and re.etype=#{etype} and (im.entryDate is null or im.entryDate &lt;=#{month} )
+    </select>
+</mapper>

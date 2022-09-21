@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.xxl.job.executor.dao.ms.PatentDataDao">
+
+    <insert id="insertOrUpdate">
+        insert into patentData
+        (patentNo,patentName,inventor,applyName,applyDateTime,mainType,mainTypeNo,caseStatus,address,
+        publicNo,publicDate,createTime,lastUpdateTime,queryWord,anx)
+        values
+        <foreach collection="list" separator="," item="l">
+            (#{l.patentNo},#{l.patentName},#{l.inventor},#{l.applyName},#{l.applyDateTime},#{l.mainType},#{l.mainTypeNo},
+            #{l.caseStatus},#{l.address},#{l.publicNo},#{l.publicDate},#{l.createTime},#{l.lastUpdateTime},#{l.queryWord},
+            #{l.anx})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        <if test="updateCaseStatus">
+            caseStatus = values(caseStatus),
+        </if>
+        <if test="updateAddress">
+            address = values(address),
+        </if>
+        lastUpdateTime = values(lastUpdateTime),
+        publicDate = values(publicDate),
+        publicNo = values(publicNo),
+        mainTypeNo = values(mainTypeNo),
+        anx= values(anx)
+    </insert>
+    <select id="getMaxPublicDate" resultType="java.util.Date">
+        select max(publicDate) from patentData where queryWord = #{queryWord}
+    </select>
+</mapper>

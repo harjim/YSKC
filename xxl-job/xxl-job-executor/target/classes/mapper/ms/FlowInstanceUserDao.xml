@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xxl.job.executor.dao.ms.FlowInstanceUserDao">
+    <insert id="addBatch">
+        insert into flowInstance_user (instanceId,userId,nodeId,creatorId,createTime,status)
+        values
+        <foreach collection="list" separator="," item="l">
+            (#{l.instanceId},#{l.userId},#{l.nodeId},#{l.creatorId},#{l.createTime},false)
+        </foreach>
+    </insert>
+
+    <delete id="deleteInstance">
+        delete from flowInstance_user where instanceId in
+        <foreach collection="instanceIds" open="(" separator="," close=")" item="instanceId">
+            #{instanceId}
+        </foreach>
+    </delete>
+    <select id="getUsers" resultType="com.xxl.job.executor.entity.ms.FlowInstanceUser">
+        select instanceId,nodeId,userId from flowInstance_user where
+        <foreach collection="list" separator=" or " item="l">
+            (instanceId = #{l.id} and nodeId = #{l.curNodeId})
+        </foreach>
+    </select>
+    <select id="getExitInstanceNodes"
+            resultType="com.xxl.job.executor.entity.ms.FlowInstanceUser">
+        select instanceId,nodeId from flowInstance_user where
+        <foreach collection="list" separator=" or " item="l">
+            (instanceId = #{l.id} and nodeId = #{l.curNodeId})
+        </foreach>
+        group by instanceId,nodeId
+    </select>
+</mapper>

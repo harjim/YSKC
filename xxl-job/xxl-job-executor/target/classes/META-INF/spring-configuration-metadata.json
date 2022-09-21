@@ -1,0 +1,52 @@
+{
+  "groups": [
+    {
+      "name": "h3",
+      "type": "com.xxl.job.executor.core.config.H3Config",
+      "sourceType": "com.xxl.job.executor.core.config.H3Config"
+    },
+    {
+      "name": "wx",
+      "type": "com.xxl.job.executor.core.config.WeChatConfig",
+      "sourceType": "com.xxl.job.executor.core.config.WeChatConfig"
+    }
+  ],
+  "properties": [
+    {
+      "name": "h3.engine-code",
+      "type": "java.lang.String",
+      "sourceType": "com.xxl.job.executor.core.config.H3Config"
+    },
+    {
+      "name": "h3.engine-secret",
+      "type": "java.lang.String",
+      "sourceType": "com.xxl.job.executor.core.config.H3Config"
+    },
+    {
+      "name": "h3.spilt-count",
+      "type": "java.lang.Integer",
+      "sourceType": "com.xxl.job.executor.core.config.H3Config"
+    },
+    {
+      "name": "h3.url",
+      "type": "java.lang.String",
+      "sourceType": "com.xxl.job.executor.core.config.H3Config"
+    },
+    {
+      "name": "wx.appid",
+      "type": "java.lang.String",
+      "sourceType": "com.xxl.job.executor.core.config.WeChatConfig"
+    },
+    {
+      "name": "wx.msg-template-id",
+      "type": "java.lang.String",
+      "sourceType": "com.xxl.job.executor.core.config.WeChatConfig"
+    },
+    {
+      "name": "wx.secret",
+      "type": "java.lang.String",
+      "sourceType": "com.xxl.job.executor.core.config.WeChatConfig"
+    }
+  ],
+  "hints": []
+}

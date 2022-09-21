@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.tech.TechProjectDao">
+    <select id="getTechProjects" resultType="com.yskc.rs.models.tech.TechProjectModel">
+        select
+        id,pyear,pname,reportType,aidType,masterName,masterTel,linkName,linkTel,applyDate,remark,endDate,beginDate,
+        productId,directionId,sourceProjectId
+        from
+        t_project
+        where companyId = #{companyId}
+        <if test="query.pyear != null and query.pyear > 0">
+            and pyear = #{query.pyear}
+        </if>
+        <if test="query.pname != null and query.pname != ''">
+            and pname like "%"#{query.pname}"%"
+        </if>
+        order by pyear desc,pname
+    </select>
+</mapper>

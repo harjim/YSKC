@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.project.ProjectYearFeeDao">
+    <insert id="insertOrUpdate">
+        insert into p_year_fee (companyId,`year`,k46,k48,k49,rdRatio,creatorId,
+                                lastUpdatorId,createTime,lastUpdateTime,msCreatorId,msLastUpdatorId)
+        values (#{e.companyId},#{e.year},#{e.k46},#{e.k48},#{e.k49},#{e.rdRatio},#{e.creatorId},
+                #{e.lastUpdatorId},#{e.createTime},#{e.lastUpdateTime},#{e.msCreatorId},#{e.msLastUpdatorId})
+        ON DUPLICATE KEY UPDATE
+         k46=values(k46),
+         k48=values(k48),
+         k49=values(k49),
+         rdRatio=values(rdRatio),
+         lastUpdatorId=values(lastUpdatorId),
+         lastUpdateTime=values(lastUpdateTime),
+         msLastUpdatorId=values(msLastUpdatorId)
+    </insert>
+    <select id="getYearFee" resultType="com.yskc.rs.models.projectyearfee.ProjectYearFeeInfoModel">
+        select k46,k48,k49,rdRatio from p_year_fee
+        where companyId=#{companyId} and `year`=#{year} limit 1
+    </select>
+</mapper>

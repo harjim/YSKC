@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.tech.TechDeclarationDao">
+    <insert id="addBatch"  parameterType="java.util.List"  useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO  `t_declaration`
+        (
+        `creatorId`,
+        `createTime`,
+        `lastUpdatorId`,
+        `lastUpdateTime`,
+        `projectId`,
+        `companyId`,
+        `seq`,
+        `key`,
+        `parentKey`,
+        `title`,
+        `content`
+        )
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.creatorId},
+            #{item.createTime},
+            #{item.lastUpdatorId},
+            #{item.lastUpdateTime},
+            #{item.projectId},
+            #{item.companyId},
+            #{item.seq},
+            #{item.key},
+            #{item.parentKey},
+            #{item.title},
+            #{item.content}
+            )
+        </foreach>
+    </insert>
+    <update id="updateList">
+        update t_declaration
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="lastUpdatorId =case" suffix="end,">
+                <foreach collection="updateList" item="item" index="index">
+                    <if test="item.lastUpdatorId!=null">
+                        when id=#{item.id} then #{item.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdateTime =case" suffix="end,">
+                <foreach collection="updateList" item="item" index="index">
+                    <if test="item.lastUpdateTime!=null">
+                        when id=#{item.id} then #{item.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="content =case" suffix="end,">
+                <foreach collection="updateList" item="item" index="index">
+                    <if test="item.content!=null">
+                        when id=#{item.id} then #{item.content}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where id in
+        <foreach collection="updateList" item="item" index="index"
+                 separator="," open="(" close=")">
+            #{item.id}
+        </foreach>
+    </update>
+    <select id="getDeclarationInfoList" resultType="com.yskc.rs.models.tech.DeclarationInfo">
+        select * from t_declaration where companyId=#{companyId} and projectId=#{projectId}
+    </select>
+
+
+</mapper>

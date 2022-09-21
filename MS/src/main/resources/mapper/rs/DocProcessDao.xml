@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.rs.DocProcessDao">
+  <select id="queryDocProcess" resultType="com.yskc.ms.entity.rs.models.DocProcessModel">
+     SELECT * from docProcess
+      <where>
+          <if test="processName != null and processName.length()>0">
+              processName like "%"#{processName}"%"
+          </if>
+      </where>
+  </select>
+
+
+    <select id="queryListModels" resultType="com.yskc.ms.entity.rs.models.DocProcessTemplateListModel">
+       SELECT
+            p.id,
+            p.seq,
+            p.processId,
+	        p.templateId,
+            t.docName,
+            t.version,
+            t.msCreatorId,
+            t.createTime,
+            t.lastUpdateTime
+        FROM
+            docProcessTemplate p
+        LEFT JOIN docProcess d ON p.processId = d.id
+        LEFT JOIN docTemplate t ON p.templateId = t.id
+        WHERE
+            d.id = #{docProcessId}
+    </select>
+
+    <select id="getDataById" resultType="com.yskc.ms.entity.rs.models.DocProcessTemplateListModel">
+         SELECT
+            p.id,
+            p.seq,
+            t.docName,
+            t.version,
+            t.msCreatorId,
+            t.createTime,
+            t.lastUpdateTime
+        FROM
+            docProcessTemplate p
+        LEFT JOIN docProcess d ON p.processId = d.id
+        LEFT JOIN docTemplate t ON p.templateId = t.id
+        where d.id = #{id}
+    </select>
+
+</mapper>

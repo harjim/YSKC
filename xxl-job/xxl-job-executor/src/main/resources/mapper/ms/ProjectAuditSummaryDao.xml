@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.xxl.job.executor.dao.ms.ProjectAuditSummaryDao">
+
+    <insert id="insertOrUpdate">
+        INSERT INTO project_audit_summary
+        (projectId,doneCnt,ongoingCnt,docDoneCnt,docOngoingCnt,doneTotal,ongoingTotal,createTime,lastUpdateTime)
+        VALUES
+        <foreach collection="list" separator="," item="l">
+            (#{l.projectId},#{l.doneCnt},#{l.ongoingCnt},#{l.docDoneCnt},#{l.docOngoingCnt},#{l.doneTotal},
+            #{l.ongoingTotal},#{l.createTime},#{l.lastUpdateTime})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        <if test="isDoc">
+            docDoneCnt = values(docDoneCnt),
+            docOngoingCnt = values(docOngoingCnt)
+        </if>
+        <if test="!isDoc">
+            doneCnt = values(doneCnt),
+            ongoingCnt = values(ongoingCnt)
+        </if>
+    </insert>
+    <update id="updateTotal">
+        update project_audit_summary
+        set doneTotal = doneCnt+docDoneCnt,ongoingTotal= ongoingCnt+docOngoingCnt,lastUpdateTime = #{now}
+        where projectId in (<foreach collection="projectIds" separator="," item="pId">#{pId}</foreach>)
+    </update>
+</mapper>

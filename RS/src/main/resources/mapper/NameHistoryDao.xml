@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.company.NameHistoryDao">
+    <select id="getNameHistory" resultType="com.yskc.rs.models.company.CompanyNameHistoryModel">
+        SELECT id, companyName, startDate, remark, createTime
+        FROM c_name_history
+        WHERE companyId = #{companyId}
+        ORDER BY startDate asc
+    </select>
+    <select id="selectNameIsFinally" resultType="com.yskc.rs.entity.company.NameHistoryEntity">
+        SELECT id, companyId, startDate, remark, companyName
+        FROM c_name_history
+        WHERE companyId = #{companyId}
+        ORDER BY startDate Desc
+        LIMIT 1
+    </select>
+    <select id="selectCountByIdAndSDate" resultType="java.lang.Integer">
+        SELECT count(*) FROM c_name_history WHERE (companyName = #{companyName} OR (startDate = #{startDate} AND companyId = #{companyId})) AND id != #{nameId}
+    </select>
+</mapper>

@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.ServiceApplyDao">
+    <select id="getApplyInfo" resultType="com.yskc.ms.models.serviceApply.ServiceApplyModel">
+        select sa.id,sa.serviceNo,sam.userId ownerId,yu.realName ownerName,yd.deptName,sa.begin,sa.end,sa.remark,sa.customers,ff.instanceId,
+               saa.techManagerId,saa.techDirectorId,saa.finaManagerId,saa.finaDirectorId,sa.createTime,sa.lastUpdateTime
+        from service_apply sa
+        left join service_apply_member sam on sam.serviceApplyId = sa.id and sam.mtype = 3
+        left join ys_user yu on sam.userId = yu.id
+        left join user_dept ud on sam.userId = ud.userId
+        left join ys_dept yd on yd.id = ud.depId
+        left join service_apply_auditor saa on sa.id = saa.serviceApplyId
+        left join flowInstance_form ff on ff.formId = sa.id and ff.moduleId = 14
+        where 1=1
+        <if test="serviceId!=null and serviceId!=0">
+            and sa.id = #{serviceId}
+        </if>
+        <if test="serviceNo!=null and serviceNo!=''">
+            and sa.serviceNo = #{serviceNo}
+        </if>
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.selectDept">
+            <property name="table" value="yd"/>
+            <property name="userDept" value="ud"/>
+        </include>
+    </select>
+
+    <select id="getList" resultType="com.yskc.ms.models.serviceApply.ServiceApplyModel">
+        select sa.id,sa.serviceNo,sam.userId ownerId,yu.realName ownerName,yd.deptName,sa.begin,sa.end,sa.remark,sa.customers,
+               saa.techManagerId,saa.techDirectorId,saa.finaManagerId,saa.finaDirectorId,ff.instanceId,
+        case when ff.status is null then 5 else ff.status end as status,
+               f.auditUsers,sa.createTime,sa.lastUpdateTime
+        from service_apply sa
+        left join service_apply_member sam on sam.serviceApplyId = sa.id and sam.mtype = 3
+        left join ys_user yu on sam.userId = yu.id
+        left join user_dept ud on sam.userId = ud.userId
+        left join ys_dept yd on yd.id = ud.depId
+        left join service_apply_auditor saa on sa.id = saa.serviceApplyId
+        left join flowInstance_form ff on ff.formId = sa.id and ff.moduleId = #{moduleId}
+        left join flowInstance f on ff.instanceId = f.id
+        where 1=1
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.byMember">
+            <property name="tableAlias" value="sa"/>
+            <property name="colId" value="serviceApplyId"/>
+            <property name="userTable" value="service_apply_member"/>
+            <property name="memberId" value="userId"/>
+        </include>
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.selectDept">
+            <property name="table" value="yd"/>
+            <property name="userDept" value="ud"/>
+        </include>
+        <if test="query.companyName!=null and query.companyName!=''">
+            and sa.customers like concat("%",#{query.companyName},"%")
+        </if>
+        <if test="query.ownerId!=null and query.ownerId!=0">
+            and sam.userId = #{query.ownerId}
+        </if>
+        <if test="query.deptId!=null and query.deptId!=0">
+            and yd.fullPath like CONCAT('%/', #{query.deptId,jdbcType=VARCHAR}, '/%')
+        </if>
+        <if test="query.status!=null and query.status!=5">
+            and ff.status = #{query.status}
+        </if>
+        <if test="query.status!=null and query.status == 5">
+            and ff.status is null
+        </if>
+        <if test="query.finaId!=null and query.finaId!=0">
+            and sa.id in (select serviceApplyId from service_apply_member sam
+            where mType=2 and sam.userId = #{query.finaId})
+        </if>
+        <if test="query.techId!=null and query.techId!=0">
+            and sa.id in (select serviceApplyId from service_apply_member sam
+            where mType=1 and sam.userId = #{query.techId})
+        </if>
+        <if test="query.serviceNo!=null and query.serviceNo!=''">
+            and sa.serviceNo like concat("%",#{query.serviceNo},"%")
+        </if>
+        <if test="query.auditUsers!=null and query.auditUsers!=''">
+            and f.auditUsers like concat("%",#{query.auditUsers},"%")
+        </if>
+    </select>
+    <select id="getMobileList" resultType="com.yskc.ms.models.serviceApply.ServiceApplyModel">
+        select sa.id,sa.serviceNo,sam.userId ownerId,yu.realName ownerName,yd.deptName,sa.begin,sa.end,sa.remark,sa.customers,
+               saa.techManagerId,saa.techDirectorId,saa.finaManagerId,saa.finaDirectorId,ff.instanceId,
+               case when ff.status is null then 5 else ff.status end as status,
+               f.auditUsers,sa.createTime,sa.lastUpdateTime
+        from service_apply sa
+        left join service_apply_member sam on sam.serviceApplyId = sa.id and sam.mtype = 3
+        left join ys_user yu on sam.userId = yu.id
+        left join user_dept ud on sam.userId = ud.userId
+         left join ys_dept yd on yd.id = ud.depId
+         left join service_apply_auditor saa on sa.id = saa.serviceApplyId
+         left join flowInstance_form ff on ff.formId = sa.id and ff.moduleId = #{moduleId}
+         left join flowInstance f on ff.instanceId = f.id
+        where 1=1
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.byMember">
+            <property name="tableAlias" value="sa"/>
+            <property name="colId" value="serviceApplyId"/>
+            <property name="userTable" value="service_apply_member"/>
+            <property name="memberId" value="userId"/>
+        </include>
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.selectDept">
+            <property name="table" value="yd"/>
+            <property name="userDept" value="ud"/>
+        </include>
+        <if test="query.companyName!=null and query.companyName!=''">
+            and sa.customers like concat("%",#{query.companyName},"%")
+        </if>
+    </select>
+    <select id="getApplyToday" resultType="java.lang.String">
+        select max(serviceNo)
+        from service_apply
+        where createTime &lt; #{tomorrow} and createTime >= #{today}
+    </select>
+    <select id="getNodeUser" resultType="com.yskc.ms.entity.ms.FlowInstanceUser">
+        select fu.nodeId,fu.id
+        from flowInstance f
+         inner join flowInstance_curNode fn on fn.instanceId = f.id
+         inner join flowInstance_user fu on fn.instanceId=fu.instanceId and fn.curNodeId=fu.nodeId
+        where f.id = #{instanceId} and fu.userId = #{userId} and fu.status is null
+    </select>
+
+</mapper>

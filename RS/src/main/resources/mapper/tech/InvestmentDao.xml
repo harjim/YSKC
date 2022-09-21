@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yskc.rs.dao.tech.InvestmentDao">
+
+
+    <select id="getList" resultType="com.yskc.rs.models.tech.InvestmentModel">
+        select id, beianId,`type`,ename,entryDate,`order`,emodal,usagePower,loadFactor,runRate,workHour
+        from t_investment
+        where companyId=#{companyId} and beianId=#{query.beianId}
+        <if test="query.type!=null and query.type>0">
+           and `type`=#{query.type}
+        </if>
+        <if test="query.ename!=null and query.ename!=''">
+            and ename like "%"#{query.ename}"%"
+        </if>
+        <if test="query.entryDate!=null">
+            and entryDate=#{query.entryDate}
+        </if>
+    </select>
+    <select id="getByBeianId" resultType="com.yskc.rs.models.tech.CountInvoiceModel">
+        SELECT tid.id,taxAmount,ti.type,tid.excludeTaxAmount amount
+        from t_invoice_detail tid
+        inner join t_investment ti on ti.id=tid.investmentId
+        where ti.beianId=#{beianId}
+    </select>
+    <select id="getPayByBeianId" resultType="com.yskc.rs.models.tech.CountInvoiceModel">
+        SELECT tid.id,amountTax taxAmount,ti.type,amount
+        from t_payment tid
+                 inner join t_investment ti on ti.id=tid.investmentId
+        where ti.beianId=#{beianId}
+    </select>
+    <select id="getInvoiceFroms" resultType="java.lang.String">
+        select distinct ti.invoiceFrom
+        from t_invoice ti
+        inner join t_invoice_detail tid on tid.invoiceId=ti.id
+        inner join t_investment tiv on tiv.id=tid.investmentId
+        inner join t_beian tb on tb.id=tiv.beianId
+        where tb.id=#{beianId} and ti.invoiceFrom like "%"#{invoiceFrom}"%"
+        limit 10
+    </select>
+    <select id="getSignTargets" resultType="java.lang.String">
+        select distinct tc.signTarget
+        from t_contract tc
+        inner join t_contract_detail tcd on tcd.contractId=tc.id
+        inner join t_investment tiv on tiv.id=tcd.investmentId
+        inner join t_beian tb on tb.id=tiv.beianId
+        where tb.id=#{beianId} and tc.signTarget like "%"#{signTarget}"%"
+        limit 10
+    </select>
+    <select id="getPayees" resultType="java.lang.String">
+        select distinct tbr.payee from t_payment tbr
+        inner join t_investment tiv on tiv.id=tbr.investmentId
+        inner join t_beian tb on tb.id=tiv.beianId
+        where tb.id=#{beianId} and tbr.payee like "%"#{payee}"%"
+        limit 10
+    </select>
+    <select id="getCompanyName" resultType="java.lang.String">
+        (select invoiceFrom from t_invoice WHERE companyId = #{companyId} and invoiceFrom like "%"#{companyName}"%" ORDER BY createTime DESC limit 5) UNION
+        (select signTarget from t_contract WHERE companyId = #{companyId} and signTarget like "%"#{companyName}"%" ORDER BY createTime DESC limit 5) UNION
+        (select payee from t_payment WHERE companyId = #{companyId} and payee like "%"#{companyName}"%" ORDER BY createTime DESC limit 5)
+    </select>
+    <select id="getDeviceName" resultType="java.lang.String">
+        (select ename from t_investment WHERE companyId = #{companyId} and ename like "%"#{deviceName}"%" ORDER BY createTime DESC limit 5) UNION
+        (select ename from t_invoice_detail WHERE companyId = #{companyId} and ename like "%"#{deviceName}"%" ORDER BY createTime DESC limit 5) UNION
+        (select ename from t_contract_detail WHERE companyId = #{companyId} and ename like "%"#{deviceName}"%" ORDER BY createTime DESC limit 5) UNION
+        (select ename from t_nameplate WHERE companyId = #{companyId} and ename like "%"#{deviceName}"%" ORDER BY createTime DESC limit 5)
+    </select>
+</mapper>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.ContractMemberDao">
+    <insert id="addMemberList">
+        insert into contract_member (contractId,mtype,userId,ratio,remark,`creatorId`, `createTime`, `lastUpdateTime`, `lastUpdatorId`)
+        values <foreach collection="list" item="item" separator=",">
+            (#{item.contractId},#{item.mtype},#{item.userId},#{item.ratio},#{item.remark},
+             #{item.creatorId},#{item.createTime},#{item.lastUpdateTime},#{item.lastUpdatorId})
+        </foreach>
+    </insert>
+    <update id="editMemberList">
+        <foreach collection="list" separator=";" item="item">
+            update contract_member set
+            userId = #{item.userId},ratio = #{item.ratio},remark = #{item.remark}
+             ,lastUpdateTime=#{item.lastUpdateTime},lastUpdatorId=#{item.lastUpdatorId}
+            where id = #{item.id}
+        </foreach>
+    </update>
+    <delete id="delByIds">
+        delete from contract_member
+        where contractId = #{contractId}
+        <if test="ids!=null and ids.size>0">
+            and (id not in (<foreach collection="ids" separator="," item="item">
+            #{item}
+        </foreach>))
+        </if>
+    </delete>
+    <delete id="delByContractIds">
+        delete from contract_member
+        where contractId in (<foreach collection="ids" separator="," item="item">
+            #{item}
+        </foreach>)
+    </delete>
+
+    <select id="getMemberList" resultType="com.yskc.ms.models.contract.ContractMemberModel">
+        select cm.id,cm.contractId,cm.userId,yu.realName userName,cm.ratio,cm.remark,yd.deptName,yd.id deptId
+        from contract_member cm
+        left join ys_user yu on cm.userId = yu.id
+        left join user_dept ud on yu.id = ud.userId
+        left join ys_dept yd on ud.depId = yd.id
+        where cm.contractId in (<foreach collection="contractIds" item="item" separator=",">
+            #{item}
+        </foreach>)
+        and cm.mtype = 5
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.selectDept">
+            <property name="table" value="yd"/>
+            <property name="userDept" value="ud"/>
+        </include>
+    </select>
+</mapper>

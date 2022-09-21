@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yskc.rs.dao.project.ProjectYieldConfigDao">
+    <insert id="addBatch">
+        INSERT INTO p_yield_config (creatorId,lastUpdatorId,createTime,lastUpdateTime,msCreatorId,msLastUpdatorId,
+        deptName,projectId,`month`,totalYield,rdYield,companyId,endTime,planYield,startTime,trialDate,unit,
+        trialProduct,`source`,testEndTime,testHour,testStartTime,totalHour,rdHour,trialHour)
+        VALUES
+        <foreach collection="list" separator="," item="l">
+            (#{l.creatorId},#{l.lastUpdatorId},#{l.createTime},#{l.lastUpdateTime},#{l.msCreatorId},#{l.msLastUpdatorId},
+            #{l.deptName},#{l.projectId},#{l.month},#{l.totalYield},#{l.rdYield},#{l.companyId},#{l.endTime},#{l.planYield},
+            #{l.startTime},#{l.trialDate},#{l.unit},#{l.trialProduct},#{l.source},#{l.testEndTime},#{l.testHour},
+            #{l.testStartTime},#{l.totalHour},#{l.rdHour},#{l.trialHour})
+        </foreach>
+    </insert>
+    <update id="updateBatch">
+        update p_yield_config
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix=" lastUpdatorId =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.lastUpdatorId != null">
+                        when id = #{l.id} then #{l.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" lastUpdateTime =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.lastUpdateTime != null">
+                        when id = #{l.id} then #{l.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" msLastUpdatorId =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.msLastUpdatorId != null">
+                        when id = #{l.id} then #{l.msLastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" rdYield =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.rdYield != null">
+                        when id = #{l.id} then #{l.rdYield}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" totalYield =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.totalYield != null">
+                        when id = #{l.id} then #{l.totalYield}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" endTime =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    when id = #{l.id} then #{l.endTime}
+                </foreach>
+            </trim>
+            <trim prefix=" planYield =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.planYield != null">
+                        when id = #{l.id} then #{l.planYield}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" startTime =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    when id = #{l.id} then #{l.startTime}
+                </foreach>
+            </trim>
+            <trim prefix=" unit =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.unit != null">
+                        when id = #{l.id} then #{l.unit}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" trialProduct =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.trialProduct != null">
+                        when id = #{l.id} then #{l.trialProduct}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        WHERE
+        <foreach collection="list" item="l" separator="or">
+            id = #{l.id}
+        </foreach>
+    </update>
+    <delete id="deleteOldTrial">
+        delete from p_yield_config where companyId=#{companyId} and projectId=#{projectId} and `month`=#{month} and `source`=#{source}
+    </delete>
+
+    <select id="getList" resultType="com.yskc.rs.models.projectyieldconfig.ProjectYieldConfigModel">
+        select id,
+               deptName,
+               totalYield,
+               rdYield,
+               trialDate,
+               unit,
+               planYield,
+               startTime,
+               endTime,
+               trialProduct
+        from p_yield_config
+        where projectId = #{query.projectId}
+          and `month` = #{query.month}
+        order by trialDate ASC
+    </select>
+    <select id="getTrialDate" resultType="java.util.Date">
+        select DISTINCT (trialDate) from p_yield_config
+        where projectId = #{query.projectId}
+          and `month` = #{query.month}
+        order by trialDate ASC
+    </select>
+    <select id="getRepeat" resultType="com.yskc.rs.entity.project.ProjectYieldConfigEntity">
+        select id
+        from p_yield_config
+        where projectId = #{config.projectId}
+          and deptName = #{config.deptName}
+          and trialDate = #{config.trialDate}
+        and startTime = #{config.startTime}
+        limit 1
+    </select>
+    <select id="getRepeatTime" resultType="com.yskc.rs.entity.project.ProjectYieldConfigEntity">
+        select py.id,py.startTime,py.endTime,py.testEndTime,py.testStartTime,p.rdTitle,py.trialDate
+        from p_yield_config py
+        left join p_project p on py.projectId = p.id
+        where projectId = #{config.projectId}
+          and py.deptName = #{config.deptName}
+          and trialDate = #{config.trialDate}
+        <if test="config.id!=null and config.id!=0">
+            and py.id != #{config.id}
+        </if>
+        and ((#{config.startTime} &lt; py.endTime and #{config.startTime}>= py.startTime) or
+        (#{config.endTime} &lt;= py.endTime and #{config.endTime}> py.startTime) or
+        (#{config.testStartTime} &lt; py.endTime and #{config.testStartTime}>= py.startTime) or
+        (#{config.testEndTime} &lt;= py.endTime and #{config.testEndTime}> py.startTime) or
+        (#{config.startTime} &lt; py.testEndTime and #{config.startTime}>= py.testStartTime) or
+        (#{config.endTime} &lt;= py.testEndTime and #{config.endTime}> py.testStartTime) or
+        (#{config.testStartTime} &lt; py.testEndTime and #{config.testStartTime}>= py.testStartTime) or
+        (#{config.testEndTime} &lt;= py.testEndTime and #{config.testEndTime}> py.testStartTime))
+        limit 1
+    </select>
+    <select id="getReport" resultType="com.yskc.rs.entity.project.ProjectYieldConfigEntity">
+        select py.id,p.rdTitle,py.deptName,py.trialDate,py.startTime,py.endTime,py.testEndTime,py.testStartTime
+        from p_yield_config py
+        left join p_project p on py.projectId = p.id
+        where <foreach collection="configs" item="config" separator="or">
+        (py.projectId = #{config.projectId}
+        and py.deptName = #{config.deptName}
+        and py.trialDate = #{config.trialDate}
+        <if test="config.id!=null and config.id!=0">
+            and py.id != #{config.id}
+        </if>
+        and ((#{config.startTime} &lt; py.endTime and #{config.startTime}>= py.startTime) or
+        (#{config.endTime} &lt;= py.endTime and #{config.endTime}> py.startTime) or
+        (#{config.testStartTime} &lt; py.endTime and #{config.testStartTime}>= py.startTime) or
+        (#{config.testEndTime} &lt;= py.endTime and #{config.testEndTime}> py.startTime) or
+        (#{config.startTime} &lt; py.testEndTime and #{config.startTime}>= py.testStartTime) or
+        (#{config.endTime} &lt;= py.testEndTime and #{config.endTime}> py.testStartTime) or
+        (#{config.testStartTime} &lt; py.testEndTime and #{config.testStartTime}>= py.testStartTime) or
+        (#{config.testEndTime} &lt;= py.testEndTime and #{config.testEndTime}> py.testStartTime)))
+    </foreach>
+        limit 1
+    </select>
+    <select id="getUsedCount" resultType="java.lang.Integer">
+        select count(*)
+        from p_docFile_trial
+        where trialId in
+            <foreach collection="ids" open="(" close=")" separator="," item="id">
+                #{id}
+            </foreach>
+    </select>
+
+    <select id="queryPYieldConfigList" resultType="com.yskc.rs.models.projectyieldconfig.ProjectYieldConfigModel"
+            parameterType="com.yskc.rs.models.projectyieldconfig.QueryYieldConfigParams">
+        SELECT pyc.id,pyc.deptName,pyc.month,pyc.totalYield,
+        pyc.rdYield,pyc.endTime,pyc.planYield,pyc.startTime,pyc.testEndTime,
+        pyc.testHour,pyc.testStartTime,pyc.totalHour,pyc.rdHour,pyc.trialHour,
+        pyc.trialDate,pyc.unit,pp.rdTitle,pp.pname,pyc.projectId,pyc.trialProduct
+        from p_yield_config pyc
+        inner join p_project pp on pyc.companyId=pp.companyId and pyc.projectId = pp.id
+        WHERE pp.companyId=#{companyId} and pyc.month >=#{beginMonth} and pyc.month &lt;=#{endMonth}
+        <if test="param.projectId != null">
+            AND pyc.projectId = #{param.projectId}
+        </if>
+        <if test="param.deptName != null">
+            AND pyc.deptName = #{param.deptName}
+        </if>
+        <if test="param.month != null">
+            AND pyc.month = #{param.month}
+        </if>
+        <if test="param.trialDate != null">
+            AND pyc.trialDate = #{param.trialDate}
+        </if>
+    </select>
+
+    <select id="findByBean" resultType="com.yskc.rs.entity.project.ProjectYieldConfigEntity" parameterType="com.yskc.rs.entity.project.ProjectYieldConfigEntity">
+        select pyc.id,pyc.projectId,pyc.trialDate,pyc.deptName from p_yield_config pyc WHERE
+        <foreach collection="queryList" separator="or" item="bean">
+        (pyc.projectId = #{bean.projectId}
+        AND pyc.deptName = #{bean.deptName}
+        AND pyc.trialDate = #{bean.trialDate})
+        </foreach>
+    </select>
+
+    <select id="getDate" resultType="date">
+        select distinct trialDate from p_yield_config
+        where
+        projectId = #{projectId}
+        and companyId = #{companyId}
+        and month = #{month}
+        order by trialDate asc
+    </select>
+    <select id="getInfos" resultType="com.yskc.rs.models.projectyieldconfig.ProjectYieldConfigInfoModel">
+        select projectId,trialDate,startTime,endTime,testStartTime,testEndTime,deptName
+        <if test="aggType==0">,trialHour,totalHour total,rdHour agg</if>
+        <if test="aggType==1">,totalYield total,rdYield agg</if>
+        from p_yield_config
+        where companyId=#{companyId} and `month`=#{month} order by projectId,trialDate
+    </select>
+    <update id="editSelected">
+        update p_yield_config set selected=#{status},lastUpdateTime=#{entity.lastUpdateTime},msLastUpdatorId=#{entity.msLastUpdatorId},
+            lastUpdatorId=#{entity.lastUpdatorId} where id in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </update>
+
+</mapper>

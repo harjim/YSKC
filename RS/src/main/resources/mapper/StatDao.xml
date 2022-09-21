@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.StatDao">
+    <select id="getProjectStat" resultType="com.yskc.rs.models.StatInfo">
+        select p.beginYear as `year`,sum(p.estimateExpense) as `amount`, count(*) as `count`, sum(case when p.formula=10 then 1 else 0 end) as selfRD from  p_project p
+        where p.companyId=#{companyId} group by p.beginYear order by p.beginYear
+    </select>
+    <select id="getProjectRDStat" resultType="com.yskc.rs.models.StatInfo">
+        select p.beginYear as `year`, sum(s.rdFunds) as `amount` from p_project p inner join p_summary s on p.id = s.projectId
+        where p.companyId =#{companyId} group by p.beginYear
+    </select>
+    <select id="getTechProjectStat" resultType="com.yskc.rs.models.StatInfo">
+        select pyear as `year`,count(1) as `count` from t_project where companyId=#{companyId} group by pyear order by pyear
+    </select>
+</mapper>

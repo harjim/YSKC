@@ -1,0 +1,611 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.ProjectMaterialDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap
+            type="com.yskc.rs.entity.project.ProjectMaterialEntity"
+            id="materialMap">
+        <result property="id" column="id"/>
+        <result property="projectId" column="projectId"/>
+        <result property="materialDataId" column="materialDataId"/>
+        <result property="used" column="used"/>
+        <result property="companyId" column="companyId"/>
+        <result property="creatorId" column="creatorId"/>
+        <result property="createTime" column="createTime"/>
+        <result property="lastUpdateTime" column="lastUpdateTime"/>
+        <result property="lastUpdatorId" column="lastUpdatorId"/>
+        <result property="rdType" column="rdType"/>
+    </resultMap>
+    <insert id="addBatch">
+        INSERT INTO `p_material`
+        ( `projectId`, `materialDataId`, `used`, `companyId`, `rdType`, `creatorId`, `createTime`, `lastUpdateTime`,
+        `lastUpdatorId`, `msCreatorId`, `msLastUpdatorId`, rdAmount,finishUnitPrice )
+        VALUES
+        <foreach collection="insertMaterialEntities" item="item" separator=",">
+            ( #{item.projectId}, #{item.materialDataId}, #{item.used}, #{item.companyId}, #{item.rdType},
+            #{item.creatorId}, #{item.createTime}, #{item.lastUpdateTime}, #{item.lastUpdatorId}, #{item.msCreatorId},
+            #{item.msLastUpdatorId}, #{item.rdAmount},#{item.finishUnitPrice} )
+        </foreach>
+    </insert>
+
+    <update id="updateUsedById">
+        update p_material
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="used =case" suffix="end,">
+                <foreach collection="projectMaterialEntities" item="i" index="index">
+                    <if test="i.used!=null">
+                        when id=#{i.id} then #{i.used}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdatorId =case" suffix="end,">
+                <foreach collection="projectMaterialEntities" item="i" index="index">
+                    <if test="i.lastUpdatorId!=null">
+                        when id=#{i.id} then #{i.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdateTime =case" suffix="end,">
+                <foreach collection="projectMaterialEntities" item="i" index="index">
+                    <if test="i.lastUpdateTime!=null">
+                        when id=#{i.id} then #{i.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="msLastUpdatorId =case" suffix="end,">
+                <foreach collection="projectMaterialEntities" item="i" index="index">
+                    <if test="i.msLastUpdatorId!=null">
+                        when id=#{i.id} then #{i.msLastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="rdAmount =case" suffix="end,">
+                <foreach collection="projectMaterialEntities" item="i" index="index">
+                    <if test="i.rdAmount!=null">
+                        when id=#{i.id} then #{i.rdAmount}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="finishAmount =case" suffix="end,">
+                <foreach collection="projectMaterialEntities" item="i" index="index">
+                    <if test="i.finishAmount!=null">
+                        when id=#{i.id} then #{i.finishAmount}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="finishQuantity =case" suffix="end,">
+                <foreach collection="projectMaterialEntities" item="i" index="index">
+                    <if test="i.finishQuantity!=null">
+                        when id=#{i.id} then #{i.finishQuantity}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="finishUnitPrice =case" suffix="end,">
+                <foreach collection="projectMaterialEntities" item="i" index="index">
+                    <if test="i.finishUnitPrice!=null">
+                        when id=#{i.id} then #{i.finishUnitPrice}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="wasteAmount =case" suffix="end,">
+                <foreach collection="projectMaterialEntities" item="i" index="index">
+                    <if test="i.wasteAmount!=null">
+                        when id=#{i.id} then #{i.wasteAmount}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="wasteQuantity =case" suffix="end,">
+                <foreach collection="projectMaterialEntities" item="i" index="index">
+                    <if test="i.wasteQuantity!=null">
+                        when id=#{i.id} then #{i.wasteQuantity}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="wasteUnitPrice =case" suffix="end,">
+                <foreach collection="projectMaterialEntities" item="i" index="index">
+                    <if test="i.wasteUnitPrice!=null">
+                        when id=#{i.id} then #{i.wasteUnitPrice}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="totalYield =case" suffix="end,">
+                <foreach collection="projectMaterialEntities" item="i" index="index">
+                    <if test="i.totalYield!=null">
+                        when id=#{i.id} then #{i.totalYield}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="rdYield =case" suffix="end,">
+                <foreach collection="projectMaterialEntities" item="i" index="index">
+                    <if test="i.rdYield!=null">
+                        when id=#{i.id} then #{i.rdYield}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="depreciationRatio =case" suffix="end,">
+                <foreach collection="projectMaterialEntities" item="i" index="index">
+                    <if test="i.depreciationRatio!=null">
+                        when id=#{i.id} then #{i.depreciationRatio}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="projectMaterialEntities" separator="or" item="i" index="index">
+            id=#{i.id}
+        </foreach>
+    </update>
+    <update id="editMaterialTrack">
+        update p_material
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="lastUpdatorId =case" suffix="end,">
+                <foreach collection="model" item="i" index="index">
+                    <if test="i.lastUpdatorId!=null">
+                        when id=#{i.id} then #{i.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdateTime =case" suffix="end,">
+                <foreach collection="model" item="i" index="index">
+                    <if test="i.lastUpdateTime!=null">
+                        when id=#{i.id} then #{i.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="msLastUpdatorId =case" suffix="end,">
+                <foreach collection="model" item="i" index="index">
+                    <if test="i.msLastUpdatorId!=null">
+                        when id=#{i.id} then #{i.msLastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="model" separator="or" item="i" index="index">
+            id=#{i.id}
+        </foreach>
+    </update>
+    <update id="updateBatch">
+        update p_material
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="used =case" suffix="end,">
+                <foreach collection="updateMaterialEntities" item="i" index="index">
+                    <if test="i.used!=null">
+                        when id=#{i.id} then #{i.used}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdateTime =case" suffix="end,">
+                <foreach collection="updateMaterialEntities" item="i" index="index">
+                    <if test="i.lastUpdateTime!=null">
+                        when id=#{i.id} then #{i.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdatorId =case" suffix="end,">
+                <foreach collection="updateMaterialEntities" item="i" index="index">
+                    <if test="i.lastUpdatorId!=null">
+                        when id=#{i.id} then #{i.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="msLastUpdatorId =case" suffix="end,">
+                <foreach collection="updateMaterialEntities" item="i" index="index">
+                    <if test="i.msLastUpdatorId!=null">
+                        when id=#{i.id} then #{i.msLastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="rdAmount =case" suffix="end,">
+                <foreach collection="updateMaterialEntities" item="i" index="index">
+                    <if test="i.rdAmount!=null">
+                        when id=#{i.id} then #{i.rdAmount}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="updateMaterialEntities" separator="or" item="i" index="index">
+            id=#{i.id}
+        </foreach>
+    </update>
+    <update id="setDepreciationRatio">
+        update p_material
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="depreciationRatio =case" suffix="end,">
+                <foreach collection="dataList" item="i" index="index">
+                    <if test="i.depreciationRatio!=null">
+                        when id=#{i.id} then #{i.depreciationRatio}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdateTime =case" suffix="end,">
+                <foreach collection="dataList" item="i" index="index">
+                    <if test="i.lastUpdateTime!=null">
+                        when id=#{i.id} then #{i.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdatorId =case" suffix="end,">
+                <foreach collection="dataList" item="i" index="index">
+                    <if test="i.lastUpdatorId!=null">
+                        when id=#{i.id} then #{i.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="msLastUpdatorId =case" suffix="end,">
+                <foreach collection="dataList" item="i" index="index">
+                    <if test="i.msLastUpdatorId!=null">
+                        when id=#{i.id} then #{i.msLastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="rdAmount =case" suffix="end,">
+                <foreach collection="dataList" item="i" index="index">
+                    <if test="i.rdAmount!=null">
+                        when id=#{i.id} then #{i.rdAmount}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="dataList" separator="or" item="i" index="index">
+            id=#{i.id}
+        </foreach>
+    </update>
+    <update id="updateYield">
+        update p_material
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="used =case" suffix="end,">
+                <foreach collection="list" item="i" index="index">
+                    <if test="i.used!=null">
+                        when id=#{i.id} then #{i.used}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="totalYield =case" suffix="end,">
+                <foreach collection="list" item="i" index="index">
+                    <if test="i.totalYield!=null">
+                        when id=#{i.id} then #{i.totalYield}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="rdYield =case" suffix="end,">
+                <foreach collection="list" item="i" index="index">
+                    <if test="i.rdYield!=null">
+                        when id=#{i.id} then #{i.rdYield}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdateTime =case" suffix="end,">
+                <foreach collection="list" item="i" index="index">
+                    <if test="i.lastUpdateTime!=null">
+                        when id=#{i.id} then #{i.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdatorId =case" suffix="end,">
+                <foreach collection="list" item="i" index="index">
+                    <if test="i.lastUpdatorId!=null">
+                        when id=#{i.id} then #{i.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="msLastUpdatorId =case" suffix="end,">
+                <foreach collection="list" item="i" index="index">
+                    <if test="i.msLastUpdatorId!=null">
+                        when id=#{i.id} then #{i.msLastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="rdAmount =case" suffix="end,">
+                <foreach collection="list" item="i" index="index">
+                    <if test="i.rdAmount!=null">
+                        when id=#{i.id} then #{i.rdAmount}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="list" separator="or" item="i" index="index">
+            id=#{i.id}
+        </foreach>
+    </update>
+
+
+    <select id="queryMaterialDataIdList"
+            resultType="com.yskc.rs.models.material.AppMaterialModel">
+        select
+        p.id,
+        p.rdAmount,
+        p.projectId,
+        p.materialDataId,
+        p.used,
+        p.rdType,
+        d.mcode,
+        d.mname,
+        d.acqDate,
+        d.unitPrice,
+        d.quantity,
+        d.remainQuantity,
+        d.unit,
+        d.companyId,
+        d.creatorId,
+        d.createTime,
+        d.remark,
+        d.specification,
+        d.billNo,
+        d.accNumber,
+        d.warehouse,
+        d.biller,
+        d.auditor,
+        d.booker,
+        d.picker,
+        d.totalAmount,
+        d.deptName,
+        p.finishAmount,
+        p.finishQuantity,
+        p.finishUnitPrice,
+        p.wasteAmount,
+        p.wasteQuantity,
+        p.wasteUnitPrice,
+        p.totalYield,
+        p.rdYield,
+        p.depreciationRatio
+        from p_material p
+        INNER JOIN d_material d on d.id = p.materialDataId
+        where p.companyId = #{companyId} and p.rdType = #{query.rdType}
+        and p.projectId = #{query.projectId}
+        <if test="query.mcode != null and query.mcode != ''">
+            and d.mcode like "%"#{query.mcode}"%"
+        </if>
+        <if test="query.mname != null and query.mname != ''">
+            and d.mname like "%"#{query.mname}"%"
+        </if>
+        <if test="startDate != null">
+            and d.acqDate &gt;= #{startDate} and d.acqDate &lt;= #{endDate}
+        </if>
+        <if test="query.deptName !=null and query.deptName != ''">
+            and d.deptName like "%"#{query.deptName}"%"
+        </if>
+    </select>
+    <select id="getProjectMaterialSum" resultType="java.math.BigDecimal">
+        select
+        sum(round(p.rdAmount,2))
+        from p_material p
+        INNER JOIN d_material d on d.id = p.materialDataId
+        where p.companyId = #{companyId} and p.rdType = #{query.rdType}
+        and p.projectId = #{query.projectId}
+        <if test="query.mcode != null and query.mcode != ''">
+            and d.mcode like "%"#{query.mcode}"%"
+        </if>
+        <if test="query.mname != null and query.mname != ''">
+            and d.mname like "%"#{query.mname}"%"
+        </if>
+        <if test="startDate != null">
+            and d.acqDate &gt;= #{startDate} and d.acqDate &lt;= #{endDate}
+        </if>
+        <if test="query.deptName !=null and query.deptName != ''">
+            and d.deptName like "%"#{query.deptName}"%"
+        </if>
+    </select>
+
+
+    <delete id="delMaterial">
+		delete from p_material where projectId = #{projectId}
+		and materialDataId = #{materialDataId} 
+		and rdType = #{rdType}
+	</delete>
+
+    <select id="queryProjectMaterialByMaterialIdAndProjectId"
+            resultType="com.yskc.rs.entity.project.ProjectMaterialEntity">
+		select * from p_material where companyId = #{companyId}
+		and materialDataId = #{materialDataId}
+		and projectId = #{projectId}
+		and rdType = #{rdType}
+	</select>
+
+    <select id="queryProjectMaterialByMaterialDataId"
+            resultType="com.yskc.rs.entity.project.ProjectMaterialEntity">
+        select * from p_material where companyId = #{companyId}
+        and materialDataId = #{materialDataId}
+    </select>
+
+
+    <select id="queryMaterialListByProjectId"
+            resultType="com.yskc.rs.models.material.AppMaterialModel">
+		select p.used,d.acqDate,d.unitPrice,p.rdType
+		from p_material p
+		LEFT JOIN d_material d on p.materialDataId = d.id
+		where p.companyId = #{companyId}
+		and p.projectId = #{projectId}
+	</select>
+
+    <select id="queryMaterialListByProjectIdAndDateAndType"
+            resultType="java.math.BigDecimal">
+        select sum(p.rdAmount)
+        from p_material p
+        LEFT JOIN d_material d on p.materialDataId = d.id
+        where p.companyId = #{companyId}
+        and p.projectId = #{projectId}
+        and d.acqDate &gt;= #{startDate} and d.acqDate &lt;= #{endDate}
+        <if test="rdType != 0 ">
+            and p.rdType = #{rdType}
+        </if>
+    </select>
+
+    <select id="getDocMaterialList" resultType="com.yskc.rs.models.project.DocMaterialModel">
+        select pm.id,dm.mcode,dm.mname,dm.specification,dm.unit,pm.used,pm.rdType,pm.deptName,rd.deptName as rdDeptName
+        from p_material as pm
+        left join d_material as dm on pm.materialDataId = dm.id
+        left join rdDept as rd on dm.rdDeptId = rd.id
+        where pm.projectId = #{query.projectId}
+        and dm.companyId = #{companyId}
+        <if test="query.mcode != null and query.mcode != ''">
+            and dm.mcode like "%"#{query.mcode}"%"
+        </if>
+        <if test="query.mname != null and query.mname != ''">
+            and dm.mname like "%"#{query.mname}"%"
+        </if>
+        <if test="query.specification != null and query.specification != ''">
+            and dm.specification like "%"#{query.specification}"%"
+        </if>
+        <if test="query.rdDeptPath!=null and query.rdDeptPath != ''">
+            and rd.identity like #{query.rdDeptPath}"%"
+        </if>
+        <if test="query.deptName !=null and query.deptName != ''">
+            and pm.deptName like "%"#{query.deptPath}"%"
+        </if>
+        <if test="query.rdType != null and query.rdType > 0 ">
+            and pm.rdType = #{query.rdType}
+        </if>
+
+    </select>
+    <select id="queryMaterialTrack" resultType="com.yskc.rs.models.material.AppMaterialModel">
+        select
+        p.id as pId,
+        p.projectId,
+        p.materialDataId,
+        p.used,
+        p.rdType,
+        d.mcode,
+        d.mname,
+        d.acqDate,
+        d.unitPrice,
+        d.quantity,
+        d.remainQuantity,
+        d.unit,
+        d.companyId,
+        d.creatorId,
+        d.createTime,
+        d.remark,
+        d.specification,
+        d.deptId,
+        d.rdDeptId,
+        d.billNo,
+        d.warehouse,
+        d.biller,
+        d.auditor,
+        d.booker,
+        d.picker,
+        d.totalAmount,
+        pt.id,
+        pt.normalOutputRate,
+        pt.rdOutputRate,
+        pt.rdOutPut,
+        pt.rdOutputAmount,
+        pt.rdLossRate,
+        pt.rdLoss,
+        pt.rdLossAmount,
+        pt.scrapRate,
+        pt.scrap,
+        pt.scrapAmount,
+        pt.scrapNo,
+        pt.sampleRevenue,
+        pt.scrapPrice,
+        pt.specialIncome,
+        pt.specialIncomeNo
+        from d_material d
+        left join p_material p on d.id = p.materialDataId
+        left join p_material_trace pt on pt.pId = p.id
+        where d.companyId = #{companyId}
+        <if test="query.projectId!=null and query.projectId>0">
+            and p.projectId= #{query.projectId}
+        </if>
+        <if test="query.mcode != null and query.mcode != ''">
+            and d.mcode like "%"#{query.mcode}"%"
+        </if>
+        <if test="query.mname != null and query.mname != ''">
+            and d.mname like "%"#{query.mname}"%"
+        </if>
+    </select>
+    <select id="selectByMaterialIds" resultType="java.lang.Integer">
+        select DISTINCT materialDataId from p_material
+        where materialDataId in
+        <foreach collection="materialIds" open="(" close=")" item="id" separator=",">
+            #{id}
+        </foreach>
+        order by materialDataId
+    </select>
+    <select id="getMaterialWorkSheetList" resultType="com.yskc.rs.models.workSheet.WorkSheetMaterialModel">
+        select m.mname as costElement,m.mname as workEvent,pm.used,m.unitPrice,m.quantity,m.totalAmount,p.rdIndex as rdNum,d.deptName as coObj
+        from p_material as pm
+        left join d_material as m on pm.materialDataId = m.id
+        left join p_project as p on pm.projectId = p.id
+        left join rdDept as d on d.id = m.rdDeptId
+        where p.id = #{query.projectId} and pm.companyId = #{companyId} and pm.rdType = #{type} and m.acqDate = #{query.workDate}
+    </select>
+    <select id="queryPMaterialList" resultType="com.yskc.rs.entity.project.ProjectMaterialEntity">
+        select * from p_material where companyId = #{companyId}
+        and projectId = #{projectId}
+        and rdType = #{type}
+        and materialDataId in
+        <foreach collection="materialIdList" open="(" close=")" item="id" separator=",">
+            #{id}
+        </foreach>
+    </select>
+    <select id="getMaterialWorkSheetMonthList" resultType="com.yskc.rs.models.workSheet.WorkSheetMiniModel">
+        select pe.rdAmount as cost,p.rdIndex,e.acqDate as workDate
+        from p_material as pe
+        left join d_material as e on pe.materialDataId = e.id
+        left join p_project as p on pe.projectId = p.id
+        left join rdDept as d on d.id = e.rdDeptId
+        where p.id = #{query.projectId} and pe.companyId = #{companyId} and pe.rdType = #{type} and e.acqDate &lt;=#{end}
+        and e.acqDate >= #{begin}
+        order by e.acqDate asc
+    </select>
+
+    <select id="exportFromMaterial" resultType="com.yskc.rs.models.aggregation.MaterialExportModel">
+        select dm.mcode,dm.mname,dm.acqDate as `date`,dm.unitPrice,dm.quantity,dm.billNo,dm.deptName,pp.rdTitle,dm.accNumber,
+        pm.used,dm.unit,pm.rdAmount,dm.totalAmount,pm.finishAmount,pm.finishQuantity,pm.finishUnitPrice,pm.wasteAmount,
+        pm.wasteQuantity,pm.wasteUnitPrice, pm.totalYield,pm.rdYield,pm.depreciationRatio,dm.remark
+        from p_material as pm
+        inner join p_project pp on pm.projectId=pp.id
+        inner join d_material dm on pm.materialDataId=dm.id
+        where
+        pm.rdType in
+        <foreach collection="model.types" item="type" open="(" close=")" separator=",">
+            #{type}
+        </foreach>
+        and pp.id in
+        <foreach collection="model.projectIds" item="projectId" open="(" close=")" separator=",">
+            #{projectId}
+        </foreach>
+        and
+        <foreach collection="model.range" item="range" separator="or" open="(" close=")">
+            (dm.acqDate &gt;=#{range.begin} and dm.acqDate &lt;= #{range.end})
+        </foreach>
+        order by acqDate,rdTitle
+    </select>
+
+    <select id="getRdMaterialTotal"
+            resultType="com.yskc.rs.models.projectmaterial.ProjectRdMaterialTotalModel">
+        select dm.acqDate,pm.projectId,pm.rdType,sum(pm.rdAmount) as total
+        from p_material pm
+        INNER JOIN d_material dm on pm.materialDataId=dm.id
+        where pm.projectId in
+        <foreach collection="projectIds" open="(" separator="," close=")" item="projectId">
+            #{projectId}
+        </foreach>
+        and dm.acqDate >= #{minDate} and dm.acqDate &lt;=#{maxDate}
+        group by dm.acqDate,pm.projectId,pm.rdType
+    </select>
+    <select id="getByIds" resultType="com.yskc.rs.models.material.AppMaterialModel">
+        select pm.id,dm.unitPrice, pm.used from p_material pm
+        inner join d_material dm on pm.materialDataId=dm.id
+        where pm.id in
+        <foreach collection="ids" open="(" separator="," close=")" item="id">
+            #{id}
+        </foreach>
+    </select>
+    <select id="getMaterialList" resultType="com.yskc.rs.models.material.AppMaterialModel">
+        select pm.id,dm.deptName,dm.unitPrice,pm.used,pm.depreciationRatio,dm.remainQuantity,dm.quantity,
+        pm.materialDataId,dm.acqDate
+         from p_material pm
+        inner join d_material dm on pm.materialDataId=dm.id
+        where pm.projectId = #{projectId} and pm.rdType = #{rdType} and dm.acqDate >= #{begin} and dm.acqDate &lt;=#{end}
+    </select>
+
+</mapper>

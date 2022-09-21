@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.rs.SupportDao">
+    <insert id="insertList">
+        insert into c_support
+        (creatorId,lastUpdatorId,createTime,lastUpdateTime,msCreatorId,msLastUpdatorId,companyId,projectName,
+        supportTime,supportDeptName,supportAmount,checkTime,remark,syear,issuceNum,master)
+        values
+        <foreach collection="insertList" item="item" separator=",">
+            (
+            #{item.creatorId},#{item.lastUpdatorId},#{item.createTime},#{item.lastUpdateTime},#{item.msCreatorId},#{item.msLastUpdatorId},
+            #{item.companyId}, #{item.projectName},#{item.supportTime},#{item.supportDeptName},#{item.supportAmount},
+            #{item.checkTime},#{item.remark},#{item.syear},#{item.issuceNum},#{item.master}
+            )
+        </foreach>
+    </insert>
+    <update id="updateList">
+        <foreach collection="updateList" item="item" separator=";">
+            update c_support set
+            lastUpdatorId=#{item.lastUpdatorId},lastUpdateTime=#{item.lastUpdateTime},msLastUpdatorId=#{item.msLastUpdatorId},
+            projectName= #{item.projectName},supportTime=#{item.supportTime},supportDeptName=#{item.supportDeptName},
+            supportAmount=#{item.supportAmount},checkTime=#{item.checkTime},remark=#{item.remark},syear=#{item.syear},
+            issuceNum=#{item.issuceNum},master=#{item.master}
+            where id=#{item.id}
+        </foreach>
+    </update>
+    <delete id="deleteData">
+        delete from c_support where companyId=#{companyId} and syear=#{year} and id not in
+        <foreach collection="saveIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    <select id="getSupport" resultType="com.yskc.ms.models.company.SupportModel">
+        select id,companyId,projectName,supportDeptName,supportAmount,checkTime,syear,issuceNum,master,supportTime from c_support
+        where companyId=#{companyId} and syear >= #{eYear} and syear &lt;=#{bYear}
+    </select>
+</mapper>

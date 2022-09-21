@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yskc.ms.dao.ms.TechSummaryDao">
+
+    <select id="getList" resultType="com.yskc.ms.models.techsummary.TechSummaryModel">
+        select p.id as projectId,c.companyName,p.year,d.fullname,ts.stageCount,
+        ts.uploadCount,ts.uploadedCount,ts.operationTime,yu.realName as operationName
+        from project p
+        inner join product pt on pt.id = p.productId
+        left join tech_summary ts on p.id = ts.projectId
+        inner join customer c on c.id = p.customerId
+        left join ys_dept d on d.id = p.deptId
+        left join ys_user yu on yu.id = ts.operationUserId
+        where pt.productType = 0
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.project">
+            <property name="tableAlias" value="p"/>
+            <property name="dataPerm" value="#{dataPerm}"/>
+            <property name="userTable" value="project_member"/>
+            <property name="colId" value="projectId"/>
+        </include>
+        <if test="query.companyName != null and query.companyName != ''">
+            and c.companyName like "%"#{query.companyName}"%"
+        </if>
+        <if test="query.year != null and query.year != ''">
+            and p.year=#{query.year}
+        </if>
+        <if test="query.fullPath != null and query.fullPath != ''">
+            and d.fullPath like #{query.fullPath}"%"
+        </if>
+        <if test="query.tIds != null and query.tIds.length>0">
+            and p.id in (select projectId from project_member where mType=1 and memberId in
+            <foreach collection="query.tIds" open="(" separator="," close=")" item="tId">
+                #{tId}
+            </foreach>
+            )
+        </if>
+    </select>
+    <select id="getTotal" resultType="com.yskc.ms.models.techsummary.TechTotalSummaryModel">
+        select sum(stageCount) as stageTotal,sum(uploadCount) as uploadTotal,sum(uploadedCount) as uploadedTotal
+        from tech_summary
+    </select>
+</mapper>

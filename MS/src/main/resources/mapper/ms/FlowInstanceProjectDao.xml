@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.FlowInstanceProjectDao">
+    <select id="getProjectAudit" resultType="com.yskc.ms.entity.ms.FlowInstanceProject">
+        select *
+        from flowInstance_project pap
+        inner join flowInstance f on pap.instanceId=f.id
+        inner join flowInstance_curNode fic on fic.instanceId=f.id and fic.nodeStatus=0
+        inner join flowInstance_user fu on fu.instanceId=f.id and fic.curNodeId=fu.nodeId and fu.userId=#{userId} and fu.status is null
+        where pap.companyId=#{companyId} and `year`=#{year} and pap.moduleId  in (1,2,3,4,9)
+    </select>
+    <select id="getAuditStatus" resultType="com.yskc.ms.models.projectAudit.AuditStatusModel">
+        select fip.moduleId,fm.modeName,fn.nodeName,fi.flowId,fi.status,fic.nodeStatus,fic.curNodeId,fip.instanceId
+         from flowInstance_project fip
+        inner join flowInstance fi on fi.id = fip.instanceId
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id
+        inner join flowModule fm on fm.id=fip.moduleId
+        inner join flowNode fn on fn.id=fic.curNodeId
+        where fip.companyId=#{companyId} and fip.year=#{year} and fip.moduleId=#{moduleId} limit 1
+    </select>
+    <select id="getInstanceInfo" resultType="com.yskc.ms.models.flowInstance.FlowInstanceInfoModel">
+        select `year`,projectId,moduleId from flowInstance_project where instanceId=#{instanceId} limit 1
+    </select>
+    <select id="getAuditTotal" resultType="com.yskc.ms.models.project.ProjectProgressModel">
+        select companyId,`year`,count(id) auditTotal from flowInstance_project
+        where instanceId in (<foreach collection="instanceIds" separator="," item="instanceId">#{instanceId}</foreach>)
+        group by companyId,`year`
+    </select>
+</mapper>

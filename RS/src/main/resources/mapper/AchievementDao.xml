@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.project.AchievementDao">
+    <update id="updateAchievement">
+        update p_achievement set achievementName=#{model.achievementName},projectId=#{model.projectId},
+            `type`=#{model.type},`source`=#{model.source},converType=#{model.converType},`description`=#{model.description},
+            lastUpdatorId=#{userId},msLastUpdatorId=#{msUserId},lastUpdateTime=#{now} where id=#{model.id}
+    </update>
+    <update id="updateFile">
+        update p_achievement set lastUploadTime=#{lastUploadTime},fileCnt=#{fileCnt} where id =#{id}
+    </update>
+    <select id="getList" resultType="com.yskc.rs.models.achievement.AchievementModel">
+        select a.id,a.achievementName,a.projectId,a.year,p.rdTitle,p.pname,a.lastUploadTime,a.fileCnt,paa.status,
+        a.type,a.source,a.converType,a.description
+        from p_achievement a
+        inner join p_project p on a.projectId=p.id
+        left join p_audit_achievement paa on paa.achievementId=a.id
+        where a.companyId=#{companyId} and a.year=#{query.year}
+        <if test="query.projectId != null and query.projectId > 0">
+            and p.id=#{query.projectId}
+        </if>
+        <if test="query.achievementName != null and query.achievementName!=''">
+            and a.achievementName like "%"#{query.achievementName}"%"
+        </if>
+    </select>
+    <select id="countName" resultType="java.lang.Integer">
+        select count(id) from p_achievement where companyId=#{companyId} and achievementName=#{model.achievementName}
+        <if test="model.id != null">
+            and id != #{model.id}
+        </if>
+    </select>
+    <select id="getStatus" resultType="java.lang.Integer">
+        select `status` from p_audit_achievement where achievementId=#{id}
+    </select>
+    <select id="getAuditAchievement" resultType="com.yskc.rs.entity.project.AuditAchievementEntity">
+        select achievementId,`status` from p_audit_achievement
+        where achievementId in (<foreach collection="ids" separator="," item="id">#{id}</foreach>)
+    </select>
+    <select id="getChildTypes" resultType="java.lang.Integer">
+        select distinct sd.childType from p_achievement pa
+        inner join p_achievement_file paf on pa.id=paf.achievementId
+        inner join sys_docList sd on sd.id=paf.listId
+        where pa.companyId=#{companyId} and pa.year>=#{beginYear} and pa.year &lt;=#{endYear} and sd.listType=1001
+          and sd.childType is not null
+    </select>
+    <select id="countAchievement" resultType="java.lang.Integer">
+        select count(id) from p_achievement where companyId=#{companyId} and `year`>=#{beginYear} and `year` &lt;=#{endYear}
+    </select>
+</mapper>

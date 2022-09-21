@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xxl.job.executor.dao.rs.RsUnCollectedDao">
+    <resultMap id="rd" type="com.xxl.job.executor.models.rs_project_uncollected.RsProjectUnCollectedModel">
+        <id column="rsProjectId" property="rsProjectId"></id>
+        <result column="pname" property="pname"></result>
+        <result column="companyId" property="companyId"></result>
+        <result column="rdTitle" property="rdTitle"></result>
+        <result column="beginYear" property="beginYear"></result>
+        <result column="endYear" property="endYear"></result>
+        <collection property="years" ofType="integer">
+            <id column="years"></id>
+        </collection>
+    </resultMap>
+    <select id="getList" resultMap="rd">
+        select id as rsProjectId,pname,companyId,rdTitle,beginYear,endYear,years
+        from p_project as pp
+        left join (select projectId,year(`month`) as years from p_summary group by projectId,year(`month`)) as ps
+        on pp.id = ps.projectId
+        group by id,years
+    </select>
+</mapper>

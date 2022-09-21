@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xxl.job.executor.dao.rs.ReportDao">
+
+    <select id="getLastOperationUser" resultType="com.xxl.job.executor.entity.ms.ProjectProgressDetail">
+        SELECT e.msLastUpdatorId as userId,e.companyId,MAX(e.lastUpdateTime) as operationTime,#{stage} as stage
+        <if test="hasYear == true">
+            <if test="selfYear == true">
+                <if test="tableName != 'p_project'">
+                    ,e.year
+                </if>
+                <if test="tableName == 'p_project'">
+                    ,e.beginYear as `year`
+                </if>
+            </if>
+            <if test="selfYear != true">
+                ,p.beginYear as `year`
+            </if>
+        </if>
+        <if test="hasYear != true">
+            ,0 as `year`
+        </if>
+        FROM ${tableName} as e
+        <if test="hasYear == true and selfYear != true">
+            LEFT JOIN p_project p on p.id = e.projectId
+        </if>
+        <where>
+            e.lastUpdateTime >= #{lastTime}
+        </where>
+        group by e.msLastUpdatorId,e.companyId,`year`
+    </select>
+    <select id="getEmployeeOpenid" resultType="com.xxl.job.executor.entity.ms.ProjectProgressDetail">
+        SELECT MAX(eo.lastUpdateTime) as operationTime,eo.companyId,-1 as userId,#{stage} as stage,0 as year
+        FROM employeeOpenid as eo
+        inner join employee AS e ON eo.enumber = e.enumber and eo.companyId = e.companyId
+        where eo.lastUpdateTime >= #{lastTime}
+        GROUP BY eo.companyId
+    </select>
+    <!--    <select id="getBudgetSummary" resultType="com.xxl.job.executor.entity.ms.ProjectProgressDetail">-->
+    <!--        &lt;!&ndash;pb.lastUpdateTime > #{lastTime} and&ndash;&gt;-->
+    <!--        select MAX(pb.lastUpdateTime) as operationTime,pb.companyId,pb2.result,#{stage} as stage,pb.msLastUpdatorId as-->
+    <!--        userId,pb2.beginYear as `year`-->
+    <!--        from p_project pb-->
+    <!--        INNER JOIN (SELECT SUM(estimateExpense)as result,companyId,beginYear FROM p_project group by-->
+    <!--        companyId,beginYear) as pb2-->
+    <!--        on pb2.companyId = pb.companyId and pb2.beginYear = pb.beginYear-->
+    <!--        where pb.msLastUpdatorId > 0 and lastUpdateTime >= #{lastTime} and-->
+    <!--        pb.companyId in-->
+    <!--        <foreach collection="companyIds" item="companyId" open="(" separator="," close=")">-->
+    <!--            #{companyId}-->
+    <!--        </foreach>-->
+    <!--        GROUP BY pb.companyId,msLastUpdatorId-->
+    <!--    </select>-->
+    <select id="getReportCnt" resultType="com.xxl.job.executor.entity.ms.ProjectProgressDetail">
+        select lastUpdateTime as operationTime,companyId,cnt as result,msLastUpdatorId as userId,ryear as `year`,20000
+        as stage from
+        p_report
+        where lastUpdateTime >= #{lastTime}
+    </select>
+    <select id="getRdFunds" resultType="com.xxl.job.executor.entity.ms.ProjectProgressDetail">
+        select max(ps.lastUpdateTime) as operationTime,p.companyId,ps2.result,ps.msLastUpdatorId as userId,
+        p.beginYear as `year`,#{stage} as stage
+        from
+        p_summary ps
+        INNER JOIN p_project p on p.id = ps.projectId
+        INNER JOIN (SELECT
+        sum(pss.rdFunds) as result,
+        pp.companyId from p_summary pss INNER JOIN p_project pp on pp.id =
+        pss.projectId group by pp.companyId) ps2 on ps2.companyId = p.companyId
+        where ps.lastUpdateTime >= #{lastTime}
+        GROUP BY p.companyId,ps.msLastUpdatorId,p.beginYear order by operationTime asc
+    </select>
+    <select id="getDocFileData" resultType="com.xxl.job.executor.entity.ms.ProjectProgressDetail">
+        select max(pdd.lastUpdateTime) as operationTime,p.companyId,0 as result,pdd.msLastUpdatorId as userId,
+        p.beginYear as `year`,#{stage} as stage
+        from p_docFile_data pdd
+        INNER JOIN p_docFile pd on pd.id = pdd.pdocFileId
+        INNER JOIN p_project p on p.id = pd.projectId
+        where pdd.lastUpdateTime >= #{lastTime}
+        GROUP BY p.companyId,pdd.msLastUpdatorId,p.beginYear order by operationTime asc
+    </select>
+
+    <select id="getAllReportCnt" resultType="com.xxl.job.executor.models.projectsummary.ReportSummaryModel">
+        select companyId,ryear as `year`,cnt,accountType,rdFee,employeeAmount,revenueFcst from p_report where
+        <foreach collection="data" item="d" separator=" or ">
+            (companyId = #{d.companyId} and ryear = #{d.year})
+        </foreach>
+    </select>
+
+    <select id="getProjectCntAndBudget" resultType="com.xxl.job.executor.models.projectsummary.RdCntBudgetSummaryModel">
+        select count(distinct p.id) as rdCount,p.companyId,#{year} as `year`,sum(pyi.budget) as budget,
+        count(case when beginYear &lt; #{year} then 1 end) lastRdCnt,count(case when endYear>#{year} then 1 end) nextRdCnt
+        from p_project p
+        left join p_year_info pyi on pyi.companyId=p.companyId and pyi.projectId=p.id and pyi.year=#{year}
+        where p.hasChild = false and p.companyId in (
+        <foreach collection="companyIds" item="companyId" separator=",">#{companyId}</foreach>)
+          and p.beginYear &lt;= #{year} and p.endYear >= #{year}
+        group by p.companyId
+    </select>
+    <select id="getProjectRdFunds" resultType="com.xxl.job.executor.models.projectsummary.ProjectSummaryModel">
+        select SUM(s.rdFunds) as rdFunds,p.companyId,#{year} as `year`
+        from p_project p
+        LEFT JOIN p_summary s on s.projectId = p.id
+        where s.month &lt;=#{end} and s.month >= #{begin} and
+        p.companyId in(<foreach collection="companyIds" item="cId" separator=",">#{cId}</foreach>)
+        and p.beginYear &lt;= #{year} and p.endYear >= #{year}
+        group by p.companyId
+    </select>
+    <select id="getProjectDocFileDataCnt"
+            resultType="com.xxl.job.executor.models.projectsummary.DocFileSummaryModel">
+        select count(pdd.id) as docFileCount,p.companyId,#{year} as `year`,count(case when pd.docFileId=38 then 1 end) as reportCnt
+        from p_docFile_data pdd
+        left JOIN p_docFile pd on pd.id = pdd.pdocFileId and pd.deleted=0
+        left JOIN p_project p on p.id = pd.projectId
+        left join p_stage ps on ps.projectId = p.id and ps.stageKey = pd.stage
+        where p.companyId in
+        <foreach collection="companyIds" item="companyId" separator="," open="(" close=")">
+            #{companyId}
+        </foreach>
+        and ((p.beginYear = #{year} and ps.beginDate is null)
+        or (p.beginYear &lt;= #{year} and p.endYear >= #{year} and ps.beginDate >=#{begin} and ps.beginDate &lt;=
+        #{end}))group by companyId
+    </select>
+    <select id="getLastUpdateCompanyId" resultType="java.lang.Integer">
+        select distinct p.companyId from p_project p
+        LEFT JOIN p_summary s on s.projectId = p.id
+        LEFT JOIN p_docFile pb on pb.projectId = p.id
+        LEFT JOIN p_report pr on pr.companyId = p.companyId
+        where p.lastUpdateTime >= #{beforeFive} or s.lastUpdateTime >= #{beforeFive}
+         or pb.lastUpdateTime >= #{beforeFive} or pr.lastUpdateTime >= #{beforeFive}
+    </select>
+    <select id="getEmployeeCnt"
+            resultType="com.xxl.job.executor.models.projectsummary.RdCntEmployeeSummaryModel">
+        select count(distinct e.id) employeeCount,count(distinct i.enumber) rdEmployeeCount,
+               count(distinct eo.id)employeeOpenidCnt,#{year} as `year`,e.companyId
+        from employee e
+        left join employeeOpenid eo on eo.companyId = e.companyId
+        left join i_member i on i.companyId=e.companyId and i.enumber=e.enumber and i.year=#{year}
+        where e.companyId in (<foreach collection="companyIds" separator="," item="id">#{id}</foreach>)
+        group by e.companyId
+    </select>
+    <select id="getEquipmentCnt"
+            resultType="com.xxl.job.executor.models.projectsummary.RdCntEquipmentSummaryModel">
+        select count(distinct e.id) equipmentCount,count(distinct i.ecode) rdEquipmentCount,#{year} as `year`,e.companyId
+        from equipment e
+        left join i_equipment i on e.companyId=i.companyId and e.ecode=i.ecode and i.year=#{year}
+        where e.companyId in (<foreach collection="companyIds" separator="," item="id">#{id}</foreach>)
+        group by e.companyId
+    </select>
+    <select id="getLastUpdateData" resultType="com.xxl.job.executor.entity.rs.CompanyRdSummary">
+        select ryear `year`,companyId,cnt rdPlanCount,rdFee budget from p_report where lastUpdateTime >=#{lastTime}
+    </select>
+    <select id="getYearCost" resultType="com.xxl.job.executor.models.projectsummary.FeeInfoModel">
+        select rdType,sum(cost) fee,companyId,`year` from c_year_cost where
+        companyId in (<foreach collection="companyIds" separator="," item="cId">#{cId}</foreach>)
+        and `year`=#{year} group by rdType,companyId,`year`
+    </select>
+    <select id="getPatentCnt" resultType="com.xxl.job.executor.models.projectsummary.PatentSummaryModel">
+        select companyId,#{year} `year`,count(id) patentCnt from patent where
+        companyId in (<foreach collection="companyIds" separator="," item="cId">#{cId}</foreach>)
+        and authDate>=#{begin} and authDate &lt;=#{end} group by companyId,`year`
+    </select>
+    <select id="getLevelFileCnt" resultType="com.xxl.job.executor.models.projectsummary.LevelFileSummaryModel">
+        select companyId,#{year} `year`,count(id) levelFileCnt from p_docFile_attachment where
+        companyId in (<foreach collection="companyIds" separator="," item="cId">#{cId}</foreach>)
+        and uploadTime>=#{begin} and uploadTime &lt;=#{end} group by companyId,`year`
+    </select>
+    <select id="getProposalCnt" resultType="com.xxl.job.executor.models.projectsummary.ProposalSummaryModel">
+        select companyId,#{year} `year`,count(id) proposalCnt from proposal_management where
+        companyId in (<foreach collection="companyIds" separator="," item="cId">#{cId}</foreach>)
+        and `year`=#{year} group by companyId,`year`
+    </select>
+    <select id="getAchievementCnt"
+            resultType="com.xxl.job.executor.models.projectsummary.AchievementSummaryModel">
+        select companyId,#{year} `year`,count(id) achievementCnt from p_achievement  where
+        companyId in (<foreach collection="companyIds" separator="," item="cId">#{cId}</foreach>)
+        and `year`=#{year} group by companyId,`year`
+    </select>
+    <select id="getHighTechIncome"
+            resultType="com.xxl.job.executor.models.projectsummary.HighTechSummaryModel">
+        select #{year} `year`, companyId, sum(IF(highTechId is not null, income, 0)) highTechIncome,
+               sum(income) totalIncome
+        from highTech_income
+        where companyId in (<foreach collection="companyIds" separator="," item="cId">#{cId}</foreach>)
+        and bookDate >=#{begin} and bookDate &lt;=#{end}
+        group by companyId, `year`
+    </select>
+    <select id="getHighTechCnt" resultType="com.xxl.job.executor.models.projectsummary.HighTechSummaryModel">
+        select #{year} `year`, companyId,count(id) highTechCount from highTech where
+        companyId in (<foreach collection="companyIds" separator="," item="cId">#{cId}</foreach>)
+        and startYear &lt;= #{year} and endYear>=#{year}
+        group by companyId, `year`
+    </select>
+</mapper>

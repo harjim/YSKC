@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.AppUserRoleDao">
+    <insert id="addBatch">
+        INSERT INTO `app_user_role`
+        (`userId`,`roleId`,`creatorId`,`createTime`)
+        VALUES
+        <foreach collection="appUserRoleList" item="item" separator=",">
+            (#{item.userId},#{item.roleId},#{item.creatorId},#{item.createTime})
+        </foreach>
+    </insert>
+    <delete id="deleteUserRole">
+        DELETE FROM app_user_role where userId in
+        <foreach collection="userIds" open="(" separator="," close=")" item="id">
+            #{id}
+        </foreach>
+    </delete>
+    <delete id="deleteByUserId">
+         delete from app_user_role where userId = #{userId}
+    </delete>
+    <select id="getCountByRoleId" resultType="java.lang.Integer">
+        select count(1) from app_user_role where roleId=#{roleId} ;
+    </select>
+
+    <select id="getCountByListRoleId" resultType="java.lang.Integer">
+        select DISTINCT roleId from app_user_role where roleId
+         in
+        <foreach collection="roleIds" item="id" index="index" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="getUserRoleIds" resultType="java.lang.Integer">
+        select roleId from app_user_role where userId=#{userId}
+    </select>
+    <select id="getByUserIds" resultType="com.yskc.ms.entity.ms.AppUserRole">
+        select * from app_user_role where userId in
+        <foreach collection="userIds" open="(" separator="," close=")" item="userId">
+            #{userId}
+        </foreach>
+    </select>
+    <select id="getByRoleIds" resultType="com.yskc.ms.entity.ms.User">
+        select distinct yu.*
+        from app_user_role au
+        inner join ys_user yu on au.userId=yu.id
+        where au.roleId in
+        <foreach collection="roleIds" item="roleId" open="(" separator="," close=")">
+            #{roleId}
+        </foreach>
+    </select>
+</mapper>

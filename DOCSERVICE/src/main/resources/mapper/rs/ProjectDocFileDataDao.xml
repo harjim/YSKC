@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.docservice.dao.rs.project.ProjectDocFileDataDao">
+    <select id="getData" resultType="com.yskc.docservice.models.rs.DocFileDataModel">
+        SELECT p.data,p.id,d.docFileTemplateId,pp.pname,pp.beginYear,pp.formula,pp.tecIndustry,d.finished,d.month,
+        pp.rdIndex,t.docTemplateName as templateName,p.wordLength,d.docFileName,d.projectId,d.docFileId,d.stage
+        FROM p_docFile d
+        LEFT JOIN p_docFile_data p ON d.id = p.pdocFileId
+        LEFT JOIN p_project pp ON d.projectId=pp.id
+        LEFT JOIN docFileTemplate t ON t.id = d.docFileTemplateId
+        LEFT JOIN docFile f ON f.id = d.docFileId
+	    LEFT JOIN docFileTemplate t2 ON t2.docFileId = f.id AND t2.defaultTemplate = TRUE
+        WHERE d.id = #{pDocFileId}
+    </select>
+</mapper>

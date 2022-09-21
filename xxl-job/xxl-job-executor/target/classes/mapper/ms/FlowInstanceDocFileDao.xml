@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xxl.job.executor.dao.ms.FlowInstanceDocFileDao">
+    <insert id="insertOrUpdate">
+        insert into flowInstance_docFile (companyId,rsProjectId,docFileId,instanceId,moduleId,creatorId,
+        createTime,lastUpdateTime,lastUpdatorId)
+        VALUES
+        <foreach collection="list" item="l" separator=",">
+            (#{l.companyId},#{l.rsProjectId},#{l.docFileId},#{l.instanceId},#{l.moduleId},#{l.creatorId},
+            #{l.createTime},#{l.lastUpdateTime},#{l.lastUpdatorId})
+            </foreach>
+        ON DUPLICATE KEY UPDATE
+        instanceId = values(instanceId),
+        lastUpdatorId = values(lastUpdatorId),
+        lastUpdateTime = values(lastUpdateTime)
+    </insert>
+    <select id="getInstances" resultType="com.xxl.job.executor.models.flowInstance.FlowInstanceDocFileModel">
+        select instanceId,docFileId from flowInstance_docFile
+        where docFileId in
+        <foreach collection="docFileIds" open="(" separator="," close=")" item="docId">
+           #{docId}
+        </foreach>
+    </select>
+    <select id="getDocFileIds" resultType="com.xxl.job.executor.entity.ms.FlowInstanceDocFile">
+        select docFileId,instanceId from flowInstance_docFile where instanceId in
+        <foreach collection="instanceIds" open="(" separator="," close=")" item="instanceId">
+            #{instanceId}
+        </foreach>
+    </select>
+    <select id="getSuggestions" resultType="com.xxl.job.executor.models.flowInstance.DocFileAuditInfoModel">
+        select fdf.instanceId,fl.suggestion,fdf.docFileId,fdf.lastUpdatorId as msLastUpdatorId from flowInstance_docFile fdf
+        left join flowInstance_log fl on fl.instanceId = fdf.instanceId
+        left join (SELECT instanceId,max(createTime) as createTime FROM flowInstance_log group by instanceId) fl2
+        on fl.instanceId = fl2.instanceId and fl.createTime = fl2.createTime
+        where fdf.instanceId in
+        <foreach collection="instanceIds" open="(" separator="," close=")" item="instanceId">
+            #{instanceId}
+        </foreach>
+        order by fl.id
+    </select>
+</mapper>

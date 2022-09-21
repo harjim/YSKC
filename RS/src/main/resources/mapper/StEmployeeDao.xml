@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.StEmployeeDao">
+    <insert id="addStEmployees">
+        insert into stEmployee (`creatorId`,`lastUpdatorId`,`createTime`,`lastUpdateTime`,`msCreatorId`,`msLastUpdatorId`,
+                                `year`,companyId,enumber)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.creatorId},#{item.lastUpdatorId},#{item.createTime},#{item.lastUpdateTime},#{item.msCreatorId},
+             #{item.msLastUpdatorId},#{item.year},#{item.companyId},#{item.enumber})
+        </foreach>
+    </insert>
+
+    <select id="getList" resultType="com.yskc.rs.models.stEmployee.StEmployeeModel">
+        select e.ename,e.companyId,e.enumber,e.deptName,e.position,e.idNumber,e.edate,e.eduLevel,
+        e.title,e.leaveDate,e.specialities,e.birthday,e.gender,st.id,st.year
+        from stEmployee st
+        inner join employee e on st.enumber = e.enumber and e.companyId = st.companyId
+        where st.year = #{query.year} and st.companyId = #{companyId}
+        <if test="query.ename != null and query.ename != ''">
+            and e.ename like concat("%",#{query.ename},"%")
+        </if>
+        <if test="query.enumber != null and query.enumber !=''">
+            and e.enumber like concat("%",#{query.enumber},"%")
+        </if>
+        <if test="query.idNumber!=null and query.idNumber !=''">
+            and e.idNumber like concat("%",#{query.idNumber},"%")
+        </if>
+        <if test="query.eduLevel!=null and query.eduLevel >=0">
+            and e.eduLevel = #{query.eduLevel}
+        </if>
+        <if test="query.position !=null and query.position!=''">
+            and e.position like concat("%",#{query.position},"%")
+        </if>
+        <if test="query.deptName !=null and query.deptName != ''">
+            and e.deptName like concat("%",#{query.deptName},"%")
+        </if>
+        <if test="query.title !=null and query.title!=''">
+            and e.title like concat("%",#{query.title},"%")
+        </if>
+        <if test="query.specialities !=null and query.specialities !=''">
+            and e.specialities like concat("%",#{query.specialities},"%")
+        </if>
+    </select>
+    <select id="getExport" resultType="com.yskc.rs.models.stEmployee.StEmployeeExportModel">
+        select e.ename,e.companyId,e.enumber,e.deptName,e.position,e.idNumber,e.edate,e.eduLevel,
+        e.title,e.leaveDate,e.specialities,e.birthday,e.gender,st.id,st.year
+        from stEmployee st
+        inner join employee e on st.enumber = e.enumber and e.companyId = st.companyId
+        where st.year = #{query.year} and st.companyId = #{companyId}
+        <if test="query.ename != null and query.ename != ''">
+            and e.ename like concat("%",#{query.ename},"%")
+        </if>
+        <if test="query.enumber != null and query.enumber !=''">
+            and e.enumber like concat("%",#{query.enumber},"%")
+        </if>
+        <if test="query.idNumber!=null and query.idNumber !=''">
+            and e.idNumber like concat("%",#{query.idNumber},"%")
+        </if>
+        <if test="query.eduLevel!=null and query.eduLevel >=0">
+            and e.eduLevel = #{query.eduLevel}
+        </if>
+        <if test="query.position !=null and query.position!=''">
+            and e.position like concat("%",#{query.position},"%")
+        </if>
+        <if test="query.deptName !=null and query.deptName != ''">
+            and e.deptName like concat("%",#{query.deptName},"%")
+        </if>
+        <if test="query.title !=null and query.title!=''">
+            and e.title like concat("%",#{query.title},"%")
+        </if>
+        <if test="query.specialities !=null and query.specialities !=''">
+            and e.specialities like concat("%",#{query.specialities},"%")
+        </if>
+    </select>
+
+    <select id="getByenumbers" resultType="java.lang.String">
+        select enumber from stEmployee where companyId =#{companyId}
+        and `year` =#{year} and enumber in
+        (<foreach collection="enumbers" item="item" separator=",">
+            #{item}
+        </foreach>)
+    </select>
+</mapper>

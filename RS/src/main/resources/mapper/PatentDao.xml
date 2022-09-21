@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.PatentDao">
+    <insert id="insertPatentList">
+        INSERT INTO `p_patent`
+        (
+        `creatorId`,
+        `lastUpdatorId`,
+        `createTime`,
+        `lastUpdateTime`,
+        `msCreatorId`,
+        `msLastUpdatorId`,
+        `companyId`,
+        `projectId`,
+        `patentNo`,
+        `patentName`,
+        `applyDate`,
+        `authorizeDate`,
+        `ownership`,
+        `searchDate`
+        )
+        VALUES
+        <foreach collection="insertList" item="item" separator=",">
+            (
+            #{item.creatorId},
+            #{item.lastUpdatorId},
+            #{item.createTime},
+            #{item.lastUpdateTime},
+            #{item.msCreatorId},
+            #{item.msLastUpdatorId},
+            #{item.companyId},
+            #{item.projectId},
+            #{item.patentNo},
+            #{item.patentName},
+            #{item.applyDate},
+            #{item.authorizeDate},
+            #{item.ownership},
+            #{item.searchDate}
+            )
+        </foreach>
+    </insert>
+    <update id="updatePatentList">
+        update p_patent
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="patentName =case" suffix="end,">
+                <foreach collection="updateList" item="i" index="index">
+                    <if test="i.patentName!=null">
+                        when id=#{i.id} then #{i.patentName}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="applyDate =case" suffix="end,">
+                <foreach collection="updateList" item="i" index="index">
+                    <if test="i.applyDate!=null">
+                        when id=#{i.id} then #{i.applyDate}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="authorizeDate =case" suffix="end,">
+                <foreach collection="updateList" item="i" index="index">
+                    <if test="i.authorizeDate!=null">
+                        when id=#{i.id} then #{i.authorizeDate}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="ownership =case" suffix="end,">
+                <foreach collection="updateList" item="i" index="index">
+                    <if test="i.ownership!=null">
+                        when id=#{i.id} then #{i.ownership}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="searchDate =case" suffix="end,">
+                <foreach collection="updateList" item="i" index="index">
+                    <if test="i.searchDate!=null">
+                        when id=#{i.id} then #{i.searchDate}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdateTime =case" suffix="end,">
+                <foreach collection="updateList" item="i" index="index">
+                    <if test="i.lastUpdateTime!=null">
+                        when id=#{i.id} then #{i.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdatorId =case" suffix="end,">
+                <foreach collection="updateList" item="i" index="index">
+                    <if test="i.lastUpdatorId!=null">
+                        when id=#{i.id} then #{i.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="msLastUpdatorId =case" suffix="end,">
+                <foreach collection="updateList" item="i" index="index">
+                    <if test="i.msLastUpdatorId!=null">
+                        when id=#{i.id} then #{i.msLastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="updateList" separator="or" item="i" index="index">
+            id=#{i.id}
+        </foreach>
+    </update>
+
+
+    <select id="queryPatent" resultType="com.yskc.rs.models.Patent.PatentModel">
+        select * from p_patent
+        where companyId = #{model.companyId}
+        and projectId = #{model.projectId}
+        <if test="model.patentNo != null and model.patentNo != ''">
+            and patentNo like "%" #{model.patentNo}"%"
+        </if>
+        <if test="model.patentName != null and model.patentName != ''">
+            and patentName like "%"#{model.patentName}"%"
+        </if>
+    </select>
+    <select id="checkPatentNo" resultType="com.yskc.rs.entity.PatentEntity">
+        select * from p_patent
+        where projectId = #{projectId} and patentNo = #{patentNo}
+        <if test="pid != null and pid != 0">
+            and id != #{pid}
+        </if>
+    </select>
+    <select id="queryPatentByProjectId" resultType="com.yskc.rs.entity.PatentEntity">
+        select * from p_patent where companyId = #{companyId} and projectId = #{projectId}
+    </select>
+</mapper>

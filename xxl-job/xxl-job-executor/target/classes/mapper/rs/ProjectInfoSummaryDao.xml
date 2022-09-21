@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xxl.job.executor.dao.rs.ProjectInfoSummaryDao">
+    <insert id="insertOrUpdate">
+         insert into p_info_summary (`month`,projectId,companyId,staffRdHour,prodRdHour,materialRaw,
+        materialAuxiliary,materialReserve,yieldAmount,createTime,lastUpdateTime,
+        trialRaw,trialAuxiliary,trialReserve,repairRaw,repairAuxiliary,repairReserve)
+        values
+        <foreach collection="insertOrUpdate" item="item" separator=",">
+        (#{item.month},#{item.projectId},#{item.companyId},#{item.staffRdHour},#{item.prodRdHour},#{item.materialRaw},
+        #{item.materialAuxiliary},#{item.materialReserve},#{item.yieldAmount},#{item.createTime},#{item.lastUpdateTime},
+        #{item.trialRaw},#{item.trialAuxiliary},#{item.trialReserve},#{item.repairRaw},#{item.repairAuxiliary},#{item.repairReserve})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        staffRdHour=values(staffRdHour),
+        prodRdHour=values(prodRdHour),
+        materialRaw=values(materialRaw),
+        materialAuxiliary=values(materialAuxiliary),
+        materialReserve=values(materialReserve),
+        trialRaw=values(trialRaw),
+        trialAuxiliary=values(trialAuxiliary),
+        trialReserve=values(trialReserve),
+        repairRaw=values(repairRaw),
+        repairAuxiliary=values(repairAuxiliary),
+        repairReserve=values(repairReserve),
+        yieldAmount=values(yieldAmount),
+        lastUpdateTime=values(lastUpdateTime)
+    </insert>
+    <update id="truncateTable">
+        truncate p_info_summary
+    </update>
+    <select id="countStaffHour" resultType="com.xxl.job.executor.entity.rs.ProjectInfoSummary">
+        select companyId,`month`,projectId,sum(rdHour) staffRdHour
+        from p_rdEmployee
+        where projectId in (select projectId from p_rdEmployee where lastUpdateTime &gt;= #{lastUpdateTime})
+        group by companyId,`month`,projectId
+    </select>
+    <select id="countEquipmentHour" resultType="com.xxl.job.executor.entity.rs.ProjectInfoSummary">
+        select companyId,`month`,projectId,sum(rdHour) prodRdHour
+        from p_rdEquipment
+        where projectId in (select projectId from p_rdEquipment where lastUpdateTime &gt;= #{lastUpdateTime})
+        group by companyId,`month`,projectId
+    </select>
+    <select id="countYieldAmount" resultType="com.xxl.job.executor.entity.rs.ProjectInfoSummary">
+        select companyId,`month`,projectId,sum(rdYield) yieldAmount
+        from p_yield_config
+        where projectId in (select projectId from p_yield_config where lastUpdateTime &gt;= #{lastUpdateTime})
+        group by companyId,`month`,projectId
+    </select>
+
+    <select id="getMaterialInfoSummary" resultType="com.xxl.job.executor.entity.rs.ProjectInfoSummary">
+        select pm.companyId,
+               pm.projectId,
+               date_format(dm.acqDate, '%Y-%m-01')                              `month`,
+               sum(IF(pm.rdType div 100 = 200 and dm.type = 0, pm.rdAmount, 0)) materialRaw,
+               sum(IF(pm.rdType div 100 = 200 and dm.type = 1, pm.rdAmount, 0)) materialAuxiliary,
+               sum(IF(pm.rdType div 100 = 200 and dm.type = 2, pm.rdAmount, 0)) materialReserve,
+               sum(IF(pm.rdType div 100 = 203 and dm.type = 0, pm.rdAmount, 0)) trialRaw,
+               sum(IF(pm.rdType div 100 = 203 and dm.type = 1, pm.rdAmount, 0)) trialAuxiliary,
+               sum(IF(pm.rdType div 100 = 203 and dm.type = 2, pm.rdAmount, 0)) trialReserve,
+               sum(IF(pm.rdType div 100 = 206 and dm.type = 0, pm.rdAmount, 0)) repairRaw,
+               sum(IF(pm.rdType div 100 = 206 and dm.type = 1, pm.rdAmount, 0)) repairAuxiliary,
+               sum(IF(pm.rdType div 100 = 206 and dm.type = 2, pm.rdAmount, 0)) repairReserve
+        from p_material pm
+                 inner join d_material dm on dm.id = pm.materialDataId
+        where pm.projectId in (select distinct projectId from p_material where lastUpdateTime >= #{lastTime})
+        group by pm.companyId, pm.projectId, `month`
+    </select>
+    <select id="getByProject" resultType="com.xxl.job.executor.entity.rs.ProjectInfoSummary">
+        select id,`month`,projectId,companyId,staffRdHour,prodRdHour,materialRaw,repairRaw,repairAuxiliary,
+        materialAuxiliary,materialReserve,materialReserve,yieldAmount,trialRaw,trialAuxiliary,trialReserve,repairReserve
+        from p_info_summary
+        where projectId in(<foreach collection="projectIds" item="projectId" separator=",">#{projectId}</foreach>)
+    </select>
+</mapper>

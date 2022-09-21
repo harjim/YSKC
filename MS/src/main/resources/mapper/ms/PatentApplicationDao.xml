@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.PatentApplicationDao">
+
+    <select id="getList" resultType="com.yskc.ms.models.patent.PatentDemandModel">
+        select pd.id,pd.demandNo,c.companyName as customerName, case when c.companyId is null then 0 else c.companyId end as companyId,
+        pd.customerId,pd.year,pd.type,pd.inventionNum,pd.utilityNum,pd.appearanceDesignNum,pd.softRightNum,
+        pd.total,pd.remark,pd.proxyPath,pd.blPath,pd.remissionPath,pd.otherPath,pd.planSubmitDate,pd.createTime,c.groupId
+        from patent_demand pd
+        left join customer as c on pd.customerId = c.id
+        <where>
+            <include refid="com.yskc.ms.dao.ms.BaseDataDao.byMember">
+                <property name="tableAlias" value="pd"/>
+                <property name="userTable" value="patent_demand_member"/>
+                <property name="colId" value="deamndId"/>
+                <property name="memberId" value="memberId"/>
+            </include>
+            <include refid="com.yskc.ms.dao.ms.BaseDataDao.memberCondition">
+                <property name="tableAlias" value="pd"/>
+                <property name="userTable" value="patent_demand_member"/>
+                <property name="colId" value="deamndId"/>
+                <property name="memberId" value="memberId"/>
+            </include>
+            <if test="query.year!=null">
+                and year = #{query.year}
+            </if>
+            <if test="query.groupName != null and query.groupName != ''">
+                and c.groupId !=0 and c.groupId in (select companyId from customer where companyType in (1,3) and companyName like "%"#{query.groupName}"%")
+            </if>
+            <if test="query.customerName!=null and query.customerName !=''">
+                and c.companyName like "%"#{query.customerName}"%"
+            </if>
+            <if test="query.type!=null">
+                and type = #{query.type}
+            </if>
+        </where>
+    </select>
+    <select id="getMemberList" resultType="com.yskc.ms.models.patent.PatentMemberModel">
+        select deamndId as demandId,mType,group_concat(distinct u.realName) as memberName,min(pd.memberId) as memberId from patent_demand_member pd inner join ys_user u on pd.memberId=u.id
+        where pd.deamndId in <foreach collection="demandIds" open="(" close=")" item="demandId" separator=",">#{demandId}</foreach>
+        group by deamndId,mType
+    </select>
+    <select id="getName" resultType="hashmap">
+        select id,realName from ys_user where id in
+        <foreach collection="set" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </select>
+    <select id="getPath" resultType="string">
+        select ${type} from patent_demand where id = #{id}
+    </select>
+    <update id="updatePath">
+        update patent_demand
+        <trim prefix="set" suffixOverrides=",">
+            <if test='type == "proxyPath"'>
+                proxyPath = #{path},
+            </if>
+            <if test='type == "blPath"'>
+                blPath = #{path},
+            </if>
+            <if test='type == "remissionPath"'>
+                remissionPath = #{path},
+            </if>
+            <if test='type == "otherPath"'>
+                otherPath = #{path},
+            </if>
+        </trim>
+        where id = #{id}
+    </update>
+    <select id="selectMember" resultType="com.yskc.ms.models.patent.PatentMemberModel">
+        select deamndId as id,memberId,mType from patent_demand_member
+    </select>
+    <insert id="setMember">
+        insert into patent_demand_member
+        (deamndId,mType,memberId)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.id},#{item.mType},#{item.memberId})
+        </foreach>
+    </insert>
+    <delete id="delMember">
+        delete from patent_demand_member
+        where deamndId in
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+        and mType = #{mType}
+    </delete>
+</mapper>

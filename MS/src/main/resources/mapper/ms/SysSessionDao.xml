@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.SysSessionDao">
+
+    <insert id="insertOne" parameterType="com.yskc.ms.entity.ms.SysSession">
+        INSERT INTO sys_session (userId,token,createTime,updateTime,expireTime )
+        VALUES (
+           #{userId},
+           #{token} ,
+           #{createTime},
+           #{updateTime},
+           #{expireTime}
+         )
+    </insert>
+    <select id="getSessionByToken" resultType="com.yskc.ms.entity.ms.SysSession">
+        select * from sys_session where token=#{token} limit 1 ;
+    </select>
+</mapper>

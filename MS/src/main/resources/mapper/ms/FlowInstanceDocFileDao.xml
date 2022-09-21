@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.FlowInstanceDocFileDao">
+
+    <select id="getDocFileAudits" resultType="com.yskc.ms.models.projectAudit.DocFileAuditModel">
+        select fdf.docFileId,fi.status
+        from flowInstance_docFile fdf
+        inner join flowInstance fi on fi.id =fdf.instanceId
+        where fdf.docFileId in (<foreach collection="docFileIds" separator="," item="docFileId">#{docFileId}</foreach>)
+    </select>
+    <select id="getDocAudit" resultType="com.yskc.ms.entity.ms.FlowInstanceDocFile">
+        select distinct fd.docFileId,fd.moduleId
+        from flowInstance_docFile fd
+        inner join flowInstance fi on fd.instanceId=fi.id
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id and fic.nodeStatus=0
+        inner join flowInstance_user fu on fu.instanceId=fic.instanceId and fu.nodeId=fic.curNodeId and fu.status is null and
+        fu.userId=#{userId}
+        where fd.rsProjectId in (<foreach collection="projectIds" item="projectId" separator=",">#{projectId}</foreach>)
+        <if test="pDocFileIds != null">
+            and fd.docFileId in(<foreach collection="pDocFileIds" item="pdocFileId" separator=",">#{pdocFileId}</foreach>)
+        </if>
+    </select>
+    <select id="getAuditStatus" resultType="com.yskc.ms.models.projectAudit.AuditStatusModel">
+      select fip.moduleId,fm.modeName,fn.nodeName,fi.flowId,fi.status,fic.nodeStatus,fic.curNodeId,fip.instanceId
+      from flowInstance_docFile fip
+        inner join flowInstance fi on fi.id = fip.instanceId
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id
+        inner join flowModule fm on fm.id=fip.moduleId
+        inner join flowNode fn on fn.id=fic.curNodeId
+        where fip.docFileId=#{docFileId} limit 1
+    </select>
+    <select id="getInstanceUsers" resultType="com.yskc.ms.entity.ms.FlowInstanceUser">
+        select fu.id,fu.instanceId,fu.nodeId,fi.lastSubmiter from flowInstance fi
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id
+        inner join flowInstance_docFile fip on fip.instanceId = fi.id
+        inner join flowInstance_user fu on fu.instanceId=fi.id and fu.nodeId=fic.curNodeId
+        where fip.rsProjectId=#{projectId} and fu.userId = #{userId} and fi.status = 0
+        and fip.docFileId in(<foreach collection="docFileIds" separator="," item="dId">#{dId}</foreach>)
+    </select>
+    <select id="getInstances" resultType="com.yskc.ms.entity.ms.FlowInstanceCurNode">
+        select fic.instanceId,fic.nodeStatus,fic.curNodeId from flowInstance fi
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id
+        inner join flowInstance_docFile fip on fip.instanceId = fi.id
+        where fip.rsProjectId=#{projectId} and fic.nodeStatus = 1
+        and fip.docFileId in(<foreach collection="docFileIds" separator="," item="dId">#{dId}</foreach>)
+    </select>
+    <select id="getDocFileInstance" resultType="com.yskc.ms.entity.ms.FlowInstanceCurNode">
+        select fic.instanceId,fic.nodeStatus,fic.curNodeId from flowInstance fi
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id
+        inner join flowInstance_docFile fip on fip.instanceId = fi.id
+        where fic.nodeStatus = 1 and
+        (<foreach collection="projectDocFiles" item="p" separator="OR">
+            (fip.docFileId = #{p.docFileId} and fip.rsProjectId=#{p.projectId})
+        </foreach>)
+    </select>
+    <select id="countAuditDocNum" resultType="com.yskc.ms.models.projectAudit.AuditDocFileModel">
+        select fd.rsProjectId,count(distinct f.id) as auditDocNum
+        from flowInstance_docFile fd
+        inner join flowInstance f on fd.instanceId=f.id
+        inner join flowInstance_curNode fic on fic.instanceId=f.id and fic.nodeStatus=0
+        inner join flowInstance_user fu on fu.instanceId=f.id and fu.nodeId=fic.curNodeId
+        where fu.userId=#{userId} and fu.status is null and fd.rsProjectId in
+        <foreach collection="projectIds" item="projectId" open="(" separator="," close=")">
+            #{projectId}
+        </foreach>
+        <if test="docFileIds!=null and docFileIds.size()>0">
+            and fd.docFileId in (<foreach collection="docFileIds" item="docFileId" separator=",">#{docFileId}</foreach>)
+        </if>
+        group by fd.rsProjectId
+    </select>
+    <select id="getDocNum" resultType="com.yskc.ms.models.projectAudit.AuditDocFileModel">
+        select fd.rsProjectId,count(1) as auditDocNum
+        from flowInstance_docFile fd
+        inner join flowInstance f on fd.instanceId=f.id
+        where f.status in
+        <foreach collection="nodeStatus" item="nodeStatus" open="(" separator="," close=")">
+            #{nodeStatus}
+        </foreach>
+        and fd.rsProjectId in
+        <foreach collection="projectIds" item="projectId" open="(" separator="," close=")">
+            #{projectId}
+        </foreach>
+        <if test="docFileIds!=null and docFileIds.size()>0">
+            and fd.docFileId in (<foreach collection="docFileIds" item="docFileId" separator=",">#{docFileId}</foreach>)
+        </if>
+        group by fd.rsProjectId
+    </select>
+    <select id="getInstanceInfo" resultType="com.yskc.ms.models.flowInstance.FlowInstanceInfoModel">
+        select rsProjectId,docFileId,moduleId from flowInstance_docFile where instanceId=#{instanceId} limit 1
+    </select>
+    <select id="getProjectInfo" resultType="com.yskc.ms.models.flowInstance.RdInstanceModel">
+        <!--        select rsProjectId,instanceId,companyId from flowInstance_report-->
+        <!--        where instanceId in (<foreach collection="instanceIds" item="instanceId" separator=",">#{instanceId}</foreach>)-->
+        <!--        union-->
+        select rsProjectId,instanceId,companyId from flowInstance_docFile
+        where instanceId in (<foreach collection="instanceIds" item="instanceId" separator=",">#{instanceId}</foreach>)
+    </select>
+    <select id="getReportInstanceUsers" resultType="com.yskc.ms.entity.ms.FlowInstanceUser">
+        select fu.id,fu.instanceId,fu.nodeId,fi.lastSubmiter from flowInstance fi
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id
+        inner join flowInstance_docFile fip on fip.instanceId = fi.id
+        inner join flowInstance_user fu on fu.instanceId=fi.id and fu.nodeId=fic.curNodeId
+        where fip.rsProjectId in (<foreach collection="projectIds" item="projectId" separator=",">#{projectId}</foreach>)
+        and fu.userId = #{userId} and fi.status = 0
+        and fip.moduleId=#{moduleId}
+    </select>
+    <select id="getReportInstances" resultType="com.yskc.ms.entity.ms.FlowInstanceCurNode">
+        select fic.instanceId,fic.curNodeId,fic.nodeStatus from flowInstance fi
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id
+        inner join flowInstance_docFile fip on fip.instanceId = fi.id
+        where fip.rsProjectId in (<foreach collection="projectIds" item="projectId" separator=",">#{projectId}</foreach>)
+        and fic.nodeStatus = 1
+        and fip.moduleId=#{moduleId}
+    </select>
+    <select id="geDocFileIds" resultType="java.lang.Integer">
+        select docFileId from flowInstance_docFile where rsProjectId = #{projectId}
+    </select>
+
+</mapper>

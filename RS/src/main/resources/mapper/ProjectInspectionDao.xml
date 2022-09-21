@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.project.ProjectInspectionDao">
+    <update id="updateList">
+        update p_inspection set rdAmount=#{amount},lastUpdateTime=#{date},lastUpdatorId=#{userId},msLastUpdatorId=#{msUserId}
+        where id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+    <update id="updateRdAmounts">
+        <foreach collection="list" item="item" separator=";">
+            update p_inspection set rdAmount=#{item.rdAmount},lastUpdateTime=#{item.lastUpdateTime},
+            lastUpdatorId=#{item.lastUpdatorId},msLastUpdatorId=#{item.msLastUpdatorId}
+            where id=#{item.id}
+        </foreach>
+    </update>
+
+    <select id="queryProjectInspection" resultType="com.yskc.rs.models.projectinspection.ProjectInspectionModel">
+        SELECT
+        p.id,
+        p.projectId,
+        d.accDate,
+        d.expense,
+        d.accNumber,
+        d.type,
+        d.summary,
+        d.deptName,
+        p.rdAmount,
+        d.remainExpense,
+        p.inspectionDataId
+        FROM
+        p_inspection p
+        JOIN d_inspection d ON p.inspectionDataId = d.id
+        WHERE
+        p.projectId = #{query.projectId}
+        AND d.accDate &gt;= #{beginDate}
+        AND d.accDate &lt;= #{endDate}
+        AND p.companyId = #{companyId}
+        <if test="query.types!=null">
+            and d.type in
+            <foreach collection="query.types" open="(" separator="," close=")" item="type">
+                #{type}
+            </foreach>
+        </if>
+        <if test="query.accDate != null">
+            and d.accDate = #{query.accDate}
+        </if>
+        <if test="query.summary != null and query.summary!=''">
+            and d.summary like "%"#{query.summary}"%"
+        </if>
+        <if test="query.deptName !=null and query.deptName != ''">
+            and d.deptName like "%"#{query.deptName}"%"
+        </if>
+    </select>
+    <select id="getProjectInspection" resultType="com.yskc.rs.models.projectinspection.HighTechInspectionModel">
+        SELECT
+            p.id,
+            p.projectId,
+            d.accDate,
+            d.expense,
+            d.accNumber,
+            d.summary,
+            d.deptName,
+            p.rdAmount
+        FROM
+            p_inspection p
+                JOIN d_inspection d ON p.inspectionDataId = d.id
+        WHERE
+            p.projectId = #{query.projectId}
+          AND d.accDate &gt;= #{beginDate}
+          AND d.accDate &lt;= #{endDate}
+          AND p.companyId = #{query.companyId}
+        <if test="query.types!=null">
+            and d.type in
+            <foreach collection="query.types" open="(" separator="," close=")" item="type">
+                #{type}
+            </foreach>
+        </if>
+    </select>
+    <insert id="addInspectionBatch">
+        INSERT INTO `p_inspection`
+        (`projectId`,`inspectionDataId`,`companyId`,`creatorId`,`createTime`,`lastUpdateTime`,`lastUpdatorId`,`msCreatorId`,`msLastUpdatorId`,`rdAmount`)
+        VALUES
+        <foreach collection="projectInspectionEntities" item="item" separator=",">
+            (#{item.projectId},#{item.inspectionDataId},#{item.companyId},#{item.creatorId},#{item.createTime},#{item.lastUpdateTime},#{item.lastUpdatorId},#{item.msCreatorId},#{item.msLastUpdatorId},#{item.rdAmount})
+        </foreach>
+    </insert>
+
+    <select id="getInspectionSum" resultType="com.yskc.rs.models.projectinspection.ProjectInspectionModel">
+        SELECT
+        p.projectId,
+        d.accDate,
+        d.type,
+        SUM(d.expense) AS expense
+        FROM
+        p_inspection p
+        INNER JOIN d_inspection d ON p.inspectionDataId = d.id
+        where p.projectId=#{projectId} and d.accDate in
+        <foreach item="item" index="index" collection="dateList" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        group by p.projectId , d.accDate, d.type
+    </select>
+
+    <select id="getInspectionDate" resultType="com.yskc.rs.models.projectinspection.ProjectInspectionModel">
+        SELECT
+        p.projectId,
+        d.accDate,
+        d.type,
+        SUM(p.rdAmount) AS expense
+        FROM
+        p_inspection p
+        INNER JOIN d_inspection d ON p.inspectionDataId = d.id
+        WHERE
+        p.projectId = #{projectId}
+        AND d.accDate &gt;= #{beginDate}
+        AND d.accDate &lt;= #{endDate}
+        <if test="types != null">
+            and d.type in
+            <foreach collection="types" open="(" separator="," close=")" item="type">
+                #{type}
+            </foreach>
+        </if>
+        group by p.projectId , d.accDate, d.type
+    </select>
+
+    <select id="getProjectInspectionSum" resultType="java.math.BigDecimal">
+        SELECT
+        sum(p.rdAmount)
+        FROM
+        p_inspection p
+        JOIN d_inspection d ON p.inspectionDataId = d.id
+        WHERE
+        p.projectId = #{query.projectId}
+        AND d.accDate &gt;= #{beginDate}
+        AND d.accDate &lt;= #{endDate}
+        AND p.companyId = #{companyId}
+        <if test="query.types!=null">
+            and d.type in
+            <foreach collection="query.types" open="(" separator="," close=")" item="type">
+                #{type}
+            </foreach>
+        </if>
+        <if test="query.accDate != null">
+            and d.accDate = #{query.accDate}
+        </if>
+        <if test="query.summary != null and query.summary!=''">
+            and d.summary like "%"#{query.summary}"%"
+        </if>
+        <if test="query.deptName !=null and query.deptName != ''">
+            and d.deptName like "%"#{query.deptName}"%"
+        </if>
+    </select>
+
+    <select id="queryWorkOrderData" resultType="com.yskc.rs.models.workSheet.WorkSheetModel">
+        SELECT
+        p.id,
+        p.projectId,
+        d.accDate,
+        d.expense as cost ,
+        d.summary as costElement,
+        d.type,
+        d.summary as workEvent,
+        r.deptName AS coObj,
+        d.deptId,
+        t.deptName,
+        j.rdIndex AS rdNum
+        FROM
+        p_inspection p
+        JOIN d_inspection d ON p.inspectionDataId = d.id
+        LEFT JOIN p_project j ON p.projectId = j.id
+        LEFT JOIN rdDept r ON d.rdDeptId = r.id
+        LEFT JOIN dept t ON d.deptId = t.id
+        WHERE
+        p.projectId = #{projectId}
+        AND p.companyId = #{companyId}
+        AND d.accDate = #{date}
+        <if test="types!=null">
+            and d.type in
+            <foreach collection="types" open="(" separator="," close=")" item="type">
+                #{type}
+            </foreach>
+        </if>
+        ORDER BY
+        d.accDate DESC
+    </select>
+    <select id="queryWorkOrderByMonth" resultType="com.yskc.rs.models.workSheet.WorkSheetMiniModel">
+        SELECT
+        d.accDate as workDate,
+        d.expense as cost ,
+        j.rdIndex
+        FROM
+        p_inspection p
+        JOIN d_inspection d ON p.inspectionDataId = d.id
+        LEFT JOIN p_project j ON p.projectId = j.id
+        WHERE
+        p.projectId = #{workSheetQuery.projectId}
+        AND p.companyId = #{info.companyId}
+        AND d.accDate >=#{workSheetQuery.month} and d.accDate &lt;= #{endDate}
+        <if test="workSheetQuery.types!=null">
+            and d.type in
+            <foreach collection="workSheetQuery.types" open="(" separator="," close=")" item="type">
+                #{type}
+            </foreach>
+        </if>
+        ORDER BY d.accDate
+    </select>
+    <select id="getAmortizationSum"
+            resultType="com.yskc.rs.models.projectinspection.SumProjectAmortizationModel">
+        select
+        sum(CASE WHEN d.type = 40000 THEN p.rdAmount ELSE 0 END) as softwareSum,
+        sum(CASE WHEN d.type = 40100 THEN p.rdAmount ELSE 0 END) as patentSum,
+        sum(CASE WHEN d.type = 40200 THEN p.rdAmount ELSE 0 END) as otherSum
+        FROM
+        p_inspection p
+        JOIN d_inspection d ON p.inspectionDataId = d.id
+        WHERE
+        p.companyId = #{companyId}
+        AND p.projectId = #{query.projectId}
+        AND d.accDate &gt;= #{beginDate}
+        AND d.accDate &lt;= #{endDate}
+        <if test="query.types!=null">
+            and d.type in
+            <foreach collection="query.types" open="(" separator="," close=")" item="type">
+                #{type}
+            </foreach>
+        </if>
+        <if test="query.accDate != null">
+            and d.accDate = #{query.accDate}
+        </if>
+        <if test="query.summary != null and query.summary!=''">
+            and d.summary like "%"#{query.summary}"%"
+        </if>
+        <if test="query.deptName !=null and query.deptName != ''">
+            and d.deptName like "%"#{query.deptName}"%"
+        </if>
+    </select>
+    <select id="getOtherSum" resultType="com.yskc.rs.models.projectinspection.OtherSumModel">
+        select
+        sum(CASE WHEN d.type = 60000 THEN p.rdAmount ELSE 0 END) as book,
+        sum(CASE WHEN d.type = 60100 THEN p.rdAmount ELSE 0 END) as rdProduction,
+        sum(CASE WHEN d.type = 60200 THEN p.rdAmount ELSE 0 END) as copyright,
+        sum(CASE WHEN d.type = 60300 THEN p.rdAmount ELSE 0 END) as benefits,
+        sum(CASE WHEN d.type = 69900 THEN p.rdAmount ELSE 0 END) as other
+        FROM
+        p_inspection p
+        JOIN d_inspection d ON p.inspectionDataId = d.id
+        WHERE
+        p.companyId = #{companyId}
+        AND p.projectId = #{query.projectId}
+        AND d.accDate &gt;= #{beginDate}
+        AND d.accDate &lt;= #{endDate}
+        <if test="query.types!=null">
+            and d.type in
+            <foreach collection="query.types" open="(" separator="," close=")" item="type">
+                #{type}
+            </foreach>
+        </if>
+        <if test="query.accDate != null">
+            and d.accDate = #{query.accDate}
+        </if>
+        <if test="query.summary != null and query.summary!=''">
+            and d.summary like "%"#{query.summary}"%"
+        </if>
+        <if test="query.deptName !=null and query.deptName != ''">
+            and d.deptName like "%"#{query.deptName}"%"
+        </if>
+    </select>
+
+    <select id="ExportFromOther" resultType="com.yskc.rs.models.aggregation.OtherExportModel">
+        select pp.rdTitle,di.accNumber,di.accDate as `date`,di.summary,pi.rdAmount,di.type,di.deptName
+        from p_inspection pi
+        inner join p_project pp on pi.projectId=pp.id
+        inner join d_inspection di on pi.inspectionDataId=di.id
+        where di.type in
+        <foreach collection="model.types" item="type" open="(" close=")" separator=",">
+            #{type}
+        </foreach>
+        and pp.id in
+        <foreach collection="model.projectIds" item="projectId" open="(" close=")" separator=",">
+            #{projectId}
+        </foreach>
+        and
+        <foreach collection="model.range" item="range" separator="or" open="(" close=")">
+            (di.accDate &gt;=#{range.begin} and di.accDate &lt;= #{range.end})
+        </foreach>
+        order by accDate,rdTitle
+    </select>
+    <select id="getUsedList" resultType="com.yskc.rs.models.UsedModel">
+        select p.rdAmount,pj.rdTitle,p.inspectionDataId as id
+        from p_inspection p
+        inner join p_project pj on p.projectId=pj.id
+        where p.projectId!=#{projectId} and p.inspectionDataId in
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+        order by pj.rdTitle asc
+    </select>
+
+</mapper>

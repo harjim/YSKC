@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.RsProjectMasterDao">
+    <select id="getMasters" resultType="com.yskc.ms.entity.ms.RsProjectMaster">
+        select rm.*,yu.realName
+        from rsProject_master rm
+        inner join ys_user yu on rm.userId=yu.id
+        where mType=1 and
+        <foreach collection="list" item="l" separator="or">
+            (year=#{l.year} and rsProjectId=#{l.projectId})
+        </foreach>
+
+    </select>
+    <select id="getMaster" resultType="com.yskc.ms.entity.ms.RsProjectMaster">
+        select * from rsProject_master where `year`=#{model.year} and rsProjectId=#{model.rsProjectId} and mType=#{model.mType}
+    </select>
+    <select id="getRsProjectIds" resultType="java.lang.Integer">
+        select rsProjectId from rsProject_master where mType=#{mType}
+           and userId in (<foreach collection="tIds" separator="," item="tId">#{tId}</foreach>)
+    </select>
+</mapper>

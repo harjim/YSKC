@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.docservice.dao.rs.init.InitEquipmentDao">
+    <update id="updateBatch">
+        update i_equipment
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="lastUpdateTime =case" suffix="end,">
+                <foreach collection="list" item="l" index="index">
+                    <if test="l.lastUpdateTime!=null">
+                        when id=#{l.id} then #{l.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdatorId =case" suffix="end,">
+                <foreach collection="list" item="l" index="index">
+                    <if test="l.lastUpdatorId!=null">
+                        when id=#{l.id} then #{l.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="msLastUpdatorId =case" suffix="end,">
+                <foreach collection="list" item="l" index="index">
+                    <if test="l.msLastUpdatorId!=null">
+                        when id=#{l.id} then #{l.msLastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="effect =case" suffix="end,">
+                <foreach collection="list" item="l" index="index">
+                    <if test="l.effect!=null">
+                        when id=#{l.id} then #{l.effect}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="entryDate =case" suffix="end,">
+                <foreach collection="list" item="l" index="index">
+                    <if test="l.entryDate!=null">
+                        when id=#{l.id} then #{l.entryDate}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="list" item="l" separator="or">
+            id = #{l.id}
+        </foreach>
+    </update>
+    <insert id="addBatch">
+        INSERT INTO
+        i_equipment(projectId,ecode,companyId,creatorId,createTime,lastUpdateTime,lastUpdatorId,msCreatorId,
+        msLastUpdatorId,effect,entryDate,`year`)
+        VALUES
+        <foreach collection="initEquipmentList" separator="," item="ie">
+            (#{ie.projectId},#{ie.ecode},#{ie.companyId},#{ie.creatorId},#{ie.createTime},#{ie.lastUpdateTime},
+            #{ie.lastUpdatorId},#{ie.msCreatorId},#{ie.msLastUpdatorId},#{ie.effect},#{ie.entryDate},#{ie.year})
+        </foreach>
+    </insert>
+    <select id="getExistList" resultType="com.yskc.docservice.entity.rs.init.InitEquipmentEntity">
+        select ecode,id from i_equipment where companyId = #{companyId} and projectId = #{projectId} and `year`=#{year}
+        and ecode in
+        <foreach collection="ecodes" open="(" separator="," close=")" item="ecode">
+            #{ecode}
+        </foreach>
+    </select>
+    <select id="getByEcodes" resultType="java.lang.String">
+        select ecode from i_equipment where companyId = #{companyId} and projectId = #{projectId}
+        <if test="year!=null and year>0">
+            and `year`=#{year}
+        </if>
+        and ecode in
+        <foreach collection="ecodes" open="(" separator="," close=")" item="ecode">
+            #{ecode}
+        </foreach>
+    </select>
+    <select id="getEquList" resultType="com.yskc.docservice.models.rs.initequipment.InitEquipmentModel">
+        select e.ename,e.quantity,e.unitPrice,e.usefullife
+        from i_equipment as ie
+                 INNER JOIN equipment as e on e.ecode = ie.ecode and e.companyId = ie.companyId
+        where ie.companyId = #{companyId} and ie.projectId = #{projectId} and ie.year=#{year}
+    </select>
+</mapper>

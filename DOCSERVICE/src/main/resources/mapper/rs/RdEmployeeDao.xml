@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.docservice.dao.rs.RdEmployeeDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.yskc.docservice.entity.rs.RdEmployeeEntity" id="rdEmployeeMap">
+        <result property="id" column="id"/>
+        <result property="creatorId" column="creatorId"/>
+        <result property="lastUpdatorId" column="lastUpdatorId"/>
+        <result property="createTime" column="createTime"/>
+        <result property="lastUpdateTime" column="lastUpdateTime"/>
+        <result property="msCreatorId" column="msCreatorId"/>
+        <result property="msLastUpdatorId" column="msLastUpdatorId"/>
+        <result property="year" column="year"/>
+        <result property="companyId" column="companyId"/>
+        <result property="enumber" column="enumber"/>
+        <result property="etype" column="etype"/>
+        <result property="rdDeptId" column="rdDeptId"/>
+    </resultMap>
+
+    <update id="updateList">
+        <foreach collection="entities" item="item" separator=";">
+            update rdEmployee set rdDeptId=#{item.rdDeptId},
+            lastUpdatorId = #{item.lastUpdatorId},
+            msLastUpdatorId = #{item.msLastUpdatorId},
+            lastUpdateTime = #{item.lastUpdateTime},
+            etype=#{item.etype},position=#{item.position}
+            where id=#{item.id}
+        </foreach>
+    </update>
+    <select id="queryByCompanyIdAndYear" resultType="com.yskc.docservice.models.rs.RdEmployeeModel">
+        select rde.enumber, e.ename
+        from rdEmployee rde
+                 left join employee e on e.enumber = rde.enumber AND e.companyId = #{companyId}
+        where rde.companyId = #{companyId}
+          and rde.year = #{year}
+    </select>
+    <select id="getByEnumbers" resultType="java.lang.String">
+        select enumber from rdEmployee as re where companyId = #{companyId} and `year` = #{year}
+        and enumber in
+        <foreach collection="numberList" open="(" separator="," close=")" item="enumber">
+            #{enumber}
+        </foreach>
+    </select>
+    <select id="getEmployeeList" resultType="com.yskc.docservice.models.rs.initmember.InitMemberModel">
+        select im.enumber,e.ename,im.projectId,im.year from i_member im
+        inner JOIN employee e on e.enumber = im.enumber and e.companyId = im.companyId
+        where im.companyId = #{companyId} and im.projectId in
+        <foreach collection="projectIds" item="projectId" open="(" separator="," close=")">
+            #{projectId}
+        </foreach>
+    </select>
+    <select id="getListByEnumbers" resultType="com.yskc.docservice.entity.rs.RdEmployeeEntity">
+        select * from rdEmployee as re where companyId = #{companyId} and `year` = #{year}
+        and enumber in
+        <foreach collection="numberList" open="(" separator="," close=")" item="enumber">
+            #{enumber}
+        </foreach>
+    </select>
+    <select id="getTermEmployee" resultType="com.yskc.docservice.models.rs.initmember.InitMemberModel">
+        select im.enumber,e.ename,im.projectId,im.year,im.entryDate,rde.etype from rdEmployee rde
+        inner join i_member im on rde.companyId=im.companyId and rde.year=im.year and rde.enumber=im.enumber
+        inner JOIN employee e on e.companyId = im.companyId and e.enumber = im.enumber
+        inner join p_project p on p.id=im.projectId
+        where rde.companyId = #{companyId} and rde.year>=#{minYear} and rde.year&lt;=#{maxYear}
+        and rde.enumber in (<foreach collection="enumbers" separator="," item="enumber">#{enumber}</foreach>)
+        order by p.rdTitle
+    </select>
+
+    <insert id="saveRdEmployeeLists" parameterType="java.util.List">
+        insert into rdEmployee
+        (creatorId,lastUpdatorId,createTime,lastUpdateTime,year,companyId,msCreatorId,msLastUpdatorId,enumber,etype,rdDeptId,`position`)
+        values
+        <foreach collection="RdEmployeeEntitys" item="employees" index="index" separator="," close=";">
+            (#{employees.creatorId},#{employees.lastUpdatorId},#{employees.createTime},#{employees.lastUpdateTime},#{employees.year},
+            #{employees.companyId},#{employees.msCreatorId},#{employees.msLastUpdatorId},#{employees.enumber},#{employees.etype},#{employees.rdDeptId},#{employees.position})
+        </foreach>
+    </insert>
+    <select id="getEmployeeByEnumber" resultType="com.yskc.docservice.models.rs.EmployeeSelectModel">
+        select enumber,ename from employee
+        where companyId = #{companyId} and enumber in
+        <foreach collection="enumbers" item="enumber" separator="," open="(" close=")">
+            #{enumber}
+        </foreach>
+    </select>
+</mapper>

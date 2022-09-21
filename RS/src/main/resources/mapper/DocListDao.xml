@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.DocListDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.yskc.rs.entity.DocListEntity" id="docListMap">
+        <result property="id" column="id"/>
+        <result property="creatorId" column="creatorId"/>
+        <result property="lastUpdatorId" column="lastUpdatorId"/>
+        <result property="createTime" column="createTime"/>
+        <result property="lastUpdateTime" column="lastUpdateTime"/>
+        <result property="msCreatorId" column="msCreatorId"/>
+        <result property="msLastUpdatorId" column="msLastUpdatorId"/>
+        <result property="listType" column="listType"/>
+        <result property="docName" column="docName"/>
+        <result property="desciption" column="desciption"/>
+        <result property="optional" column="optional"/>
+        <result property="seq" column="seq"/>
+        <result property="companyId" column="companyId"/>
+    </resultMap>
+    <update id="updateInfo">
+        update sys_docList set docName=#{model.docName},rdActivities=#{model.rdActivities},lastUpdatorId=#{userId},
+        msLastUpdatorId=#{msUserId},lastUpdateTime=#{now} where id=#{model.id}
+    </update>
+    <select id="getListType" resultType="java.lang.Integer">
+        select listType from sys_docList where id = #{listId}
+    </select>
+    <select id="getFileTypes" resultType="com.yskc.rs.models.sysDocument.FileTypeModel">
+        select id,listType,docName,seq
+        from sys_docList
+        where listType=1001 and companyId=0 and docName!='查新报告'
+    </select>
+    <select id="getDocList" resultType="com.yskc.rs.models.docFile.NewReportsModel">
+        select sd.fileName,sd.filePath,sd.createTime,pp.pname,pp.rdTitle,pp.id as projectId,sdl.docName,sd.id,sd.stageKey
+        from sys_document sd
+        left join p_project pp on sd.projectId=pp.id
+        inner join sys_docList sdl on sd.listId=sdl.id and sdl.listType=1001 and sdl.docName="查新报告"
+        where sd.projectId=#{projectId}
+    </select>
+    <select id="getReports" resultType="com.yskc.rs.models.docFile.NewReportsModel">
+         select sd.fileName,sd.filePath,sd.createTime,pp.pname,pp.rdTitle,pp.id as projectId,sdl.docName,sd.id,ps.stageName as stageKey
+        from sys_document sd
+        left join p_project pp on sd.projectId=pp.id
+        inner join sys_docList sdl on sd.listId=sdl.id and sdl.listType=1001 and sdl.docName="查新报告"
+        left join p_stage ps on sd.stageKey=ps.stageKey and ps.projectId = sd.projectId
+        where sd.projectId=#{projectId}
+        order by sd.createTime
+    </select>
+    <select id="getLastId" resultType="java.lang.Integer">
+    select max(id) from sys_docList
+    </select>
+
+</mapper>

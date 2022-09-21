@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.rs.BudgetDao">
+
+    <select id="querySourceBudget" resultType="com.yskc.ms.models.rs.BudgetModel">
+        SELECT
+        p.id,
+        p.companyId,
+        p.projectId,
+        p.month,
+        p.type,
+        p.key as sole,
+        p.VALUE,
+        s.`value` as name
+        FROM
+        p_budget p
+        LEFT JOIN sys_dictionary s ON p.key = s.key
+        where
+        projectId = #{projectId}
+        <if test="month == null">
+            and month is null
+        </if>
+        <if test="month != null">
+            and month = #{month}
+        </if>
+
+        ORDER BY createTime
+
+    </select>
+
+    <select id="queryAllBudget" resultType="com.yskc.ms.models.rs.BudgetModel">
+        SELECT `month`,`value` FROM p_budget WHERE projectId = #{projectId} AND `key` = 'spending01'
+        <if test="onlyYear">
+            and `month` is null
+        </if>
+    </select>
+    <select id="getOtherMonth" resultType="java.util.Map">
+        select
+        SUM(CASE WHEN `key` = 'source01' THEN `value` ELSE 0 END) AS source01,
+        SUM(CASE WHEN `key` = 'source02' THEN `value` ELSE 0 END) AS source02,
+        SUM(CASE WHEN `key` = 'source03' THEN `value` ELSE 0 END) AS source03,
+        SUM(CASE WHEN `key` = 'source04' THEN `value` ELSE 0 END) AS source04,
+        SUM(CASE WHEN `key` = 'source05' THEN `value` ELSE 0 END) AS source05,
+        SUM(CASE WHEN `key` = 'spending01' THEN `value` ELSE 0 END) AS spending01,
+        SUM(CASE WHEN `key` = '100' THEN `value` ELSE 0 END) AS `100`,
+        SUM(CASE WHEN `key` = '10000' THEN `value` ELSE 0 END) AS `10000`,
+        SUM(CASE WHEN `key` = '10100' THEN `value` ELSE 0 END) AS `10100`,
+        SUM(CASE WHEN `key` = '200' THEN `value` ELSE 0 END) AS `200`,
+        SUM(CASE WHEN `key` = '20000' THEN `value` ELSE 0 END) AS `20000`,
+        SUM(CASE WHEN `key` = '20100' THEN `value` ELSE 0 END) AS `20100`,
+        SUM(CASE WHEN `key` = '20200' THEN `value` ELSE 0 END) AS `20200`,
+        SUM(CASE WHEN `key` = '20300' THEN `value` ELSE 0 END) AS `20300`,
+        SUM(CASE WHEN `key` = '20400' THEN `value` ELSE 0 END) AS `20400`,
+        SUM(CASE WHEN `key` = '20500' THEN `value` ELSE 0 END) AS `20500`,
+        SUM(CASE WHEN `key` = '300' THEN `value` ELSE 0 END) AS `300`,
+        SUM(CASE WHEN `key` = '30000' THEN `value` ELSE 0 END) AS `30000`,
+        SUM(CASE WHEN `key` = '30100' THEN `value` ELSE 0 END) AS `30100`,
+        SUM(CASE WHEN `key` = '400' THEN `value` ELSE 0 END) AS `400`,
+        SUM(CASE WHEN `key` = '40000' THEN `value` ELSE 0 END) AS `40000`,
+        SUM(CASE WHEN `key` = '40100' THEN `value` ELSE 0 END) AS `40100`,
+        SUM(CASE WHEN `key` = '40200' THEN `value` ELSE 0 END) AS `40200`,
+        SUM(CASE WHEN `key` = '500' THEN `value` ELSE 0 END) AS `500`,
+        SUM(CASE WHEN `key` = '50000' THEN `value` ELSE 0 END) AS `50000`,
+        SUM(CASE WHEN `key` = '50100' THEN `value` ELSE 0 END) AS `50100`,
+        SUM(CASE WHEN `key` = '50200' THEN `value` ELSE 0 END) AS `50200`,
+        SUM(CASE WHEN `key` = '50300' THEN `value` ELSE 0 END) AS `50300`,
+        SUM(CASE WHEN `key` = '600' THEN `value` ELSE 0 END) AS `600`,
+        SUM(CASE WHEN `key` = '60000' THEN `value` ELSE 0 END) AS `60000`,
+        SUM(CASE WHEN `key` = '60100' THEN `value` ELSE 0 END) AS `60100`,
+        SUM(CASE WHEN `key` = '60200' THEN `value` ELSE 0 END) AS `60200`,
+        SUM(CASE WHEN `key` = '60300' THEN `value` ELSE 0 END) AS `60300`,
+        SUM(CASE WHEN `key` = '60400' THEN `value` ELSE 0 END) AS `60400`,
+        SUM(CASE WHEN `key` = '69900' THEN `value` ELSE 0 END) AS `69900`
+        from p_budget where projectId = #{projectId} and `month` is not null
+        <if test="month != null">
+            and `month` != #{month}
+        </if>
+    </select>
+    <select id="getYearMonth" resultType="java.util.Map">
+         select
+        SUM(CASE WHEN `key` = 'source01' THEN `value`/10000 ELSE 0 END) AS source01,
+        SUM(CASE WHEN `key` = 'source02' THEN `value`/10000 ELSE 0 END) AS source02,
+        SUM(CASE WHEN `key` = 'source03' THEN `value`/10000 ELSE 0 END) AS source03,
+        SUM(CASE WHEN `key` = 'source04' THEN `value`/10000 ELSE 0 END) AS source04,
+        SUM(CASE WHEN `key` = 'source05' THEN `value`/10000 ELSE 0 END) AS source05
+        from p_budget where companyId = #{companyId} and projectId = #{projectId} and `month` is null
+    </select>
+    <select id="getListByProject" resultType="com.yskc.ms.entity.rs.BudgetEntity">
+        select *
+        from p_budget where  projectId= #{projectId} and `type`=4
+    </select>
+    <select id="getTotal" resultType="com.yskc.ms.entity.rs.BudgetEntity">
+        select `key`,SUM(`value`) as `value`
+        from p_budget where  projectId= #{projectId} and `type`=4
+        group by `key`
+    </select>
+</mapper>

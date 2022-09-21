@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.ProjectInfoSummaryDao">
+    <select id="getInfoSummary" resultType="com.yskc.rs.models.project.ProjectInfoSummaryModel">
+        select p.id projectId,p.rdTitle,p.pname,Sum(ps.staffRdHour) staffRdHour,Sum(ps.prodRdHour) prodRdHour,
+        Sum(ps.materialRaw +ps.materialAuxiliary + ps.materialReserve) materialTotal,
+        Sum(ps.repairRaw +ps.repairAuxiliary + ps.repairReserve) repairTotal,
+        Sum(ps.trialRaw +ps.trialAuxiliary + ps.trialReserve) trialTotal,
+        Sum(ps.yieldAmount) yieldAmount,p.beginYear,p.endYear
+        from p_info_summary ps
+        inner join p_project p on ps.projectId=p.id
+        where ps.month &gt;= #{firstDay} and ps.month &lt;= #{lastDay} and ps.projectId in
+        <foreach collection="projectIds" item="projectId" open="(" separator="," close=")">
+            #{projectId}
+        </foreach>
+        group by projectId,p.rdTitle,p.beginYear
+        ORDER BY p.beginYear,p.rdTitle
+    </select>
+    <select id="getSummaryByMonth" resultType="com.yskc.rs.entity.project.ProjectInfoSummaryEntity">
+        select p.id projectId,p.rdTitle,ps.${col},ps.month
+
+        from p_info_summary ps
+        inner join p_project p on ps.projectId=p.id
+        where ps.month &gt;= #{firstDay} and ps.month &lt;= #{lastDay} and ps.projectId in
+        <foreach collection="projectIds" item="projectId" open="(" separator="," close=")">
+            #{projectId}
+        </foreach>
+        order by `month` asc
+    </select>
+    <select id="getMaterialSummary" resultType="com.yskc.rs.models.projectinfosummary.MaterialFeeModel">
+        select pis.projectId,
+        <if test="type == 0">
+            sum(pis.materialRaw) raw,sum(pis.materialAuxiliary) auxiliary,sum(pis.materialReserve) reserve
+        </if>
+        <if test="type == 1">
+            sum(pis.trialRaw) raw,sum(pis.trialAuxiliary) auxiliary,sum(pis.trialReserve) reserve
+        </if>
+        <if test="type == 2">
+            sum(pis.repairRaw) raw,sum(pis.repairAuxiliary) auxiliary,sum(pis.repairReserve) reserve
+        </if>
+        from p_info_summary pis
+        inner join p_project p on p.id=pis.projectId
+        where p.companyId=#{companyId} and pis.month >=#{begin} and pis.month &lt;=#{end} group by pis.projectId
+    </select>
+</mapper>

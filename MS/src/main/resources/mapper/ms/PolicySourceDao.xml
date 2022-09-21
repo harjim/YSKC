@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.PolicySourceDao">
+    <select id="getList" resultType="com.yskc.ms.models.policy.PolicySourceModel">
+        select ps.id,ps.sname,ps.domain,ps.stype,ps.typeUrl from policySource ps
+        where 1 = 1
+        and ps.id
+        <if test="query.subscription != null">
+            <if test="query.subscription">
+                in
+            </if>
+            <if test="!query.subscription">
+                not in
+            </if>
+            (select distinct sourceId from policySourceUser
+            where userId = #{userId})
+        </if>
+        <if test="query.sname != null and query.sname != ''">
+            and ps.sname like "%"#{query.sname}"%"
+        </if>
+        <if test="query.addressCode != null and query.addressCode != ''">
+            and ps.addressCode like #{query.addressCode}"%"
+        </if>
+    </select>
+    <select id="getSubscription" resultType="com.yskc.ms.entity.ms.PolicySourceUser">
+        select userId,sourceId from policySourceUser
+        where userId = #{userId}
+        and sourceId in
+        <foreach collection="sourceIds" item="sourceId" open="(" separator="," close=")">
+            #{sourceId}
+        </foreach>
+    </select>
+    <select id="getSourceUserList" resultType="com.yskc.ms.models.dept.DeptUserInfo">
+        SELECT
+        y.id,
+        y.userName,
+        y.realName,
+        y.tel,
+        y.gender,
+        y.depId,
+        y.postion,
+        y.remark,
+        (SELECT GROUP_CONCAT(u1.depId ORDER BY u1.userId) FROM user_dept u1 WHERE u1.userId = y.`id`) AS deptIdArrStr,
+        (SELECT GROUP_CONCAT(distinct d1.deptName order by d1.id) FROM user_dept ud1 left join ys_dept d1 on d1.id =
+        ud1.depId WHERE ud1.userId = y.`id`) AS deptName
+        FROM
+        policySourceUser psu
+        inner join ys_user y on psu.userId = y.id
+        LEFT JOIN user_dept as ud on ud.userId = y.id
+        LEFT JOIN ys_dept as d on ud.depId = d.id
+        WHERE psu.sourceId = #{query.sourceId}
+        <if test="query.realName != null and query.realName != ''">
+            and y.realName like "%"#{query.realName}"%"
+        </if>
+        <if test="query.fullPath != null and query.fullPath != ''">
+            and d.fullPath like #{query.fullPath}"%"
+        </if>
+        GROUP BY y.id
+    </select>
+    <select id="getByTypeUrl" resultType="java.lang.Integer">
+        select id from policySource where typeUrl = #{typeUrl}
+    </select>
+    <select id="getSource" resultType="java.util.Map">
+        select id,`domain`,sname,stype,url,dataParse,dataContent,dateParse,formData,
+          jsonFormat,method,pageMax,pageParse,pageType,titleParse,dateFormat,typeUrl
+          from policySource where id = #{sourceId}
+    </select>
+</mapper>

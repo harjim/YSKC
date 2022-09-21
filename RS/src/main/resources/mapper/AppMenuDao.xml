@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.AppMenuDao">
+
+    <select id="getAppMenus" resultType="com.yskc.rs.models.menu.MenuInfo">
+      select * from app_menu where status=1 order by level,seq ASC;
+    </select>
+    
+    <select id="getAppMenuList" resultType="com.yskc.rs.models.menu.AppMenuModel">
+        select * from app_menu where id != -1
+        
+       		<if test="status != -1 ">
+              and  status = #{status}
+            </if>
+            <if test="menuName != null and menuName.length()>0">
+              and  name LIKE #{menuName}
+            </if>
+        
+        order by level,seq ASC
+    </select>
+    
+    <select id="getreeNode" resultType="com.yskc.rs.models.menu.AppMenuModel">
+        SELECT * FROM app_menu t WHERE t.id= #{cid}
+    </select>
+    
+    <select id="queryTreeNode" resultType="com.yskc.rs.models.menu.AppMenuModel">
+       SELECT * FROM app_menu t WHERE t.parentId= #{cid}
+    </select>
+</mapper>

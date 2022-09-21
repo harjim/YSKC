@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.es.EsTechRequirementDao">
+    <select id="getList" resultType="com.yskc.ms.models.newexpert.techrequirement.EsTechRequirementModel">
+        select t.id,t.requirementName,t.customerName,t.researchArea,t.cooperateType,
+        t.urgency,u.realName as creatorName,t.createTime,t.closeDate,t.status,
+        t.budget,t.negotiation
+        from esdb.tech_requirement as t
+        left join msdb.ys_user as u on t.msCreatorId = u.id
+        <where>
+            <if test="null != query.requirementName and query.requirementName !=''">
+                and t.requirementName like "%"#{query.requirementName}"%"
+            </if>
+            <if test="null != query.customerName and query.customerName !=''">
+                and t.customerName like "%"#{query.customerName}"%"
+            </if>
+            <if test="null != query.researchArea and query.researchArea !=''">
+                <bind name="researchAreaBind" value="','+query.researchArea"/>
+                and (t.researchArea like #{query.researchArea}"%" OR t.researchArea like "%"#{query.researchArea}"%")
+            </if>
+            <if test="null != query.cooperateType">
+                and t.cooperateType = #{query.cooperateType}
+            </if>
+            <if test="null != query.urgency">
+                and t.urgency = #{query.urgency}
+            </if>
+            <if test="null != query.msCreatorId">
+                and t.msCreatorId = #{query.msCreatorId}
+            </if>
+            <if test="null != query.status">
+                and t.status = #{query.status}
+            </if>
+        </where>
+    </select>
+    <select id="getData" resultType="com.yskc.ms.models.newexpert.techrequirement.EsTechRequirementModel">
+        select industry,keywords,linkName,`position`,linkTel,linkEmail,addressCode,address,background,
+               difficulty,target
+        from tech_requirement where id =#{id}
+    </select>
+    <update id="updateTech">
+        update tech_requirement set requirementName=#{entity.requirementName},`status`=#{entity.status},budget=#{entity.budget},
+               negotiation=#{entity.negotiation},industry=#{entity.industry},researchArea=#{entity.researchArea},
+               cooperateType=#{entity.cooperateType},urgency=#{entity.urgency},closeDate=#{entity.closeDate},
+               keywords=#{entity.keywords},customerName=#{entity.customerName},linkName=#{entity.linkName},
+               `position`=#{entity.position},linkTel=#{entity.linkTel},linkEmail=#{entity.linkEmail},
+               addressCode=#{entity.addressCode},address=#{entity.address},background=#{entity.background},
+               difficulty=#{entity.difficulty},target=#{entity.target},lastUpdateTime=#{entity.lastUpdateTime},
+               msLastUpdatorId=#{entity.msLastUpdatorId}
+        where id = #{entity.id}
+    </update>
+    <select id="getStatus" resultType="com.yskc.ms.models.newexpert.techrequirement.EsTechRequirementModel">
+        select requirementName,status from tech_requirement where id IN
+        (
+            <foreach collection="ids" separator="," item="id">
+                #{id}
+            </foreach>
+        )
+    </select>
+</mapper>

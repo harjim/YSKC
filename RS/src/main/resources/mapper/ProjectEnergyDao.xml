@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.project.ProjectEnergyDao">
+    <insert id="addList">
+        INSERT INTO p_energy
+        (projectId,energyDataId,companyId,creatorId,createTime,lastUpdateTime,lastUpdatorId,
+        rdAmount,totalHour,rdHour,msCreatorId,msLastUpdatorId,etype,totalYield,rdYield)
+        VALUES
+        <foreach collection="energys" separator="," item="e">
+            (#{e.projectId},#{e.energyDataId},#{e.companyId},#{e.creatorId},#{e.createTime},#{e.lastUpdateTime},
+            #{e.lastUpdatorId},#{e.rdAmount},#{e.totalHour},#{e.rdHour},#{e.msCreatorId},#{e.msLastUpdatorId},
+            #{e.etype},#{e.totalYield},#{e.rdYield})
+        </foreach>
+    </insert>
+    <update id="updateList">
+        update p_energy
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="rdAmount =case" suffix="end,">
+                <foreach collection="energys" item="i" index="index">
+                    <if test="i.rdAmount!=null">
+                        when id=#{i.id} then #{i.rdAmount}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="totalHour =case" suffix="end,">
+                <foreach collection="energys" item="i" index="index">
+                    <if test="i.totalHour!=null">
+                        when id=#{i.id} then #{i.totalHour}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="rdHour =case" suffix="end,">
+                <foreach collection="energys" item="i" index="index">
+                    <if test="i.rdHour!=null">
+                        when id=#{i.id} then #{i.rdHour}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdateTime =case" suffix="end,">
+                <foreach collection="energys" item="i" index="index">
+                    <if test="i.lastUpdateTime!=null">
+                        when id=#{i.id} then #{i.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdatorId =case" suffix="end,">
+                <foreach collection="energys" item="i" index="index">
+                    <if test="i.lastUpdatorId!=null">
+                        when id=#{i.id} then #{i.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="msLastUpdatorId =case" suffix="end,">
+                <foreach collection="energys" item="i" index="index">
+                    <if test="i.msLastUpdatorId!=null">
+                        when id=#{i.id} then #{i.msLastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="totalYield =case" suffix="end,">
+                <foreach collection="energys" item="i" index="index">
+                    <if test="i.totalYield!=null">
+                        when id=#{i.id} then #{i.totalYield}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="rdYield =case" suffix="end,">
+                <foreach collection="energys" item="i" index="index">
+                    <if test="i.rdYield!=null">
+                        when id=#{i.id} then #{i.rdYield}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="energys" item="e" separator="or">
+            id = #{e.id}
+        </foreach>
+    </update>
+    <update id="updateBatch">
+        <foreach collection="list" item="l">
+            update p_energy set rdAmount=#{l.rdAmount},lastUpdateTime=#{now},lastUpdatorId=#{userId},msLastUpdatorId=#{msUserId},
+            rdYield=#{l.rdYield},totalYield=#{l.totalYield},rdHour=#{l.rdHour},totalHour=#{l.totalHour} where id=#{l.id};
+        </foreach>
+    </update>
+
+    <select id="getList" resultType="com.yskc.rs.models.projectenergy.ProjectEnergyModel">
+        select pe.id,pe.energyDataId,e.ename,e.accNumber,e.`type`,e.occDate,e.unitPrice,e.unit,e.totalAmount,
+        e.quantity,pe.rdAmount,e.remainAmount, e.deptName,e.amount,pe.totalHour,pe.rdHour,pe.totalYield,pe.rdYield,
+        pe.projectId
+        from d_energy as e
+        LEFT JOIN p_energy as pe on e.id = pe.energyDataId
+        where pe.companyId = #{companyId}
+        and pe.projectId in (<foreach collection="projectIds" separator="," item="pId">#{pId}</foreach>)
+        and e.occDate &lt;= #{queryEnergy.monthEnd}
+        and e.occDate &gt;= #{queryEnergy.monthBegin}
+        and pe.etype = #{queryEnergy.etype}
+        <if test="queryEnergy.type != null and queryEnergy.type > 0">
+            and e.type = #{queryEnergy.type}
+        </if>
+        <if test="queryEnergy.ename != null and queryEnergy.ename != ''">
+            and e.ename like "%"#{queryEnergy.ename}"%"
+        </if>
+        <if test="queryEnergy.deptName !=null and queryEnergy.deptName != ''">
+            and e.deptName like "%"#{queryEnergy.deptName}"%"
+        </if>
+    </select>
+    <select id="getEnergySum" resultType="com.yskc.rs.models.projectenergy.EnergySumModel">
+        select pe.projectId,
+               sum(pe.rdAmount) as rdAmount
+        from d_energy as e
+                 LEFT JOIN p_energy as pe on e.id = pe.energyDataId
+        where pe.projectId = #{projectId}
+          and pe.etype = #{etype}
+          and e.type = #{type}
+          and e.occDate &lt;= #{end}
+          and e.occDate &gt;= #{begin}
+    </select>
+    <select id="getProjectEnergyTotal" resultType="java.math.BigDecimal">
+        select sum(pe.rdAmount)
+        from d_energy as e
+        LEFT JOIN p_energy as pe on e.id = pe.energyDataId
+        where pe.projectId = #{queryEnergy.projectId}
+        and pe.companyId = #{companyId}
+        and e.occDate &lt;= #{queryEnergy.monthEnd}
+        and e.occDate &gt;= #{queryEnergy.monthBegin}
+        and pe.etype = #{queryEnergy.etype}
+        <if test="queryEnergy.type != null and queryEnergy.type > 0">
+            and e.type = #{queryEnergy.type}
+        </if>
+        <if test="queryEnergy.ename != null and queryEnergy.ename != ''">
+            and e.ename like "%"#{queryEnergy.ename}"%"
+        </if>
+        <if test="queryEnergy.deptName !=null and queryEnergy.deptName != ''">
+            and e.deptName like "%"#{queryEnergy.deptName}"%"
+        </if>
+        GROUP BY pe.`projectId`
+    </select>
+    <select id="getEnergyList" resultType="com.yskc.rs.models.projectenergy.EnergyListModel">
+        select e.id,e.ename,e.`type`,e.accNumber,e.occDate,e.unitPrice,e.unit,e.remark,
+        e.quantity,e.remainAmount,e.deptName,e.amount,e.totalAmount
+        from d_energy as e
+        LEFT JOIN p_energy as pe on pe.energyDataId = e.id and pe.projectId = #{queryEnergy.projectId} and pe.etype =
+        #{queryEnergy.etype}
+        where e.companyId=#{companyId}
+        and pe.id IS NULL
+        and e.occDate &lt;= #{queryEnergy.monthEnd}
+        and e.occDate &gt;= #{queryEnergy.monthBegin}
+        and e.remainAmount != 0
+        <if test="queryEnergy.type != null and queryEnergy.type > 0">
+            and e.type = #{queryEnergy.type}
+        </if>
+        <if test="queryEnergy.ename != null and queryEnergy.ename != ''">
+            and e.ename like "%"#{queryEnergy.ename}"%"
+        </if>
+        <if test="queryEnergy.deptName !=null and queryEnergy.deptName != ''">
+            and e.deptName like "%"#{queryEnergy.deptName}"%"
+        </if>
+        <if test="queryEnergy.remark !=null and queryEnergy.remark != ''">
+            and e.remark like "%"#{queryEnergy.remark}"%"
+        </if>
+    </select>
+
+    <select id="getEnergyTotal" resultType="java.math.BigDecimal">
+        select sum(e.amount)
+        from d_energy as e
+        LEFT JOIN p_energy as pe on pe.energyDataId = e.id and pe.projectId = #{queryEnergy.projectId} and pe.etype
+        = #{queryEnergy.etype}
+        where e.companyId=#{companyId}
+        and pe.id IS NULL
+        and e.occDate &lt;= #{queryEnergy.monthEnd}
+        and e.occDate &gt;= #{queryEnergy.monthBegin}
+        and e.remainAmount != 0
+        <if test="queryEnergy.type != null and queryEnergy.type > 0">
+            and e.type = #{queryEnergy.type}
+        </if>
+        <if test="queryEnergy.ename != null and queryEnergy.ename != ''">
+            and e.ename like "%"#{queryEnergy.ename}"%"
+        </if>
+        <if test="queryEnergy.deptName !=null and queryEnergy.deptName != ''">
+            and e.deptName like "%"#{queryEnergy.deptName}"%"
+        </if>
+        <if test="queryEnergy.remark !=null and queryEnergy.remark != ''">
+            and e.remark like "%"#{queryEnergy.remark}"%"
+        </if>
+        GROUP BY pe.`projectId`
+    </select>
+    <select id="getEnergyWorkSheetList" resultType="com.yskc.rs.models.workSheet.WorkSheetModel">
+        select e.ename     as costElement,
+               e.ename     as workEvent,
+               pe.rdAmount as cost,
+               p.rdIndex   as rdNum,
+               d.deptName  as coObj
+        from p_energy as pe
+                 left join d_energy as e on pe.energyDataId = e.id
+                 left join p_project as p on pe.projectId = p.id
+                 left join rdDept as d on d.id = e.rdDeptId
+        where p.id = #{query.projectId}
+          and pe.companyId = #{companyId}
+          and e.`type` = #{type}
+          and e.occDate = #{query.workDate}
+    </select>
+    <select id="getEnergyWorkSheetMonthList" resultType="com.yskc.rs.models.workSheet.WorkSheetMiniModel">
+        select pe.rdAmount as cost, p.rdIndex, e.occDate as workDate
+        from p_energy as pe
+                 left join d_energy as e on pe.energyDataId = e.id
+                 left join p_project as p on pe.projectId = p.id
+                 left join rdDept as d on d.id = e.rdDeptId
+        where p.id = #{query.projectId}
+          and pe.companyId = #{companyId}
+          and e.`type` = #{type}
+          and e.occDate &lt;= #{end}
+          and e.occDate >= #{begin}
+        order by e.occDate asc
+    </select>
+    <select id="exportFromStimulus" resultType="com.yskc.rs.models.aggregation.EnergyExportModel">
+        select de.ename,de.occDate as `date`,de.unitPrice,de.quantity,de.unit,de.deptName,de.amount,de.accNumber,
+        pe.rdAmount,p.rdTitle,pe.rdHour,pe.totalHour,pe.totalYield,pe.rdYield,de.totalAmount
+        from p_energy pe
+        inner join p_project p on pe.projectId = p.id
+        inner join d_energy de on pe.energyDataId = de.id
+        where p.id in
+        <foreach collection="term.projectIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        and pe.etype = #{etype}
+        and de.type = #{term.type}
+        and
+        <foreach collection="term.range" item="r" open="(" separator="or" close=")">
+            (de.occDate >= #{r.begin} and de.occDate &lt;= #{r.end})
+        </foreach>
+        order by `date`,rdTitle
+    </select>
+    <select id="getListByIds" resultType="com.yskc.rs.models.projectenergy.ProjectEnergyModel">
+        select pe.id,pe.energyDataId,
+        pe.rdAmount,e.remainAmount,e.amount,pe.totalHour,pe.rdHour,pe.totalYield,pe.rdYield
+        from d_energy as e
+        LEFT JOIN p_energy as pe on e.id = pe.energyDataId
+        where pe.id in
+        <foreach collection="ids" open="(" separator="," close=")" item="id">
+            #{id}
+        </foreach>
+    </select>
+    <select id="getUsedList" resultType="com.yskc.rs.models.projectenergy.EnergyUsedModel">
+        select pe.energyDataId as id, pe.rdAmount,p.rdTitle,pe.etype
+        from p_energy pe
+        INNER JOIN p_project p on p.id = pe.projectId
+        where p.id != #{projectId} and pe.energyDataId in
+        <foreach collection="dataIds" open="(" separator="," close=")" item="dataId">
+            #{dataId}
+        </foreach>
+        order by rdTitle
+    </select>
+    <select id="getProjectEnergyList" resultType="com.yskc.rs.models.projectenergy.ProjectEnergyModel">
+        select pe.id,
+               pe.energyDataId,
+               pe.rdAmount,
+               e.remainAmount,
+               e.amount,
+               pe.totalHour,
+               pe.rdHour,
+               pe.totalYield,
+               e.occDate,
+               pe.rdYield,
+               e.deptName
+        from d_energy as e
+                 LEFT JOIN p_energy as pe on e.id = pe.energyDataId
+        where pe.projectId = #{projectId}
+          and pe.etype = #{rdType}
+          and e.occDate >= #{begin}
+          and e.occDate &lt;= #{end}
+    </select>
+    <select id="getTermData" resultType="com.yskc.rs.models.projectenergy.ProjectEnergyModel">
+        select pe.id,pe.energyDataId,pe.rdAmount,e.occDate,e.remainAmount,e.amount,e.deptName,pe.projectId from p_energy pe
+        inner join d_energy e on e.id=pe.energyDataId
+        where pe.companyId=#{companyId} and pe.etype = #{rdType} and e.occDate >= #{begin} and e.occDate &lt;= #{end}
+    </select>
+    <select id="getEnergySums" resultType="com.yskc.rs.models.projectenergy.EnergySumModel">
+        select pe.projectId, sum(pe.rdAmount) as rdAmount from  p_energy as pe
+        INNER JOIN d_energy as e on e.id = pe.energyDataId
+        where pe.projectId in (<foreach collection="projectIds" separator="," item="pId">#{pId}</foreach>)
+          and pe.etype = #{rdType}
+          and e.occDate &lt;= #{end}
+          and e.occDate &gt;= #{begin}
+        group by pe.projectId
+    </select>
+    <select id="getEnergies" resultType="com.yskc.rs.models.projectenergy.HighTechProjectEnergyModel">
+        select pe.id,de.unitPrice,de.quantity,pe.totalHour,
+               pe.rdHour,de.amount,pe.rdAmount
+        from p_energy pe
+        inner join d_energy de on de.id = pe.energyDataId
+        where pe.projectId = #{query.projectId}
+            and pe.etype = #{query.etype}
+        <if test="null != query.month">
+            and (de.occDate &lt;= #{query.monthEnd} and de.occDate &gt;= #{query.monthBegin})
+        </if>
+    </select>
+</mapper>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.AppRoleDao">
+    <select id="getAppRoleList" resultType="com.yskc.rs.models.role.AppRoleModel">
+        select a.id,a.roleName,a.remark,a.createTime,y.userName as creatorName from app_role as a
+        join ys_user as y on y.id=a.creatorId
+        <where>
+            <if test="roleName != null and roleName.length()>0">
+                a.roleName=#{roleName}
+            </if>
+        </where>
+    </select>
+    <select id="getRoleCountByName" resultType="java.lang.Integer">
+          select count(1) from app_role where roleName=#{roleName}
+    </select>
+    <select id="getRoles" resultType="com.yskc.rs.models.role.AppRoleModel">
+        SELECT a.id,a.companyId,a.roleName,a.remark,a.creatorId,a.createTime
+        FROM app_role as a
+        INNER JOIN app_company_role as acr on a.id=acr.roleId and acr.companyId=#{companyId}
+        where 1=1
+        <if test="roleName != null and roleName != ''">
+            and a.roleName like "%"#{roleName}"%"
+        </if>
+        order by a.companyId,a.createTime
+    </select>
+
+
+</mapper>

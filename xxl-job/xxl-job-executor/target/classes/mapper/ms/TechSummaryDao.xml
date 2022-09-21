@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xxl.job.executor.dao.ms.TechSummaryDao">
+    <insert id="insertOrUpdate">
+        insert into tech_summary
+        (projectId,customerId,`year`,createTime,updateTime,operationTime,operationUserId,stageCount,uploadCount,
+        uploadedCount)
+        values
+        <foreach collection="list" separator="," item="l">
+            (#{l.projectId},#{l.customerId},#{l.year},#{l.createTime},#{l.updateTime},#{l.operationTime},
+            #{l.operationUserId}, #{l.stageCount},#{l.uploadCount}, #{l.uploadedCount})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        updateTime = values(updateTime),
+        operationUserId = values(operationUserId),
+        stageCount = values(stageCount),
+        uploadCount = values(uploadCount),
+        uploadedCount = values(uploadedCount)
+    </insert>
+</mapper>

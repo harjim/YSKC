@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.rs.InitMemberDao">
+
+
+    <select id="getStaffInfoList" resultType="com.yskc.ms.models.rs.InitMemberListModel">
+        select e.ename,im.role,re.position,rd.deptName,im.id,e.gender,
+        re.etype,c.companyName,e.birthday,e.specialities
+        from i_member im
+        left join employee e on e.enumber=im.enumber and e.companyId=im.companyId
+        left join rdEmployee re on re.enumber=im.enumber and im.companyId=re.companyId and re.year=im.year
+        left join rdDept rd on re.rdDeptId=rd.id
+        inner join p_project p on p.id = im.projectId
+        left join company c on c.id = im.companyId
+        where im.companyId = #{companyId} and im.projectId = #{projectId} and im.year=#{year} and (im.entryDate = p.beginDate OR im.entryDate is null)
+        <if test="memberIds!=null and memberIds.size()>0">
+            and im.id in
+            <foreach collection="memberIds" item="memberId" open="(" separator="," close=")">
+                #{memberId}
+            </foreach>
+        </if>
+        order by im.isMaster desc,re.etype, im.enumber desc
+        <!--        select em.ename,-->
+        <!--        case em.gender-->
+        <!--        when 2 then '男'-->
+        <!--        when 1 then '女'-->
+        <!--        else ''-->
+        <!--        end gender,-->
+        <!--        case em.eduLevel-->
+        <!--        when 0 then '无'-->
+        <!--        when 1 then '高中及以下'-->
+        <!--        when 2 then '中专'-->
+        <!--        when 3 then '大专'-->
+        <!--        when 4 then '本科'-->
+        <!--        when 5 then '硕士'-->
+        <!--        when 6 then '博士'-->
+        <!--        when 7 then '初中' end eduLevel,-->
+        <!--        em.specialities,em.title,-->
+        <!--        em.edate,em.deptName,im.role,em.position-->
+        <!--        from employee em-->
+        <!--        left join i_member im on em.enumber=im.enumber-->
+        <!--        where em.companyId = #{companyId} and im.projectId in-->
+        <!--        <foreach collection="projectIds" item="projectId" open="(" close=")" separator=",">-->
+        <!--            #{projectId}-->
+        <!--        </foreach>-->
+        -- order by im.isMaster,im.enumber desc
+    </select>
+
+    <select id="getMemberEname" resultType="com.yskc.ms.models.rs.InitMemberModel">
+        select e.ename
+        from i_member as i
+        LEFT JOIN employee AS e on i.enumber=e.enumber and e.companyId = i.companyId
+        where i.projectId = #{projectId} and i.year=#{year}
+        order by isMaster DESC limit 20
+    </select>
+
+    <select id="getMemberEnames" resultType="com.yskc.ms.models.rs.InitMemberModel">
+        select e.ename
+        from i_member as i
+        LEFT JOIN employee AS e on i.enumber=e.enumber and e.companyId = i.companyId
+        where i.year=#{year} and i.projectId in
+        <foreach collection="projectIds" item="projectId" open="(" close=")" separator=",">
+            #{projectId}
+        </foreach>
+        order by isMaster DESC limit 20
+    </select>
+    <select id="getMemberList" resultType="com.yskc.ms.models.rs.InitMemberModel">
+        select
+        im.enumber,im.id,im.projectId,e.ename,rde.position,e.title,e.edate,im.year,
+        rde.etype,rde.rdDeptId,e.birthday,e.specialities,im.role,im.isMaster,im.entryDate,rd.deptName
+        from i_member as im
+        LEFT JOIN employee as e on e.enumber = im.enumber and e.companyId =im.companyId
+        LEFT JOIN rdEmployee as rde on rde.companyId= e.companyId and rde.enumber=e.enumber and rde.year=im.year
+        LEFT JOIN rdDept as rd on rd.id = rde.rdDeptId
+        where im.projectId = #{query.projectId}
+        <if test="query.enumber != null and query.enumber != '' ">
+            and e.enumber like "%"#{query.enumber}"%"
+        </if>
+        <if test="query.ename != null and query.ename != '' ">
+            and e.ename like "%"#{query.ename}"%"
+        </if>
+        <if test="query.deptName !=null and query.deptName != ''">
+            and rd.year=#{query.year} and rd.deptName like "%"#{query.deptName}"%"
+        </if>
+        <if test="query.specialities !=null and query.specialities !=''">
+            and e.specialities like "%"#{query.specialities}"%"
+        </if>
+        <if test="query.role !=null and query.role !=''">
+            and im.role like "%"#{query.role}"%"
+        </if>
+    </select>
+    <select id="getStaffsInfo" resultType="com.yskc.ms.models.rs.InitMemberListModel">
+        select e.ename,im.role,re.position,rd.deptName,im.id
+        from i_member im
+        left join employee e on e.enumber=im.enumber and e.companyId=im.companyId
+        left join rdEmployee re on re.enumber=im.enumber and im.companyId=re.companyId and re.year=im.year
+        left join rdDept rd on re.rdDeptId=rd.id
+        where im.companyId = #{companyId} and im.projectId = #{projectId} and im.year=#{year}
+        <if test="memberIds!=null and memberIds.length>0">
+            and im.id not in
+            <foreach collection="memberIds" item="memberId" open="(" separator="," close=")">
+                #{memberId}
+            </foreach>
+        </if>
+        order by im.isMaster desc,re.etype, im.enumber desc
+    </select>
+    <select id="getList" resultType="com.yskc.ms.models.rs.InitMemberModel">
+        select
+        im.enumber,im.id,im.projectId,e.ename,rde.position,e.title,e.edate,
+        rde.etype,rde.rdDeptId,e.birthday,e.specialities,im.role,im.isMaster,im.entryDate,rd.deptName
+        from i_member as im
+        LEFT JOIN employee as e on e.enumber = im.enumber and e.companyId =im.companyId
+        LEFT JOIN rdEmployee as rde on rde.companyId= e.companyId and rde.year=#{query.year} and rde.enumber=e.enumber
+        LEFT JOIN rdDept as rd on rd.id = rde.rdDeptId
+        where im.companyId = #{companyId} and im.projectId = #{query.projectId}
+        <if test="query.enumber != null and query.enumber != '' ">
+            and e.enumber like "%"#{query.enumber}"%"
+        </if>
+        <if test="query.ename != null and query.ename != '' ">
+            and e.ename like "%"#{query.ename}"%"
+        </if>
+        <if test="query.rdDeptPath !=null and query.rdDeptPath != ''">
+            and rd.identity like #{query.rdDeptPath}"%"
+        </if>
+
+        <if test="query.specialities !=null and query.specialities !=''">
+            and e.specialities like "%"#{query.specialities}"%"
+        </if>
+        <if test="query.role !=null and query.role !=''">
+            and im.role like "%"#{query.role}"%"
+        </if>
+    </select>
+    <select id="getMasterByYear" resultType="com.yskc.ms.entity.rs.InitMemberEntity">
+        select * from i_member where isMaster and projectId=#{projectId} and `year`=#{year}
+    </select>
+    <select id="getMemberByProAndYear" resultType="java.util.Map">
+        SELECT projectId, count(id) as members FROM `i_member` where projectId in
+        <foreach collection="projectIds" item="projectId" open="(" separator="," close=")">
+            #{projectId}
+        </foreach>
+        and `year` = #{year}
+        group by projectId;
+    </select>
+
+    <select id="getMembers" resultType="com.yskc.ms.models.rs.InitMemberModel">
+        select
+        im.enumber,im.id,im.projectId,e.ename,rde.position,e.title,e.edate,
+        rde.etype,rde.rdDeptId,e.birthday,e.specialities,im.role,im.isMaster,im.entryDate,rd.deptName,rd.fullName
+        from i_member as im
+        LEFT JOIN employee as e on e.enumber = im.enumber and e.companyId =im.companyId
+        LEFT JOIN rdEmployee as rde on rde.companyId= e.companyId and rde.year=#{query.year} and rde.enumber=e.enumber
+        LEFT JOIN rdDept as rd on rd.id = rde.rdDeptId
+        where im.companyId = #{query.companyId} and im.projectId = #{query.projectId} and im.year=#{query.year}
+    </select>
+</mapper>

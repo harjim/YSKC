@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    ms:
+      driver-class-name: com.mysql.jdbc.Driver
+      url: jdbc:mysql://192.168.125.140:3306/mscopy?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&useSSL=false
+      username: root
+      password: Lz@DFby*313&lM
+  redis:
+    database: 0
+    host: 192.168.125.140
+    port: 6379
+
+dingDingConfig:
+  #dingoaippdherp6i9tuynn
+  agentId: 302821533
+  appKey: dingxrsmrn4ae1cecwgk
+  appSecret: dnKvwmzm0nJ36yFbC58FK0K8ymf01Rocu2gL-S5tl552eij4eRv72msnag-2ZQgp
+commonConfig:
+  picUrl: http://project.gdyskc.com:9000/img/logo.af1ca756.png
+

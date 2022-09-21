@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+            integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+        <script src="https://g.alicdn.com/dingding/dingtalk-jsapi/2.13.42/dingtalk.open.js"></script>
+    </head>
+    <body>
+
+    </body>
+    <script>
+         $(() => {
+            dd.ready(function() {
+            dd.runtime.permission.requestAuthCode({
+        corpId: "ding543f60a6e3104cf835c2f4657eb6378f", // 企业id
+        onSuccess: function (info) {
+                  code = info.code // 通过该免登授权码可以获取用户身份
+                  alert(code)
+                 $.ajax({
+                    type: 'post',
+                    url: "http://" + location.hostname + "/api/mobile/index/loginApp", // 'http://192.168.99.99:9001/api/mobile/index/loginApp',
+				    dataType: "json",
+				    contentType: "application/json;charset=UTF-8",
+                    data:{code},
+                    success:(res=>{
+                        alert(res)
+                    }),
+                    error:(res)=>{
+                        alert(JSON.stringify(res))
+                    }
+
+                 })
+        }});
+        });
+         })
+      
+    </script>
+</html>

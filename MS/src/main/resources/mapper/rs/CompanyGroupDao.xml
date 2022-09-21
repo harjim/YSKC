@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.rs.CompanyGroupDao">
+    <select id="getByCompanyId" resultType="com.yskc.ms.entity.rs.CompanyGroupEntity">
+        select id,companyId,groupId,companyType,fullPath,`level` from company_group where companyId in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+               #{id}
+        </foreach>
+    </select>
+    <select id="getCompanyByFullPath" resultType="com.yskc.ms.models.customer.FindCustomerModel">
+        select cg.companyId,c.id,c.companyName,cg.fullPath,c1.companyName as groupName,cg.groupId from company_group cg
+            inner join company c on c.id = cg.companyId
+            left join company c1 on cg.groupId = c1.id
+        <where>
+            cg.fullpath like #{fullPath}"%"
+            <if test="null != companyName and companyName !=''">
+                and c.companyName like "%"#{companyName}"%"
+            </if>
+        </where>
+    </select>
+    <select id="getCompanyByGroupId" resultType="com.yskc.ms.models.customer.FindCustomerModel">
+        select cg.companyId,c.id,c.companyName,cg.fullPath,c1.companyName as groupName,cg.groupId from company_group cg
+        inner join company c on c.id = cg.companyId
+        left join company c1 on cg.groupId = c1.id
+        <where>
+            cg.groupId = #{companyId}
+            <if test="null != companyName and companyName !=''">
+                and c.companyName like "%"#{companyName}"%"
+            </if>
+        </where>
+    </select>
+    <select id="getByCompanyIdOrGroupId" resultType="com.yskc.ms.entity.rs.CompanyGroupEntity">
+        select id,companyId,groupId,companyType,fullPath,`level` from company_group
+            where companyId = #{id} OR groupId = #{id}
+    </select>
+    <select id="getGroupByCompanyId" resultType="com.yskc.ms.models.customer.FindCustomerModel">
+        select DISTINCT(cg.companyId) as id ,c.companyName from company_group cg
+        inner join company c on cg.groupId = c.id
+        where cg.companyId in
+        <foreach collection="companyIds" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+    <insert id="insertBatch">
+        insert into company_group(companyId,groupId,companyType,fullPath,`level`,
+            createTime,lastUpdateTime,msCreatorId,msLastUpdatorId)
+        VALUES
+        <foreach collection="list" item="c" separator=",">
+            (#{c.companyId},#{c.groupId},#{c.companyType},#{c.fullPath},#{c.level},
+             #{c.createTime},#{c.lastUpdateTime},#{c.msCreatorId},#{c.msLastUpdatorId})
+        </foreach>
+    </insert>
+    <update id="updateGroups">
+        <foreach collection="list" separator=";" item="item">
+            update company_group set groupId=#{entity.groupId},companyType=3,groupId=#{entity.companyId},
+                fullPath=CONCAT(#{entity.fullPath},fullPath),`level`=#{entity.level}+1+`level`,
+                lastUpdateTime=#{entity.lastUpdateTime},msLastUpdatorId=#{entity.msLastUpdatorId}
+            where companyId = #{item}
+        </foreach>
+    </update>
+    <update id="subsidiariesDemotion">
+        <foreach collection="fullPaths" separator=";" item="f">
+            update company_group set fullPath=CONCAT(#{entity.fullPath},fullPath),
+                                 `level`=#{entity.level}+1+`level`,lastUpdateTime=#{entity.lastUpdateTime},
+                                 msLastUpdatorId=#{entity.msLastUpdatorId}
+            where fullPath like #{f}"%" AND fullPath !=#{f}
+        </foreach>
+    </update>
+    <delete id="delByCompanyIds">
+        delete from company_group where companyId in
+        <foreach collection="ids" open="(" item="id" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    <update id="upNotGroup">
+        update company_group set fullPath=REPLACE(fullPath,#{entity.fullPath},""),
+            companyType=1,groupId=-1,`level`=`level`-#{entity.level}-1,lastUpdateTime=#{entity.lastUpdateTime},
+            msLastUpdatorId=#{entity.msLastUpdatorId} where companyId in
+        <foreach collection="companyIds" open="(" separator="," close=")" item="id">
+            #{id}
+        </foreach>
+    </update>
+    <update id="subsidiariesUpgrade">
+        <foreach collection="fullPaths" separator=";" item="f">
+            update company_group set fullPath=REPLACE(fullPath,#{entity.fullPath},""),
+            `level`=`level`-#{entity.level}-1,lastUpdateTime=#{entity.lastUpdateTime},
+            msLastUpdatorId=#{entity.msLastUpdatorId}
+            where fullPath like #{f}"%" AND fullPath !=#{f}
+        </foreach>
+    </update>
+</mapper>

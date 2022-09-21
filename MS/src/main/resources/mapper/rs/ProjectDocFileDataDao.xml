@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.rs.ProjectDocFileDataDao">
+
+    <select id="getData" resultType="com.yskc.ms.models.rs.DocFileDataModel">
+         SELECT p.data,p.id,d.docFileTemplateId,pp.pname,pp.beginYear,pp.formula,pp.tecIndustry,
+         pp.rdIndex,t.docTemplateName as templateName,d.docFileName,d.projectId,p.wordLength,d.docFileId,d.month
+        FROM p_docFile d
+        LEFT JOIN p_docFile_data p ON d.id = p.pdocFileId
+        LEFT JOIN p_project pp ON d.projectId=pp.id
+        LEFT JOIN docFileTemplate t ON t.id = d.docFileTemplateId
+        WHERE d.id = #{pDocFileId}
+    </select>
+    <select id="getFileDatas" resultType="com.yskc.ms.models.rs.DocFileDataModel">
+        SELECT p.data,p.id,d.docFileTemplateId,pp.pname,pp.beginYear,pp.rdIndex,
+        t.docTemplateName as templateName,d.id as pDocFileId,d.docFileId,
+        ps.stageName as stageType,d.docFileName,d.month
+        FROM p_docFile d
+        LEFT JOIN p_docFile_data p ON d.id = p.pdocFileId
+        LEFT JOIN p_project pp ON d.projectId=pp.id
+        LEFT JOIN docFileTemplate t ON t.id = d.docFileTemplateId
+        LEFT JOIN p_stage ps on ps.stageKey=d.stage and ps.projectId = d.projectId
+        WHERE
+        <if test="ids!=null and ids.size()>0">
+            d.id in (<foreach collection="ids" item="id" separator=",">#{id}</foreach>)
+        </if>
+        <if test="ids == null or ids.size()==0">
+            d.projectId=#{projectId}
+        </if>
+        order by d.stage,d.seq
+    </select>
+    <select id="getReportList" resultType="com.yskc.ms.models.projectAudit.ReportListModel">
+        select pp.id as projectId,pp.pname,pp.beginYear `year`,pp.rdTitle,pdd.id,pdd.data,pd.docFileName,
+        d.docTemplateName as templateName,pp.companyId,pd.id as docFileId,ad.status as auditStatus
+        from p_project pp
+        inner join p_docFile pd on pd.projectId=pp.id and pd.docFileId=#{docFileId} and pd.deleted=false
+        left join p_docFile_data pdd on pdd.pdocFileId=pd.id
+        left join docFileTemplate d on d.id=pd.docFileTemplateId
+        left join docFile df on df.id=d.docFileId
+        left join p_audit_docFile ad on pd.id=ad.docFileId
+        where  pp.companyId=#{companyId}  and pp.beginYear &lt;= #{year} and pp.endYear &gt;= #{year}
+        order by pp.rdTitle
+    </select>
+    <select id="getByDocId" resultType="com.yskc.ms.entity.rs.ProjectDocFileDataEntity">
+        select *
+        from p_docFile_data
+        where pdocFileId=#{pDocFileId}
+    </select>
+</mapper>

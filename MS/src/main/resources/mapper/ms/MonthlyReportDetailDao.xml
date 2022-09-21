@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.MonthlyReportDetailDao">
+    <select id="getMonthList" resultType="java.util.Map">
+        select mr.id,mr.workMonth,yu.realName,mr.companyCnt,mr.done,mr.commit,mr.reject,mr.serviceCnt,
+        <foreach collection="types" item="t" separator=",">
+            ${t.alias}.done ${t.col}Done,${t.alias}.commit ${t.col}Commit,${t.alias}.reject ${t.col}Reject
+        </foreach>
+        from monthly_report mr
+        inner join ys_user yu on yu.id = mr.userId
+        <foreach collection="types" item="t" separator=" ">
+            left join monthly_report_detail ${t.alias} on ${t.alias}.userId=mr.userId and
+            ${t.alias}.workMonth=mr.workMonth
+            and ${t.alias}.moduleId=#{t.moduleId}
+        </foreach>
+        where 1=1
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.byUser">
+            <property name="tableAlias" value="yu"/>
+            <property name="perm" value="#{perm}"/>
+        </include>
+        <if test="query.userIds != null and query.userIds.size() > 0">
+            and mr.userId in (<foreach collection="query.userIds" separator="," item="uId">#{uId}</foreach>)
+        </if>
+        <if test="query.deptId != null and query.deptId > 0">
+            and mr.userId in (select ud.userId from user_dept ud inner join ys_dept yd on yd.id=ud.depId
+            where yd.fullPath like CONCAT('%/', #{query.deptId,jdbcType=VARCHAR}, '/%') )
+        </if>
+        <if test="query.month != null">
+            and mr.workMonth=#{query.month}
+        </if>
+    </select>
+</mapper>

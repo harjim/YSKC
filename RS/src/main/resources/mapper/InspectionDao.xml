@@ -1,0 +1,443 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.InspectionDao">
+    <insert id="addBatch">
+        INSERT INTO d_inspection
+        (`type`,accDate,accNumber,expense,summary,companyId,creatorId,createTime,remark,deptId,rdDeptId,
+        enumber,accountTitleId,lastUpdateTime,lastUpdatorId,msCreatorId,msLastUpdatorId,deptName,remainExpense)
+        VALUES
+        <foreach collection="addList" separator="," item="d">
+            (#{d.type},#{d.accDate},#{d.accNumber},#{d.expense},#{d.summary},#{d.companyId},#{d.creatorId},
+            #{d.createTime},#{d.remark},#{d.deptId},#{d.rdDeptId},#{d.enumber},#{d.accountTitleId},
+            #{d.lastUpdateTime},#{d.lastUpdatorId},#{d.msCreatorId},#{d.msLastUpdatorId},#{d.deptName},#{d.remainExpense})
+        </foreach>
+    </insert>
+
+    <select id="queryAll" resultType="com.yskc.rs.models.inspection.InspectionModel">
+        SELECT
+        i.id,
+        i.type as typeName,
+        i.type,
+        i.accDate,
+        i.accNumber,
+        i.expense,
+        i.summary,
+        i.remark,
+        i.deptName,
+        i.enumber,
+        i.accountTitleId,
+        a.fullAccountName
+        FROM
+        d_inspection AS i
+        LEFT JOIN accountTitle a ON a.id = i.accountTitleId
+        where i.companyId = #{companyId}
+        <if test="inspectionQuery.type!=null">
+            and i.type in
+            <foreach collection="inspectionQuery.type" open="(" separator="," close=")" item="type">
+                #{type}
+            </foreach>
+        </if>
+        <if test="inspectionQuery.qtype !=null and inspectionQuery.qtype > 0">
+            and i.type = #{inspectionQuery.qtype}
+        </if>
+        <if test="inspectionQuery.accDate != null">
+            and i.accDate = #{inspectionQuery.accDate}
+        </if>
+        <if test="inspectionQuery.endMonth != null">
+            and i.accDate <![CDATA[ <= ]]> #{inspectionQuery.endMonth}
+        </if>
+        <if test="inspectionQuery.startMonth != null">
+            and i.accDate <![CDATA[ >= ]]> #{inspectionQuery.startMonth}
+        </if>
+        <if test="inspectionQuery.accNumber != null and inspectionQuery.accNumber!=''">
+            and i.accNumber like "%"#{inspectionQuery.accNumber}"%"
+        </if>
+        <if test="inspectionQuery.summary != null and inspectionQuery.summary!=''">
+            and i.summary like "%"#{inspectionQuery.summary}"%"
+        </if>
+        <if test="inspectionQuery.deptName !=null and inspectionQuery.deptName != ''">
+            and i.deptName like "%"#{inspectionQuery.deptName}"%"
+        </if>
+    </select>
+    <select id="querytravelData" resultType="com.yskc.rs.models.inspection.InspectionModel">
+        SELECT
+        i.id,
+        i.type as typeName,
+        i.type,
+        i.accDate,
+        i.accNumber,
+        i.expense,
+        i.summary,
+        i.remark,
+        i.deptName,
+        i.enumber,
+        e.ename as ename,
+        i.accountTitleId,
+        a.fullAccountName
+        FROM
+        d_inspection AS i
+        left join employee e on e.enumber= i.enumber and i.companyId = e.companyId
+        LEFT JOIN accountTitle a ON a.id = i.accountTitleId
+        where i.companyId = #{companyId}
+        <if test="inspectionQuery.type!=null">
+            and i.type in
+            <foreach collection="inspectionQuery.type" open="(" separator="," close=")" item="type">
+                #{type}
+            </foreach>
+        </if>
+        <if test="inspectionQuery.accDate != null">
+            and i.accDate = #{inspectionQuery.accDate}
+        </if>
+        <if test="inspectionQuery.endMonth != null">
+            and i.accDate <![CDATA[ <= ]]> #{inspectionQuery.endMonth}
+        </if>
+        <if test="inspectionQuery.startMonth != null">
+            and i.accDate <![CDATA[ >= ]]> #{inspectionQuery.startMonth}
+        </if>
+        <if test="inspectionQuery.accNumber != null and inspectionQuery.accNumber!=''">
+            and i.accNumber like "%"#{inspectionQuery.accNumber}"%"
+        </if>
+        <if test="inspectionQuery.summary != null and inspectionQuery.summary!=''">
+            and i.summary like "%"#{inspectionQuery.summary}"%"
+        </if>
+        <if test="inspectionQuery.deptName !=null and inspectionQuery.deptName != ''">
+            and i.deptName like "%"#{inspectionQuery.deptName}"%"
+        </if>
+    </select>
+
+    <select id="queryForExport" resultType="com.yskc.rs.models.excel.InspectionExcel">
+        SELECT
+        i.id,
+        i.type,
+        i.accDate,
+        i.accNumber,
+        i.expense,
+        i.summary,
+        i.remark,
+        i.deptId,
+        i.deptName,
+        a.fullAccountName
+        FROM
+        d_inspection AS i
+        LEFT JOIN accountTitle a ON a.id = i.accountTitleId
+        where i.companyId = #{companyId}
+        <if test="inspectionQuery.type!=null">
+            and i.type in
+            <foreach collection="inspectionQuery.type" open="(" separator="," close=")" item="type">
+                #{type}
+            </foreach>
+        </if>
+        <if test="inspectionQuery.accDate != null">
+            and i.accDate = #{inspectionQuery.accDate}
+        </if>
+        <if test="inspectionQuery.endMonth != null">
+            and i.accDate <![CDATA[ <= ]]> #{inspectionQuery.endMonth}
+        </if>
+        <if test="inspectionQuery.startMonth != null">
+            and i.accDate <![CDATA[ >= ]]> #{inspectionQuery.startMonth}
+        </if>
+        <if test="inspectionQuery.accNumber != null and inspectionQuery.accNumber!=''">
+            and i.accNumber like "%"#{inspectionQuery.accNumber}"%"
+        </if>
+        <if test="inspectionQuery.summary != null and inspectionQuery.summary!=''">
+            and i.summary like "%"#{inspectionQuery.summary}"%"
+        </if>
+        <if test="inspectionQuery.deptName !=null and inspectionQuery.deptName != ''">
+            and i.deptName like "%"#{inspectionQuery.deptName}"%"
+        </if>
+        order by i.createTime DESC
+    </select>
+
+    <select id="queryInspectionByTerm" resultType="com.yskc.rs.models.inspection.InspectionModel">
+        SELECT
+        d.id,d.accDate,d.accNumber,d.expense,d.summary,d.type,d.deptName,d.remark
+        FROM
+        d_inspection AS d
+        LEFT JOIN p_inspection AS p ON d.id = p.inspectionDataId and p.projectId=#{query.projectId}
+        WHERE
+        p.inspectionDataId IS NULL
+        and d.remainExpense!=0.00
+        AND d.companyId = #{companyId}
+        AND d.accDate &gt;= #{beginDate}
+        AND d.accDate &lt;= #{endDate}
+        <if test="query.types!=null">
+            and d.type in
+            <foreach collection="query.types" open="(" separator="," close=")" item="type">
+                #{type}
+            </foreach>
+        </if>
+        <if test="query.summary != null and query.summary!=''">
+            and d.summary like "%"#{query.summary}"%"
+        </if>
+        <if test="query.deptName !=null and query.deptName  != ''">
+            and d.deptName like "%"#{query.deptName}"%"
+        </if>
+        <if test="query.accNumber!=null and query.accNumber!=''">
+            and d.accNumber like "%"#{query.accNumber}"%"
+        </if>
+        <if test="query.remark!=null and query.remark!=''">
+            and d.remark like "%"#{query.remark}"%"
+        </if>
+    </select>
+
+    <update id="updateInspetionRdDept">
+        update d_inspection
+        set rdDeptId=#{entity.rdDeptId}
+        where id = #{entity.id}
+          and companyId = #{companyId}
+    </update>
+
+    <update id="updateInspetioneType">
+        update d_inspection
+        set type=#{entity.type}
+        where id = #{entity.id}
+          and companyId = #{companyId}
+    </update>
+    <update id="updateAmount">
+        update d_inspection set
+        remainExpense=0.00,lastUpdateTime=#{date},lastUpdatorId=#{userId},msLastUpdatorId=#{msUserId}
+        where id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+    <update id="updateList">
+        <foreach collection="inspectionEntities" item="item" separator=";">
+            update d_inspection set remainExpense=#{item.remainExpense},lastUpdateTime=#{item.lastUpdateTime},
+            lastUpdatorId=#{item.lastUpdatorId},msLastUpdatorId=#{item.msLastUpdatorId}
+            where id=#{item.id}
+        </foreach>
+    </update>
+    <select id="queryInspectionDataByTerm" resultType="com.yskc.rs.entity.InspectionEntity">
+        SELECT
+        d.id,
+        d.accDate,
+        d.accNumber,
+        d.expense,
+        d.summary,
+        d.type,
+        d.rdDeptId,
+        d.companyId,
+        d.creatorId,
+        d.remainExpense
+        FROM
+        d_inspection AS d
+        LEFT JOIN p_inspection AS p ON d.id = p.inspectionDataId and p.projectId=#{query.projectId}
+        LEFT JOIN employee e on e.enumber= d.enumber and e.companyId = #{companyId}
+        WHERE
+        p.inspectionDataId IS NULL
+        AND d.companyId = #{companyId}
+        AND d.accDate &gt;= #{beginDate}
+        AND d.accDate &lt;= #{endDate}
+        AND d.remainExpense!=0.00
+        <if test="query.types != null">
+            and d.type in
+            <foreach collection="query.types" open="(" separator="," close=")" item="type">
+                #{type}
+            </foreach>
+        </if>
+        <if test="query.summary != null and query.summary!=''">
+            and d.summary like "%"#{query.summary}"%"
+        </if>
+        <if test="query.deptName !=null and query.deptName != ''">
+            and d.deptName like "%"#{query.deptName}"%"
+        </if>
+        <if test="query.enumber !=null and query.enumber !=''">
+            and d.enumber like "%"#{query.enumber}"%"
+        </if>
+        <if test="query.ename !=null and query.ename!='' ">
+            and e.ename like "%"#{query.ename}"%"
+        </if>
+        <if test="query.accNumber!=null and query.accNumber !=''">
+            and d.accNumber like "%"#{query.accNumber}"%"
+        </if>
+    </select>
+
+    <select id="getInspectionSum" resultType="java.math.BigDecimal">
+        SELECT
+        sum( d.expense)
+        FROM
+        d_inspection AS d
+        LEFT JOIN p_inspection AS p ON d.id = p.inspectionDataId
+        WHERE
+        p.inspectionDataId IS NULL
+        and d.remainExpense!=0.00
+        AND d.companyId = #{companyId}
+        AND d.accDate &gt;= #{beginDate}
+        AND d.accDate &lt;= #{endDate}
+        <if test="query.types!=null">
+            and d.type in
+            <foreach collection="query.types" open="(" separator="," close=")" item="type">
+                #{type}
+            </foreach>
+        </if>
+        <if test="query.summary != null and query.summary!=''">
+            and d.summary like "%"#{query.summary}"%"
+        </if>
+        <if test="query.deptName !=null and query.deptName  != ''">
+            and d.deptName like "%"#{query.deptName}"%"
+        </if>
+        <if test="query.accNumber!=null and query.accNumber!=''">
+            and d.accNumber like "%"#{query.accNumber}"%"
+        </if>
+        <if test="query.remark!=null and query.remark !=''">
+            and d.remark like "%"#{query.remark}"%"
+        </if>
+    </select>
+
+    <select id="queryTravelFee" resultType="com.yskc.rs.models.inspection.InspectionModel">
+        SELECT
+        d.id, d.accDate,d.accNumber, d.expense, d.summary,d.type, d.deptName,d.companyId,d.enumber,e.ename,d.remark
+        FROM
+        d_inspection AS d
+        LEFT JOIN p_inspection AS p ON d.id = p.inspectionDataId and p.projectId=#{query.projectId}
+        LEFT JOIN employee e on d.enumber = e.enumber and e.companyId = #{companyId}
+        WHERE
+        p.inspectionDataId IS NULL
+        AND d.companyId = #{companyId}
+        AND d.accDate &gt;= #{beginDate}
+        AND d.accDate &lt;= #{endDate}
+        AND d.remainExpense!=0.00
+        <if test="type!=null">
+            and d.type = #{type}
+        </if>
+        <if test="query.summary != null and query.summary!=''">
+            and d.summary like "%"#{query.summary}"%"
+        </if>
+        <if test="query.deptName !=null and query.deptName != ''">
+            and d.deptName like "%"#{query.deptName}"%"
+        </if>
+        <if test="query.enumber !=null and query.enumber !=''">
+            and d.enumber like "%"#{query.enumber}"%"
+        </if>
+        <if test="query.ename !=null and query.ename!='' ">
+            and e.ename like "%"#{query.ename}"%"
+        </if>
+        <if test="query.accNumber!=null and query.accNumber !=''">
+            and d.accNumber like "%"#{query.accNumber}"%"
+        </if>
+        <if test="query.remark!=null and query.remark !=''">
+            and d.remark like "%"#{query.remark}"%"
+        </if>
+    </select>
+
+    <select id="queryTravelFeeSum" resultType="java.math.BigDecimal">
+        SELECT
+        sum(d.expense)
+        FROM
+        d_inspection AS d
+        LEFT JOIN p_inspection AS p ON d.id = p.inspectionDataId
+        LEFT JOIN employee e on d.enumber = e.enumber and e.companyId = #{companyId}
+        WHERE
+        p.inspectionDataId IS NULL
+        AND d.companyId = #{companyId}
+        AND d.accDate &gt;= #{beginDate}
+        AND d.accDate &lt; #{endDate}
+        AND d.remainExpense!=0.00
+        <if test=" type!=null">
+            and d.type = #{type}
+        </if>
+        <if test="query.summary != null and query.summary!=''">
+            and d.summary like "%"#{query.summary}"%"
+        </if>
+        <if test="query.deptName !=null and query.deptName != ''">
+            and d.deptName like "%"#{query.deptName}"%"
+        </if>
+        <if test="query.enumber !=null and query.enumber !=''">
+            and d.enumber like "%"#{query.enumber}"%"
+        </if>
+        <if test="query.ename !=null and query.ename!='' ">
+            and e.ename like "%"#{query.ename}"%"
+        </if>
+        <if test="query.accNumber!=null and query.accNumber !=''">
+            and d.accNumber like "%"#{query.accNumber}"%"
+        </if>
+        <if test="query.remark!=null and query.remark !=''">
+            and d.remark like "%"#{query.remark}"%"
+        </if>
+    </select>
+    <select id="getProjectUsed" resultType="java.lang.Integer">
+        select DISTINCT i.id from p_inspection as pi inner join d_inspection as i on pi.inspectionDataId = i.id
+        where i.id in
+        <foreach collection="ids" item="id" index="index" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+    <select id="getAmortizationSum"
+            resultType="com.yskc.rs.models.projectinspection.SumProjectAmortizationModel">
+        SELECT
+        sum(CASE WHEN d.type = 40000 THEN d.expense ELSE 0 END) as softwareSum,
+        sum(CASE WHEN d.type = 40100 THEN d.expense ELSE 0 END) as patentSum,
+        sum(CASE WHEN d.type = 40200 THEN d.expense ELSE 0 END) as otherSum
+        FROM
+        d_inspection AS d
+        LEFT JOIN p_inspection AS p ON d.id = p.inspectionDataId
+        LEFT JOIN employee e on d.enumber = e.enumber and e.companyId = #{companyId}
+        WHERE
+        p.inspectionDataId IS NULL
+        AND d.companyId = #{companyId}
+        AND d.accDate &gt;= #{beginDate}
+        AND d.accDate &lt;= #{endDate}
+        and d.remainExpense!=0.00
+        <if test="query.types!=null">
+            and d.type in
+            <foreach collection="query.types" open="(" separator="," close=")" item="type">
+                #{type}
+            </foreach>
+        </if>
+        <if test="query.summary != null and query.summary!=''">
+            and d.summary like "%"#{query.summary}"%"
+        </if>
+        <if test="query.deptName !=null and query.deptName != ''">
+            and d.deptName like "%"#{query.deptName}"%"
+        </if>
+        <if test="query.enumber !=null and query.enumber !=''">
+            and d.enumber like "%"#{query.enumber}"%"
+        </if>
+        <if test="query.ename !=null and query.ename!='' ">
+            and e.ename like "%"#{query.ename}"%"
+        </if>
+        <if test="query.accNumber!=null and query.accNumber !=''">
+            and d.accNumber like "%"#{query.accNumber}"%"
+        </if>
+        <if test="query.remark!=null and query.remark!=''">
+            and d.remark like "%"#{query.remark}"%"
+        </if>
+    </select>
+    <select id="getOtherSum" resultType="com.yskc.rs.models.projectinspection.OtherSumModel">
+        SELECT
+        sum(CASE WHEN d.type = 60000 THEN d.expense ELSE 0 END) as book,
+        sum(CASE WHEN d.type = 60100 THEN d.expense ELSE 0 END) as rdProduction,
+        sum(CASE WHEN d.type = 60200 THEN d.expense ELSE 0 END) as copyright,
+        sum(CASE WHEN d.type = 60300 THEN d.expense ELSE 0 END) as benefits,
+        sum(CASE WHEN d.type = 69900 THEN d.expense ELSE 0 END) as other
+        FROM
+        d_inspection AS d
+        LEFT JOIN p_inspection AS p ON d.id = p.inspectionDataId
+        WHERE
+        p.inspectionDataId IS NULL
+        AND d.companyId = #{companyId}
+        AND d.accDate &gt;= #{beginDate}
+        AND d.accDate &lt;= #{endDate}
+        AND d.remainExpense!=0.00
+        <if test="query.types!=null">
+            and d.type in
+            <foreach collection="query.types" open="(" separator="," close=")" item="type">
+                #{type}
+            </foreach>
+        </if>
+        <if test="query.summary != null and query.summary!=''">
+            and d.summary like "%"#{query.summary}"%"
+        </if>
+        <if test="query.deptName !=null and query.deptName != ''">
+            and d.deptName like "%"#{query.deptName}"%"
+        </if>
+        <if test="query.accNumber!=null and query.accNumber !=''">
+            and d.accNumber like "%"#{query.accNumber}"%"
+        </if>
+        <if test="query.remark!=null and query.remark!=''">
+            and d.remark like "%"#{query.remark}"%"
+        </if>
+    </select>
+</mapper>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.rs.RsStageDao">
+    <select id="queryStage" resultType="com.yskc.ms.models.rs.RsStageModel">
+        select p.* from p_stage p
+        where companyId = #{companyId} and projectId = #{projectId}
+        order by p.stageKey ASC
+    </select>
+    <select id="getStageInfo" resultType="com.yskc.ms.entity.rs.RsStageEntity">
+        select s.* from
+        p_stage s
+        inner join p_docFile pd on pd.stage=s.stageKey and pd.projectId=s.projectId
+        where pd.id=#{pDocFileId} and s.projectId=#{projectId}
+    </select>
+    <select id="queryStageList" resultType="com.yskc.ms.models.rs.RsStageModel">
+        select p.* from p_stage p
+        where companyId = #{query.companyId} and projectId = #{query.projectId}
+        order by p.stageKey ASC
+    </select>
+    <select id="searchStage" resultType="com.yskc.ms.models.SysDictionaryModel">
+        select id, stageKey as `key`, stageName as `value`
+        from c_stage
+        where companyId = 0
+    </select>
+</mapper>

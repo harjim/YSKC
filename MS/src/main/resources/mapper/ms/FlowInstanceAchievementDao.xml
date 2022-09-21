@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.FlowInstanceAchievementDao">
+    <select id="getUserAudit" resultType="java.lang.Integer">
+        select distinct fa.achievementId from flowInstance_achievement fa
+        inner join flowInstance fi on fi.id=fa.instanceId
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id
+        inner join flowInstance_user fu on fu.instanceId=fi.id and fu.nodeId=fic.curNodeId and fu.status is null
+          and fu.userId=#{userId}
+        where fa.achievementId in (<foreach collection="achievementIds" separator="," item="aId">#{aId}</foreach>)
+    </select>
+    <select id="getInstanceInfo" resultType="com.yskc.ms.models.flowInstance.FlowInstanceInfoModel">
+        select achievementId dataId,moduleId from flowInstance_achievement where instanceId=#{instanceId} limit 1
+    </select>
+    <select id="getAchievementInstanceUsers" resultType="com.yskc.ms.entity.ms.FlowInstanceUser">
+        select fu.id,fu.instanceId,fu.nodeId,fi.lastSubmiter from flowInstance fi
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id
+        inner join flowInstance_achievement fa on fa.instanceId = fi.id
+        inner join flowInstance_user fu on fu.instanceId=fi.id and fu.nodeId=fic.curNodeId
+        where fa.achievementId in (<foreach collection="achievementIds" item="aId" separator=",">#{aId}</foreach>)
+        and fu.userId = #{userId} and fi.status = 0
+        and fa.moduleId=12
+    </select>
+    <select id="getAchievementInstances" resultType="com.yskc.ms.entity.ms.FlowInstanceCurNode">
+        select fic.instanceId,fic.curNodeId,fic.nodeStatus from flowInstance fi
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id
+        inner join flowInstance_achievement fa on fa.instanceId = fi.id
+        where fa.achievementId in (<foreach collection="achievementIds" item="aId" separator=",">#{aId}</foreach>)
+        and fic.nodeStatus = 1
+        and fa.moduleId=12
+    </select>
+    <select id="getAuditStatus" resultType="com.yskc.ms.models.projectAudit.AuditStatusModel">
+        select fa.moduleId,fm.modeName,fn.nodeName,fi.flowId,fi.status,fic.nodeStatus,fic.curNodeId,fa.instanceId
+        from flowInstance_achievement fa
+                 inner join flowInstance fi on fi.id = fa.instanceId
+                 inner join flowInstance_curNode fic on fic.instanceId=fi.id
+                 inner join flowModule fm on fm.id=fa.moduleId
+                 inner join flowNode fn on fn.id=fic.curNodeId
+        where fa.achievementId=#{achievementId}
+        limit 1
+    </select>
+    <select id="getAchievementIds" resultType="java.lang.Integer">
+        select achievementId from flowInstance_achievement
+        where instanceId in (<foreach collection="instanceIds" item="instanceId" separator=",">#{instanceId}</foreach>)
+    </select>
+</mapper>

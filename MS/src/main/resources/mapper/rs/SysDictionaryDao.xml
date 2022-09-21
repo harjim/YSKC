@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.rs.SysDictionaryDao">
+    <select id="getDictionaryByType" resultType="com.yskc.ms.models.SysDictionaryModel">
+         select * from sys_dictionary where type=#{type} order by `key`
+    </select>
+    <select id="getCustomerDictionary" resultType="com.yskc.ms.models.SysDictionaryModel">
+        select * from sys_dictionary where type in <foreach collection="list" item="item" separator=",">
+            #{item}
+        </foreach>
+        order by `key`
+    </select>
+    <select id="getDictionaryByBudgetType" resultType="com.yskc.ms.models.SysDictionaryModel">
+    SELECT `key`, type, parentKey, `value`
+    FROM sys_dictionary WHERE type = 3 OR type = 4 ORDER BY `type`
+    </select>
+    <select id="getProductNeedData" resultType="com.yskc.ms.models.SysDictionaryModel">
+        SELECT `key`, type, parentKey, `value` FROM sys_dictionary
+        WHERE type=1 or type =10 or type =11 ORDER BY `type`
+    </select>
+
+    <select id="queryList" parameterType="com.yskc.ms.models.SysDictionaryParams" resultType="com.yskc.ms.entity.rs.models.SysDictionaryEntityModel">
+        SELECT a.id,a.type,a.key,a.value,a.parentKey,a.remark,a.order,
+        sys.value as parentKeyValue
+        FROM sys_dictionary a
+        left join sys_dictionary sys on sys.type=a.type and
+        sys.key = a.parentKey
+        WHERE 1=1
+        <if test="params.type!=null">
+            AND a.type = #{params.type}
+        </if>
+        <if test="params.key!=null and params.key != ''">
+            AND  a.key  LIKE #{params.key}"%"
+        </if>
+        <if test="params.parentKeyValue!=null and params.parentKeyValue != ''">
+            AND  sys.value LIKE "%"#{params.parentKeyValue}"%"
+        </if>
+        <if test="params.value!=null and params.value != ''">
+            AND  a.value LIKE "%"#{params.value}"%"
+        </if>
+    </select>
+
+    <select id="findKey"  resultType="com.yskc.ms.entity.rs.SysDictionaryEntity">
+        SELECT a.key,a.value
+        FROM sys_dictionary a
+        WHERE
+        a.type = #{type}
+        AND (a.key like #{key}"%" or a.value like "%"#{key}"%")
+        limit 5
+    </select>
+    <select id="findByKey" resultType="integer" parameterType="string">
+        SELECT COUNT(1) FROM sys_dictionary a
+        where a.parentKey = #{key}
+    </select>
+
+    <select id="findBean" parameterType="com.yskc.ms.entity.rs.SysDictionaryEntity" resultType="integer">
+        SELECT COUNT(1) FROM sys_dictionary a
+        where a.type = #{entity.type}
+        AND a.key = #{entity.key}
+        <if test="entity.id!=null">
+        AND a.id != #{entity.id}
+        </if>
+    </select>
+
+    <select id="getHighTecIndustry" resultType="string">
+        select value from sys_dictionary where type = 2 and `key` in
+        <foreach collection="list" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+    <select id="getAddress" resultType="com.yskc.ms.entity.rs.models.SysDictionaryEntityModel">
+        select `key`,value from sys_dictionary where type = #{type} and `key` in
+        <foreach collection="list" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+</mapper>

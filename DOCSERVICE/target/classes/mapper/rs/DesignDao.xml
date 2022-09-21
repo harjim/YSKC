@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.docservice.dao.rs.DesignDao">
+    <update id="updateList">
+        <foreach collection="designEntities" item="item" separator=";">
+            update d_design set remainDFee=#{item.remainDFee},lastUpdateTime=#{item.lastUpdateTime},
+            lastUpdatorId=#{item.lastUpdatorId},msLastUpdatorId=#{item.msLastUpdatorId}
+            where id=#{item.id}
+        </foreach>
+    </update>
+    <insert id="addDesignBatch">
+        INSERT INTO `d_design`
+        (
+        `dname`,
+        `designDate`,
+        `dFee`,
+        `companyId`,
+        `creatorId`,
+        `createTime`,
+        `remark`,
+        `rdDeptId`,
+        `deptId`,
+        `lastUpdateTime`,
+        `lastUpdatorId`,
+        `msCreatorId`,
+        `msLastUpdatorId`,
+        accountTitleId,
+        deptName,
+        remainDFee
+        )
+        VALUES
+        <foreach collection="designEntityList" item="item" separator=",">
+            ( #{item.dname},
+            #{item.designDate},
+            #{item.dFee},
+            #{item.companyId},
+            #{item.creatorId},
+            #{item.createTime},
+            #{item.remark},
+            #{item.rdDeptId},
+            #{item.deptId},
+            #{item.lastUpdateTime},
+            #{item.lastUpdatorId},
+            #{item.msCreatorId},
+            #{item.msLastUpdatorId},
+            #{item.accountTitleId},
+            #{item.deptName},
+            #{item.remainDFee}
+            )
+        </foreach>
+    </insert>
+
+</mapper>

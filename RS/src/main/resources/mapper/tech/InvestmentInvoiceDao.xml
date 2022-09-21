@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yskc.rs.dao.tech.InvestmentInvoiceDao">
+<!--    <insert id="insertList">-->
+<!--        insert into t_investment_invoice (creatorId,lastUpdatorId,createTime,lastUpdateTime,msCreatorId,-->
+<!--        msLastUpdatorId,investmentId,invoiceDetailId)-->
+<!--        values-->
+<!--        <foreach collection="invoices" item="item" separator=",">-->
+<!--            (#{item.creatorId},#{item.lastUpdatorId},#{item.createTime},#{item.lastUpdateTime},#{item.msCreatorId},-->
+<!--            #{item.msLastUpdatorId},#{item.investmentId},#{item.invoiceDetailId})-->
+<!--        </foreach>-->
+<!--    </insert>-->
+    <insert id="insertList">
+        insert into t_investment_invoice (creatorId,lastUpdatorId,createTime,lastUpdateTime,msCreatorId,
+        msLastUpdatorId,investmentId,invoiceDetailId)
+        values
+        <foreach collection="invoiceIds" item="invoiceDetailId"  separator=",">
+           (#{userId},#{userId},#{date},#{date},#{msUserId},#{msUserId},#{investmentId},#{invoiceDetailId})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        lastUpdatorId = values(lastUpdatorId),
+        msLastUpdatorId = values(msLastUpdatorId),
+        lastUpdateTime = values(lastUpdateTime)
+    </insert>
+    <delete id="delByInvestmentId">
+        delete  from t_investment_invoice
+        where investmentId=#{id} and invoiceDetailId in
+        <foreach collection="invoiceDetailIds" item="invoiceDetailId" open="(" separator="," close=")">
+            #{invoiceDetailId}
+        </foreach>
+    </delete>
+    <delete id="delInvestment">
+        delete from t_investment_invoice
+        where investmentId in
+        <foreach collection="investmentIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    <select id="getByInvestment" resultType="java.lang.Integer">
+        select invoiceDetailId
+        from t_investment_invoice
+        where investmentId=#{investmentId}
+    </select>
+
+</mapper>

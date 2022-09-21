@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.project.AchievementFileDao">
+    <select id="getAchievementIds" resultType="java.lang.Integer">
+        select distinct achievementId from p_achievement_file
+         where achievementId in (<foreach collection="achievementIds" separator="," item="aId">#{aId}</foreach>)
+    </select>
+    <select id="getStatFile" resultType="com.yskc.rs.entity.project.AchievementEntity">
+        select max(lastUpdateTime)lastUploadTime,count(id) fileCnt from p_achievement_file where achievementId=#{achievementId}
+        group by achievementId
+    </select>
+    <select id="getFiles" resultType="com.yskc.rs.models.achievement.AchievementFileModel">
+        select paf.id,paf.achievementId,paf.filepath,paf.fileName,paf.stageKey,paf.listId,sd.docName,
+               paf.lastUpdateTime,paf.seq,paf.converResult
+        from p_achievement_file paf
+        left join sys_docList sd on paf.listId=sd.id
+        where paf.achievementId=#{achievementId}
+        order by paf.seq
+    </select>
+    <select id="getMaxSeq" resultType="integer">
+        select max(seq)
+        from p_achievement_file
+        where achievementId = #{achievementId}
+    </select>
+    <update id="updateAchievementFile">
+        update p_achievement_file
+        <set>
+            lastUpdatorId = #{entity.lastUpdatorId},
+            lastUpdateTime = #{entity.lastUpdateTime},
+            msLastUpdatorId = #{entity.msLastUpdatorId},
+            listId = #{entity.listId},
+            <if test="null != entity.filepath">
+                filepath = #{entity.filepath},
+            </if>
+            <if test="null != entity.fileName">
+                fileName = #{entity.fileName},
+            </if>
+            <if test="null != entity.converResult">
+                converResult=#{entity.converResult},
+            </if>
+            stageKey = #{entity.stageKey},
+            seq = #{entity.seq}
+        </set>
+        where id = #{entity.id}
+    </update>
+
+    <select id="getSeq" resultType="com.yskc.rs.models.achievement.AchievementFileModel">
+        select id,seq from p_achievement_file where id = #{id}
+    </select>
+
+    <update id="updateSeq">
+        <foreach collection="list" separator=";" item="item">
+            update p_achievement_file set seq = #{item.seq} where id = #{item.id}
+        </foreach>
+    </update>
+</mapper>

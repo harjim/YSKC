@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.highTech.HighTechDao">
+    <select id="getList" resultType="com.yskc.rs.models.hightech.HighTechModel">
+        select id,tecIndustry,hcode,hname,startYear,endYear,codeNum
+        from highTech
+        where companyId=#{companyId}
+        <if test="query.year!=null and query.year>0">
+            and startYear &lt;= #{query.year} and endYear &gt;= #{query.year}
+        </if>
+        <if test="query.tecIndustry!=null and query.tecIndustry!=''">
+            and tecIndustry like "%"#{query.tecIndustry}"%"
+        </if>
+        <if test="query.hcode!=null and query.hcode!=''">
+            and hcode like "%"#{query.hcode}"%"
+        </if>
+        <if test="query.hname!=null and query.hname!=''">
+            and hname like "%"#{query.hname}"%"
+        </if>
+        order by hcode
+    </select>
+    <select id="verifyCodeName" resultType="com.yskc.rs.entity.hightech.HighTechEntity">
+        select *
+        from highTech
+        where companyId=#{companyId}
+        <if test="hcode!=null and hcode!=''">
+            and hcode=#{hcode}
+        </if>
+        <if test="hname!=null and hname!=''">
+            and hname=#{hname}
+        </if>
+        <if test="existId!=null and existId>0">
+            and id!=#{existId}
+        </if>
+        limit 1
+    </select>
+    <select id="getMaxCode" resultType="java.lang.Integer">
+        select IFNULL(max(codeNum),0)
+        from highTech
+        where companyId=#{companyId} and startYear=#{year}
+    </select>
+    <select id="getHighTechSelect" resultType="com.yskc.rs.models.hightech.HighTechSelectModel">
+        select id,hname,hcode
+        from highTech
+        where companyId=#{companyId} and endYear >=#{year} and startYear &lt;=#{year}
+        order by hcode
+    </select>
+    <select id="countData" resultType="com.yskc.rs.models.hightech.HighTechIncomeModel">
+         select sum(hti.income) as income,ht.hcode,ht.hname
+         from highTech_income hti
+         left join highTech ht on ht.id=hti.highTechId and ht.companyId=hti.companyId
+         where ht.startYear &lt;=#{year} and ht.endYear &gt;=#{year} and hti.companyId=#{companyId} and YEAR(hti.bookDate)=#{year}
+         group by ht.hcode,hname
+    </select>
+    <select id="getDescription" resultType="string">
+        select description from highTech
+        where companyId = #{companyId} and hcode = #{hcode}
+    </select>
+</mapper>

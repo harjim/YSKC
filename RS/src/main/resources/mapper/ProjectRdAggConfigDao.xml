@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.project.ProjectRdAggConfigDao">
+    <insert id="insertOrUpdate">
+        insert into p_rdAgg_config(`type`,companyId,config,creatorId,lastUpdatorId,createTime,
+        lastUpdateTime, msCreatorId,msLastUpdatorId,`month`) values
+        <foreach collection="configs" item="c" separator=",">
+            (#{c.type},#{c.companyId},#{c.config},#{c.creatorId},#{c.lastUpdatorId},#{c.createTime},
+            #{c.lastUpdateTime},#{c.msCreatorId},#{c.msLastUpdatorId},#{c.month})
+        </foreach>
+        on duplicate key update
+        lastUpdatorId=values(lastUpdatorId),
+        lastUpdateTime=values(lastUpdateTime),
+        msLastUpdatorId=values(msLastUpdatorId),
+        config=values(config)
+    </insert>
+    <select id="getConfig" resultType="java.lang.String">
+        select config  from p_rdAgg_config where companyId = #{companyId} and `type` = #{type} and `month`=#{month}
+    </select>
+</mapper>

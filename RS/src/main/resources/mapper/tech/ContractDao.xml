@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yskc.rs.dao.tech.ContractDao">
+
+    <select id="getContracts" resultType="com.yskc.rs.models.tech.ContractInfoModel">
+        select tcd.id, tcd.ename,tcd.emodal,tc.contractNo,tc.signTarget,tc.seq,
+                tc.seq,tcd.amount,tcd.quantity,tcd.partPurchase,tcd.secondHand,tcd.traderPurchase,
+               tc.filePath,tc.contractDate,tc.id as contractId,tcd.investmentId
+        from t_contract_detail tcd
+        inner join t_contract tc on tcd.contractId=tc.id
+        where tcd.investmentId=#{query.investmentId} and tcd.companyId=#{companyId}
+        <if test="query.ename!=null and query.ename!=''">
+            and tcd.ename like "%"#{query.ename}"%"
+        </if>
+        <if test="query.emodal!=null and query.emodal!=''">
+            and tcd.emodal like "%"#{query.emodal}"%"
+        </if>
+        order by tc.seq,tcd.ename,tcd.emodal
+    </select>
+    <select id="getContractDetails" resultType="com.yskc.rs.models.tech.ContractInfoModel">
+        select tcd.id, tcd.ename,tcd.emodal,tc.contractNo,tc.signTarget,
+               tc.seq,tcd.quantity,tcd.amount,tcd.investmentId,
+               tcd.partPurchase,tcd.secondHand,tcd.traderPurchase,
+               tc.filePath,tc.contractDate,tc.id as contractId
+        from t_contract_detail tcd
+        inner join t_contract tc on tc.id=tcd.contractId
+        where tcd.companyId=#{companyId} and (tcd.investmentId is null
+        <if test="query.investmentId!=null and query.investmentId>0">
+            or tcd.investmentId=#{query.investmentId}
+        </if>
+        )
+        <if test="query.contractNo!=null and query.contractNo!=''">
+            and tc.contractNo like "%"#{query.contractNo}"%"
+        </if>
+        <if test="query.ename!=null and query.ename!=''">
+            and tcd.ename like "%"#{query.ename}"%"
+        </if>
+        <if test="query.emodal!=null and query.emodal!=''">
+            and tcd.emodal like "%"#{query.emodal}"%"
+        </if>
+    </select>
+    <select id="verifyContract" resultType="com.yskc.rs.entity.tech.Contract">
+        select id,contractNo
+        from t_contract
+        where companyId=#{companyId} and contractNo=#{contractNo}
+    </select>
+</mapper>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.docservice.dao.rs.SummaryDao">
+    <insert id="insertOrUpdate">
+        INSERT INTO `p_summary`
+        (`lastUpdatorId`,`msCreatorId`,`msLastUpdatorId`,`projectId`,`month`,`rdType`,`accountNumber`,`rdFunds`,`creatorId`,`createTime`,`updatorId`,`lastUpdateTime`)
+        VALUES
+        <foreach collection="summaryEntities" item="item" index="index" separator=",">
+            (#{item.lastUpdatorId},#{item.msCreatorId},#{item.msLastUpdatorId},#{item.projectId},#{item.month},#{item.rdType},#{item.accountNumber},#{item.rdFunds},#{item.creatorId},#{item.createTime},#{item.updatorId},#{item.lastUpdateTime})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        rdFunds=values(rdFunds),
+        updatorId=values(updatorId),
+        lastUpdateTime=values(lastUpdateTime),
+        lastUpdatorId=values(lastUpdatorId),
+        msLastUpdatorId=values(msLastUpdatorId)
+    </insert>
+    <select id="getBudgetByYear" resultType="com.yskc.docservice.models.rs.project.ProjectBudgetModel">
+        select projectId,rdType,sum(rdFunds) rdFunds
+        from p_summary
+        where projectId=#{projectId} and YEAR(`month`)=#{year}
+        group by rdType,projectId
+    </select>
+    <select id="getProjectSummary" resultType="com.yskc.docservice.models.rs.project.ProjectBudgetModel">
+        select projectId,rdType,sum(rdFunds) rdFunds
+        from p_summary
+        where projectId=#{projectId}
+        <if test="beginDate!=null and endDate !=null">
+            and  `month` >= #{beginDate} and  `month` &lt;= #{endDate}
+        </if>
+        group by rdType,projectId
+    </select>
+    <select id="getProjectRdFundsSum" resultType="java.math.BigDecimal">
+    select sum(rdFunds) from p_summary where projectId=#{projectId}
+    </select>
+
+</mapper>

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.ProjectProgressDetailDao">
+    <select id="getDetailList" resultType="com.yskc.ms.models.project.ProjectStageModel">
+        select stage,realName,operationTime,result
+        from project_progress_detail ppd
+        left join ys_user yu on ppd.userId=yu.id
+        where ppd.companyId=#{companyId}
+            and ppd.year=#{year}
+
+    </select>
+
+    <select id="getList" resultType="com.yskc.ms.models.project.ProjectProgressModel">
+        SELECT ip.id, c.id as customerId,c.companyId, c.companyName, c.companyLevel,ip.year,d.fullname as deptName,
+        ps.cnt,ps.rdCount,ps.budget,ps.rdFunds,ps.docFileCount,ps.operationTime,yu.realName as operationRealName,
+        ps.employeeCount,ps.rdEmployeeCount,ps.employeeOpenidCnt,ps.equipmentCount,ps.rdEquipmentCount,yu2.realName as owerName,
+        pas.doneTotal,pas.ongoingTotal,ps.lastRdCnt,ps.patentApplyCnt,ps.buildCnt,ip.types,c.groupId
+        from innovation_project ip
+        INNER JOIN customer c ON c.id = ip.customerId
+        LEFT JOIN project_summary_data ps on ps.customerId = ip.customerId and ps.year=ip.year
+        LEFT JOIN ys_dept d on ip.deptId=d.id
+        LEFT JOIN ys_user yu on yu.id = ps.operationUserId
+        LEFT JOIN ys_user yu2 on yu2.id = c.owerId
+        LEFT JOIN (select sum(doneCnt)doneTotal,sum(ongoingCnt)ongoingTotal,customerId,`year` from project_audit_summary
+        where auditType=0 group by customerId,`year`)pas
+        on pas.customerId = ip.customerId and pas.year = ip.year
+        WHERE c.companyId != 0
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.project">
+            <property name="tableAlias" value="ip"/>
+            <property name="dataPerm" value="#{dataPerm}"/>
+            <property name="userTable" value="innovation_member"/>
+            <property name="colId" value="innovationId"/>
+        </include>
+        <if test="query.companyName != null and query.companyName != ''">
+            and c.companyName like "%"#{query.companyName}"%"
+        </if>
+        <if test="query.groupName != null and query.groupName != ''">
+            and c.groupId !=0 and c.groupId in (select companyId from customer where companyType in (1,3) and companyName like "%"#{query.groupName}"%")
+        </if>
+        <if test="query.deptId != null and query.deptId != ''">
+            and d.fullPath like CONCAT('%/', #{query.deptId,jdbcType=VARCHAR}, '/%')
+        </if>
+        <if test="query.year != null">
+            and ip.year =#{query.year}
+        </if>
+        <if test="query.tIds != null and query.tIds.length>0">
+            and ip.id in (select innovationId from innovation_member where mType=1 and memberId in
+            <foreach collection="query.tIds" open="(" separator="," close=")" item="tId">
+                #{tId}
+            </foreach>)
+        </if>
+        <if test="query.fIds != null and query.fIds.length>0">
+            and ip.id in (select innovationId from innovation_member where mType=2 and memberId in
+            <foreach collection="query.fIds" open="(" separator="," close=")" item="fId">
+                #{fId}
+            </foreach>)
+        </if>
+        <if test="query.owerId!=null and query.owerId>0">
+            and yu2.id= #{query.owerId}
+        </if>
+        <if test="null != query.companyLevel and query.companyLevel != ''">
+            and c.companyLevel = #{query.companyLevel}
+        </if>
+    </select>
+    <select id="getTotal" resultType="com.yskc.ms.models.projectsummary.ProjectSummaryTotal">
+        SELECT sum(ps.cnt) as cnt, sum(ps.rdCount) as rdCount,
+        sum(ps.budget) as budget, sum(ps.rdFunds) as rdFunds,
+        sum(ps.docFileCount) as docFileCount,
+        sum(ps.reportCnt) as reportCnt,
+        sum(ps.patentApplyCnt) as patentApplyCnt
+        from innovation_project ip
+        INNER JOIN customer c ON c.id = ip.customerId
+        INNER JOIN project_summary_data ps on ps.customerId = ip.customerId and ps.year=ip.year
+        LEFT JOIN ys_dept d on c.deptId=d.id
+        WHERE c.companyId != 0
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.project">
+            <property name="tableAlias" value="ip"/>
+            <property name="dataPerm" value="#{dataPerm}"/>
+            <property name="userTable" value="innovation_member"/>
+            <property name="colId" value="innovationId"/>
+        </include>
+        <if test="query.companyName != null and query.companyName != ''">
+            and c.companyName like "%"#{query.companyName}"%"
+        </if>
+        <if test="query.deptId != null and query.deptId != ''">
+            and d.fullPath like CONCAT('%/', #{query.deptId,jdbcType=VARCHAR}, '/%')
+        </if>
+        <if test="query.year != null">
+            and ip.year =#{query.year}
+        </if>
+        <if test="query.tIds != null and query.tIds.length>0">
+            and ip.id in (select innovationId from innovation_member where mType=1 and memberId in
+            <foreach collection="query.tIds" open="(" separator="," close=")" item="tId">
+                #{tId}
+            </foreach>)
+        </if>
+        <if test="query.fIds != null and query.fIds.length>0">
+            and ip.id in (select innovationId from innovation_member where mType=2 and memberId in
+            <foreach collection="query.fIds" open="(" separator="," close=")" item="fId">
+                #{fId}
+            </foreach>)
+        </if>
+    </select>
+    <select id="countRdInfo" resultType="com.yskc.ms.models.project.ProjectProgressModel">
+        select case when  ps.employeeCount is null then 0 else ps.employeeCount end as employeeCount,
+        case when ps.rdEmployeeCount is null then 0 else ps.rdEmployeeCount end as rdEmployeeCount,
+        case when ps.equipmentCount is null then 0 else ps.equipmentCount end as equipmentCount,
+        case when ps.rdEquipmentCount is null then 0 else ps.rdEquipmentCount end as rdEquipmentCount
+        from project_summary_data ps
+        left join customer c on c.id=ps.customerId
+        where c.companyId=#{companyId} and ps.year=#{year}
+    </select>
+
+</mapper>

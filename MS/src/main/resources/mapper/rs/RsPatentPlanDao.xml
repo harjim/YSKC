@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.rs.RsPatentPlanDao">
+    <select id="queryPatentPlanList" resultType="com.yskc.ms.models.patentPlan.RsPatentPlanModel">
+        select pp.id,pp.patentName,pp.patentNo,pp.status,pp.disclosureParperPath as path,pp.masterId,pp.description,
+        c.companyName,p.pname,p.rdTitle,pp.projectId,pp.inventor,pp.companyId,pa.patentName as
+        rsPatentName,pa.mainType,pa.applyDateTime,pp.filepath,pp.year,pp.finalizedName,pp.msCreatorId
+        from p_patent_plan pp
+        left join p_project p on pp.projectId=p.id
+        inner join company c on c.id=pp.companyId
+        left join patent pa on pa.patentNo=pp.patentNo
+        where pp.source=0
+        and pp.id in (<foreach collection="patentIds" item="patentId" separator=",">#{patentId}</foreach> )
+        <if test="query.companyName!=null and query.companyName!=''">
+            and c.companyName like "%"#{query.companyName}"%"
+        </if>
+        <if test="query.patentName!=null and query.patentName!=''">
+            and pp.patentName like "%"#{query.patentName}"%"
+        </if>
+        <if test="query.patentNo!=null and query.patentNo!=''">
+            and pp.patentNo like "%"#{query.patentNo}"%"
+        </if>
+        <if test="query.masterId!=null and query.masterId>0">
+            and pp.masterId=#{query.masterId}
+        </if>
+        <if test="query.inventor!=null and query.inventor!=''">
+            and pp.inventor like "%"#{query.inventor}"%"
+        </if>
+    </select>
+
+    <update id="updateList">
+        <foreach collection="models" item="item" index="index" separator=";">
+            update p_patent_plan set
+            masterId=#{item.masterId},status=#{item.status},lastUpdateTime=#{item.lastUpdateTime},
+            msLastUpdatorId=#{item.msLastUpdatorId}
+            where id=#{item.id}
+        </foreach>
+    </update>
+
+    <select id="queryListByMasterId" resultType="com.yskc.ms.entity.rs.RsPatentPlanEntity">
+        select * from
+        p_patent_plan
+        where masterId=#{masterId}
+    </select>
+    <select id="getPatentInfo" resultType="com.yskc.ms.models.patentPlan.RsPatentPlanModel">
+        select pp.id,pp.patentName,pp.disclosureParperPath as path,pp.description,pp.inventor,pp.filepath,p.pname
+        from p_patent_plan pp
+        inner join p_project p on pp.projectId=p.id
+        where pp.id=#{patentPlanId}
+    </select>
+    <select id="getOpinions" resultType="com.yskc.ms.entity.rs.PatentOpinionEntity">
+        SELECT p1.id,p1.patentPlanId,p1.filepath,p1.opinion
+        FROM p_patent_opinion p1
+        INNER JOIN (
+        SELECT MAX(createTime) createTime,patentPlanId
+        FROM p_patent_opinion
+        WHERE patentPlanId in (<foreach collection="patentIds" item="patentId" separator=",">#{patentId}</foreach>)
+        GROUP BY patentPlanId ) p2
+        ON p1.createTime=p2.createTime AND p1.patentPlanId=p2.patentPlanId
+    </select>
+    <select id="getPatent" resultType="com.yskc.ms.entity.rs.RsPatentPlanEntity">
+        select * from
+        p_patent_plan where 1=1
+        <if test="patentId!=null and patentId>0">
+            and id=#{patentId}
+        </if>
+        <if test="patentNo!=null and patentNo!=''">
+            and patentNo=#{patentNo}
+        </if>
+    </select>
+    <select id="getOpinionByPatent" resultType="com.yskc.ms.models.patentPlan.PatentOpinionModel">
+        select filepath,opinion,createTime,patentPlanId
+        from p_patent_opinion
+        where patentPlanId=#{patentId}
+        order by createTime desc
+    </select>
+
+    <update id="rejectPatent">
+        update p_patent_plan set status=#{status},lastUpdateTime=#{updateTime},msLastUpdatorId=#{updateUserId}
+        where id in
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </update>
+
+</mapper>

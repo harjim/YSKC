@@ -1,0 +1,442 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.SummaryDao">
+    <update id="updateAccount" parameterType="com.yskc.rs.models.voucher.UpdateAccount">
+        UPDATE p_summary
+        SET accountNumber = #{updateAccount.accountNumber} ,
+        lastUpdateTime=#{updateAccount.lastUpdateTime},
+        updatorId=#{updateAccount.lastUpdatorId},
+        lastUpdatorId=#{updateAccount.lastUpdatorId},
+        msLastUpdatorId=#{updateAccount.msLastUpdatorId}
+        WHERE projectId=#{updateAccount.projectId} and month=#{updateAccount.month} and rdType in
+        <foreach collection="updateAccount.rdType" open="(" separator="," close=")" item="type">
+            #{type}
+        </foreach>
+    </update>
+    <delete id="deleteInfo">
+        DELETE FROM p_summary where projectId=#{projectId} and month=#{month} and rdType in
+        <foreach item="item" index="index" collection="rdTypeList" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+    <delete id="deleteByProjectIdAndType">
+        DELETE FROM p_summary where projectId in
+        <foreach item="item" index="index" collection="projectIds" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and rdType in
+        <foreach item="item" index="index" collection="rdTypeList" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+    <select id="getByProjectIdAndRdType" resultType="com.yskc.rs.entity.SummaryEntity">
+        select * from p_summary where projectId = #{projectId} and rdType = #{rdType}
+    </select>
+    <insert id="insertOrUpdate">
+        INSERT INTO `p_summary`
+        (`lastUpdatorId`,`msCreatorId`,`msLastUpdatorId`,`projectId`,`month`,`rdType`,`accountNumber`,`rdFunds`,`creatorId`,`createTime`,`updatorId`,`lastUpdateTime`)
+        VALUES
+        <foreach collection="summaryEntities" item="item" index="index" separator=",">
+            (#{item.lastUpdatorId},#{item.msCreatorId},#{item.msLastUpdatorId},#{item.projectId},#{item.month},#{item.rdType},#{item.accountNumber},#{item.rdFunds},#{item.creatorId},#{item.createTime},#{item.updatorId},#{item.lastUpdateTime})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        rdFunds=values(rdFunds),
+        updatorId=values(updatorId),
+        lastUpdateTime=values(lastUpdateTime),
+        lastUpdatorId=values(lastUpdatorId),
+        msLastUpdatorId=values(msLastUpdatorId)
+    </insert>
+
+    <delete id="delRdFundsForZero">
+        DELETE from p_summary where projectId = #{projectId}
+        and `month` in (<foreach collection="months" item="m" separator=",">#{m}</foreach>) and rdFunds = 0
+    </delete>
+    <delete id="deleteByProjectIds">
+        delete from p_summary
+        where projectId in (<foreach collection="projectIds" item="projectId" separator=",">#{projectId}</foreach>)
+    </delete>
+    <delete id="deleteByProjects">
+        delete from p_summary
+        where projectId in (<foreach collection="projectIds" item="projectId" separator=",">#{projectId}</foreach>)
+        and `month`=#{month} and rdType in (<foreach collection="rdTypes" separator="," item="rdType">#{rdType}</foreach>)
+    </delete>
+
+    <select id="getRdFundsByProjectId" resultType="com.yskc.rs.models.summary.RdFundsModel">
+        select projectId,`month`,rdType,rdFunds from p_summary where projectId = #{projectId}
+         and `month` >= #{beginMonth} and `month` &lt;= #{endMonth}
+    </select>
+
+    <select id="getRdSummaryByMonth" resultType="com.yskc.rs.models.summary.SimpleSummaryModel">
+        SELECT p.rdTitle,s.`month`,s.rdType,s.rdFunds from p_summary s inner join p_project p on s.projectId=p.id
+        where rdType in
+        <foreach collection="rdTypes" open="(" separator="," close=")" item="rdType">
+            #{rdType}
+        </foreach>
+        and `month`= #{rdMonth}
+        <if test="rdYear!=null">
+            and p.beginYear &lt;= #{rdYear} and p.endYear >= #{rdYear}
+        </if>
+        and p.companyId=#{companyId}
+        <if test="projectId!=null">
+            and s.projectId=#{projectId}
+        </if>
+        order by p.rdTitle
+    </select>
+
+    <select id="getDataReportFunds" resultType="com.yskc.rs.models.summary.DataFundsModel">
+        SELECT ps.projectId,ps.`month`,ps.rdType,ps.rdFunds,p.parentId
+        from p_summary ps
+        INNER JOIN p_project p on p.id = ps.projectId
+        WHERE p.companyId = #{companyId} and ps.`month` &lt;= #{endMonth} and ps.`month` >= #{beginMonth}
+        <if test="projectId!=null and projectId>0">
+            and ps.projectId=#{projectId}
+        </if>
+        order by ps.`month`,ps.rdType
+    </select>
+
+    <select id="getDataByRdType" resultType="com.yskc.rs.models.summary.DataFundsModel">
+        SELECT ps.projectId,ps.`month`,ps.rdType,ps.rdFunds,p.parentId
+        from p_summary ps
+        INNER JOIN p_project p on p.id = ps.projectId
+        WHERE p.companyId = #{companyId} and ps.`month` &lt;= #{endMonth} and ps.`month` >= #{beginMonth} and ps.rdType in
+         <foreach collection="rdTypes" item="rdType" open="(" close=")" separator=",">
+             #{rdType}
+         </foreach>
+        order by ps.`month`,ps.rdType
+    </select>
+    <select id="getRdSituation" resultType="com.yskc.rs.models.summary.RdSituationModel">
+      SELECT id,pname,projectSource,formula,result,targets,beginDate,endDate,govCost
+        FROM p_project
+        WHERE companyId = #{companyId} AND beginYear &lt;= #{year} AND endYear >= #{year} and parentId = 0
+        order by rdTitle
+    </select>
+    <select id="getRdSituationEmployee" resultType="com.yskc.rs.models.summary.MiniRdSituationModel">
+        SELECT p.id,p.parentId, COUNT(DISTINCT pa.enumber) AS employee,SUM(pa.rdHour) AS totalWork
+        FROM p_project AS p
+        LEFT JOIN p_rdEmployee AS pa ON pa.projectId = p.id
+        WHERE pa.month &lt;=#{endMonth} and pa.month >= #{beginMonth}
+        GROUP BY p.id,p.parentId
+    </select>
+    <select id="getRdActive" resultType="java.util.Map">
+        SELECT COUNT(DISTINCT pa.enumber) AS employeeNum,
+               COUNT(DISTINCT CASE WHEN e.eduLevel >= 4 and e.eduLevel &lt;=6 THEN e.id ELSE NULL END) AS undergraduate,
+               COUNT(DISTINCT CASE WHEN e.gender = 1 THEN e.id ELSE NULL END) AS female,
+               (select SUM(unitPrice)equipmentAmount from equipment where companyId=#{companyId} and purchaseDate >= #{yearBegin}  and purchaseDate &lt;= #{yearEnd}) AS equipmentAmount,
+               COUNT(DISTINCT pt.id) AS patentCnt,COUNT(DISTINCT  CASE WHEN pt.mainType='发明专利' THEN pt.id ELSE NULL END) AS inventionCnt
+        FROM employee AS e
+                 LEFT JOIN p_rdEmployee AS pa ON e.companyId = pa.companyId AND e.enumber = pa.enumber AND pa.month >= #{yearBegin}
+            AND pa.month &lt;= #{yearEnd}
+                 LEFT JOIN patent AS pt ON pt.companyId=e.companyId AND pt.applyDateTime>=#{yearBegin} AND pt.applyDateTime &lt;= #{yearEnd}
+        WHERE e.companyId = #{companyId}
+    </select>
+    <select id="getActiveSummary" resultType="java.util.Map">
+        SELECT SUM( ps.rdFunds ) AS cost,
+        SUM(CASE WHEN rdType DIV 1000 = 10 THEN ps.rdFunds ELSE 0 END) AS employee,
+        SUM(CASE WHEN rdType DIV 1000 = 20 THEN ps.rdFunds ELSE 0 END) AS direct,
+        SUM(CASE WHEN rdType DIV 1000 = 30 THEN ps.rdFunds ELSE 0 END) AS depreciation,
+        SUM(CASE WHEN rdType DIV 1000 = 40 THEN ps.rdFunds ELSE 0 END) AS amortization,
+        SUM(CASE WHEN rdType DIV 100 = 500 OR rdType DIV 100 = 501  THEN ps.rdFunds ELSE 0 END) AS design,
+        SUM(CASE WHEN rdType DIV 100 = 502 OR rdType DIV 100 = 503  THEN ps.rdFunds ELSE 0 END) AS trial,
+        SUM(CASE WHEN rdType DIV 1000 >= 60  THEN ps.rdFunds ELSE 0 END) AS other
+         FROM p_summary AS ps
+        LEFT JOIN p_project AS p ON ps.projectId = p.id
+        WHERE p.companyId = #{companyId} AND p.beginYear &lt;= #{year} and p.endYear >= #{year}
+        AND ps.month &lt;= #{endMonth} and ps.month >= #{beginMonth}
+    </select>
+
+    <select id="querySummaryByProjectId" resultType="com.yskc.rs.models.project.TypeModel">
+      SELECT
+            p.`month`,
+            p.rdFunds as value,
+            p.rdType as type,
+            p.id,
+            p.projectId
+        FROM
+            p_summary p
+            where  p.projectId =#{projectId}
+    </select>
+    <select id="getByProjectIds" resultType="com.yskc.rs.models.project.TypeModel">
+        SELECT
+        p.`month`,
+        p.rdFunds as value,
+        p.rdType as type,
+        p.id,
+        p.projectId
+        FROM
+        p_summary p
+        where p.projectId in
+        <foreach collection="projectIds" item="projectId" open="(" separator="," close=")">
+            #{projectId}
+        </foreach>
+        and p.rdFunds !=0
+    </select>
+    <select id="getVoucherInfoList" resultType="com.yskc.rs.models.voucher.VoucherInfo">
+        SELECT ps.id, ps.month,ps.rdFunds,ps.rdType,ps.accountNumber,ps.projectId,a.accountName,pp.rdIndex, false as
+        isSum,a.id as accountId
+        FROM p_summary as ps
+        join p_project as pp ON ps.projectId=pp.id
+        left join accountTitle as a on a.accountNumber=ps.accountNumber and a.companyId=pp.companyId
+        WHERE pp.id=#{projectId} and pp.companyId=#{companyId} and ps.rdFunds >0
+        <if test="month!=null">
+            and ps.month=#{month}
+        </if>
+        and ps.rdType in
+        <foreach collection="rdTypes" open="(" separator="," close=")" item="type">
+            #{type}
+        </foreach>
+        order by ps.month desc,ps.rdType;
+    </select>
+    <select id="queryByYearAndProjectIds" resultType="com.yskc.rs.models.summary.OtherSummaryModel">
+        SELECT
+        projectid,
+        `month`,
+        rdType,
+        rdFunds
+        FROM p_summary t
+        WHERE `month` >= #{beginYear} AND `month` &lt;= #{endYear}
+        and rdFunds > 0
+        and projectId in
+        <foreach collection="projectIds" open="(" separator="," close=")" item="projectId">
+            #{projectId}
+        </foreach>
+    </select>
+    <select id="getAccountSalaryDetail" resultType="com.yskc.rs.models.project.RdSalaryDetailModel">
+        SELECT
+        pre.projectId,a.accountName,ds.pay,ds.accountTitleId,ds.payDetail,pre.rdHour,ds.workHours,
+        ds.insuranceDetail,ds.insuranceFund,pre.`rdInsuranceFund`,pre.`rdPay`
+        FROM p_rdEmployee pre
+        INNER JOIN p_project p ON pre.companyId=p.companyId and pre.projectId = p.id
+        INNER JOIN d_salary ds ON ds.companyId = pre.`companyId` AND ds.month = pre.`month` AND ds.enumber = pre.enumber
+        LEFT JOIN accountTitle a ON a.id = ds.accountTitleId
+        WHERE pre.companyId=#{companyId} and pre.month = #{month}
+        AND p.id in
+        <foreach collection="projectIds" open="(" separator="," close=")" item="projectId">
+            #{projectId}
+        </foreach>
+        and p.hasChild = false
+    </select>
+    <select id="getProjectInfo" resultType="com.yskc.rs.models.project.ProjectInfoModel">
+        select id,rdTitle,workshop,pname,rdNumber from p_project where companyId = #{companyId} and endDate >= #{begin}
+        and beginDate &lt;= #{end} and hasChild = false
+        order by beginYear,rdIndex
+    </select>
+
+    <select id="getSummaryCostByYear" resultType="java.util.Map">
+        SELECT s.month,
+        SUM(CASE WHEN s.rdType div 100 = 100 THEN s.rdFunds ELSE 0 END) AS salary,
+        SUM(CASE WHEN s.rdType div 100 = 101 THEN s.rdFunds ELSE 0 END) AS insurance,
+        SUM(CASE WHEN s.rdType div 100 = 300 THEN s.rdFunds ELSE 0 END) AS prod,
+        SUM(CASE WHEN s.rdType div 100 = 301 THEN s.rdFunds ELSE 0 END) AS lab,
+        SUM(CASE WHEN s.rdType div 100 = 200 THEN s.rdFunds ELSE 0 END) AS material,
+        SUM(CASE WHEN s.rdType div 100 = 201 THEN s.rdFunds ELSE 0 END) AS stimulus,
+        SUM(CASE WHEN s.rdType div 100 = 202 THEN s.rdFunds ELSE 0 END) AS fuel,
+        SUM(CASE WHEN s.rdType div 100 = 203 THEN s.rdFunds ELSE 0 END) AS trialProd,
+        SUM(CASE WHEN s.rdType div 100 = 206 THEN s.rdFunds ELSE 0 END) AS repair,
+        SUM(CASE WHEN s.rdType div 100 = 205 THEN s.rdFunds ELSE 0 END) AS inspection,
+        SUM(CASE WHEN s.rdType div 100 = 500 THEN s.rdFunds ELSE 0 END) AS design,
+        SUM(CASE WHEN s.rdType div 1000 = 40 THEN s.rdFunds ELSE 0 END) AS amortization,
+        SUM(CASE WHEN s.rdType div 100 = 604 THEN s.rdFunds ELSE 0 END) AS travel,
+        SUM(CASE WHEN s.rdType div 100 = 699 THEN s.rdFunds ELSE 0 END) AS other,
+        SUM(CASE WHEN s.rdType div 100 = 207 THEN s.rdFunds ELSE 0 END ) AS sampleMachine
+        FROM p_project AS p
+        inner JOIN p_summary AS s ON s.projectId = p.id
+        WHERE s.month &gt;= #{beginMonth} AND s.month &lt;=#{endMonth} AND p.companyId = #{companyId}
+        GROUP BY s.month
+    </select>
+    <select id="getYearFunds" resultType="com.yskc.rs.models.summary.DataFundsModel">
+       SELECT ps.projectId,ps.rdType,ps.rdFunds,p.parentId
+        from p_summary ps
+        INNER JOIN p_project p on p.id = ps.projectId
+        WHERE p.companyId = #{companyId} and ps.`month` &lt;= #{endMonth} and ps.`month` >= #{beginMonth}
+        order by ps.rdType
+    </select>
+    <select id="getRdSituationFunds" resultType="com.yskc.rs.models.summary.RdSituationModel">
+        select p.id,p.parentId,SUM(s.rdFunds) AS cost
+        from p_project p
+        INNER JOIN p_summary s on p.id = s.projectId
+        where p.companyId = #{companyId}
+        and s.month &lt;= #{endMonth} and s.month >= #{beginMonth}
+        group by p.id,p.parentId
+    </select>
+    <select id="getProjectSummary" resultType="com.yskc.rs.models.project.ProjectBudgetModel">
+        select projectId,rdType,sum(rdFunds) rdFunds
+        from p_summary
+        where projectId=#{projectId}
+        <if test="beginDate!=null and endDate !=null">
+          and  `month` >= #{beginDate} and  `month` &lt;= #{endDate}
+        </if>
+        group by rdType,projectId
+    </select>
+    <select id="getSummaryByYear" resultType="com.yskc.rs.models.project.ProjectBudgetModel">
+        select projectId,sum(rdFunds) rdFunds
+        from p_summary
+        where `month` &gt;= #{firstDay} and `month` &lt;= #{lastDay} and projectId in
+        <foreach collection="projectIds" item="projectId" open="(" separator="," close=")">
+            #{projectId}
+        </foreach>
+        group by projectId
+    </select>
+    <select id="getMinMaxMonth" resultType="java.util.Map">
+        select max(`month`) as maxMonth,min(`month`) as minMonth from p_summary
+        where projectId=#{projectId}
+    </select>
+    <select id="countExist" resultType="java.lang.Integer">
+        select count(id) from p_summary where projectId=#{projectId} and `month` >=#{begin} and `month` &lt; #{end} and rdFunds!=0
+    </select>
+    <select id="getBudgetByYear" resultType="com.yskc.rs.models.project.ProjectBudgetModel">
+        select projectId,rdType,sum(rdFunds) rdFunds
+        from p_summary
+        where projectId=#{projectId} and YEAR(`month`)=#{year}
+        group by rdType,projectId
+    </select>
+    <select id="getGroupFunds" resultType="com.yskc.rs.models.summary.DataFundsModel">
+        select `month`,sum(rdFunds) rdFunds,rdType from p_summary
+        where projectId in (
+            select id from p_project where 1=1
+            <if test="companyId != null">
+                and companyId = #{companyId}
+            </if>
+            <if test="companyId == null">
+                and companyId in (select companyId from company_group where fullPath like #{groupFullPath}"%")
+            </if>
+            and beginYear &lt;=#{year} and endyear >=#{year})
+        and `month`>=#{begin} and `month` &lt;=#{end} group by `month`,rdType
+    </select>
+    <select id="countFunds" resultType="com.yskc.rs.models.company.CountRdFundModel">
+        select rdType,sum(rdFunds) as rdFund
+        from p_summary
+        where YEAR(`month`)=#{year} and projectId in (<foreach collection="projectIds" item="projectId" separator=",">#{projectId}</foreach> )
+        group by rdType
+    </select>
+    <select id="getDataByYear" resultType="com.yskc.rs.models.company.CountRdFundModel">
+        select rdType,sum(rdFunds) as rdFund,`month`
+        from p_summary
+        where `month` &lt;=#{endOfYear} and `month` &gt;=#{beginOfYear}
+        and projectId in (<foreach collection="projectIds" item="projectId" separator=",">#{projectId}</foreach> )
+        group by `month`,rdType
+    </select>
+    <select id="getFundByMonth" resultType="com.yskc.rs.models.company.CountBudgetModel">
+        select sum(rdFunds) as rdFunds,`month`
+        from p_summary
+        where `month` &lt;=#{endOfYear} and `month` &gt;=#{beginOfYear}
+        and projectId in (<foreach collection="projectIds" item="projectId" separator=",">#{projectId}</foreach> )
+        group by `month`
+        order by `month`
+    </select>
+    <select id="getFundByYearAndProId" resultType="java.util.Map">
+        select projectId,sum(rdFunds) as rdFunds from p_summary where projectId in
+        <foreach collection="projectIds" item="projectId" open="(" separator="," close=")">
+            #{projectId}
+        </foreach>
+        and month &lt;= #{endDate} and month >= #{beginDate}
+        group by projectId
+    </select>
+    <select id="getRdCntAndRdFunds" resultType="com.yskc.rs.models.highscore.HighTechScoreModel">
+        select count(distinct p.id) rdCnt,sum(ps.rdFunds) rdFunds from p_project p
+        left join p_summary ps on ps.projectId=p.id  and ps.month >=#{start} and ps.month &lt;#{end}
+        where p.companyId=#{companyId} and p.beginDate &lt;#{end} and p.beginDate >=#{start}
+    </select>
+    <select id="getProjectRdFundsSum" resultType="java.math.BigDecimal">
+        select sum(rdFunds) from p_summary where projectId=#{projectId}
+    </select>
+    <select id="getSummaryByCompany" resultType="java.util.Map">
+        SELECT
+        SUM(CASE WHEN s.rdType div 100 = 100 THEN s.rdFunds ELSE 0 END) AS '100',
+        SUM(CASE WHEN s.rdType div 100 = 101 THEN s.rdFunds ELSE 0 END) AS '101',
+        SUM(CASE WHEN s.rdType div 100 = 300 THEN s.rdFunds ELSE 0 END) AS '300',
+        SUM(CASE WHEN s.rdType div 100 = 301 THEN s.rdFunds ELSE 0 END) AS '301',
+        SUM(CASE WHEN s.rdType div 100 = 200 THEN s.rdFunds ELSE 0 END) AS '200',
+        SUM(CASE WHEN s.rdType div 100 = 201 THEN s.rdFunds ELSE 0 END) AS '201',
+        SUM(CASE WHEN s.rdType div 100 = 202 THEN s.rdFunds ELSE 0 END) AS '202',
+        SUM(CASE WHEN s.rdType div 100 = 203 THEN s.rdFunds ELSE 0 END) AS '203',
+        SUM(CASE WHEN s.rdType div 100 = 206 THEN s.rdFunds ELSE 0 END) AS '206',
+        SUM(CASE WHEN s.rdType div 100 = 205 THEN s.rdFunds ELSE 0 END) AS '205',
+        SUM(CASE WHEN s.rdType div 100 = 500 THEN s.rdFunds ELSE 0 END) AS '500',
+        SUM(CASE WHEN s.rdType div 100 = 400 THEN s.rdFunds ELSE 0 END) AS '400',
+        SUM(CASE WHEN s.rdType div 100 = 401 THEN s.rdFunds ELSE 0 END) AS '401',
+        SUM(CASE WHEN s.rdType div 100 = 402 THEN s.rdFunds ELSE 0 END) AS '402',
+        SUM(CASE WHEN s.rdType div 100 = 604 THEN s.rdFunds ELSE 0 END) AS '604',
+        SUM(CASE WHEN(s.rdType div 100 = 699) or
+        (s.rdType div 100 &lt;= 603 and s.rdType div 100 >= 600) THEN s.rdFunds ELSE 0 END) AS '699',
+        SUM(CASE WHEN s.rdType div 100 = 207 THEN s.rdFunds ELSE 0 END ) AS '207'
+        FROM p_project AS p
+        inner JOIN p_summary AS s ON s.projectId = p.id
+        WHERE s.month >=#{beginMonth} AND s.month &lt;=#{endMonth} and p.hasChild=false
+          <if test="companyId!=null">
+              and p.companyId = #{companyId}
+          </if>
+        and p.beginYear &lt;= #{year} and p.endYear &gt;= #{year}
+    </select>
+    <select id="getSummaryByProjectList" resultType="java.util.Map">
+        SELECT p.id projectId,
+            SUM(CASE WHEN s.rdType div 100 = 100 THEN s.rdFunds ELSE 0 END) AS '100',
+            SUM(CASE WHEN s.rdType div 100 = 101 THEN s.rdFunds ELSE 0 END) AS '101',
+            SUM(CASE WHEN s.rdType div 100 = 300 THEN s.rdFunds ELSE 0 END) AS '300',
+            SUM(CASE WHEN s.rdType div 100 = 301 THEN s.rdFunds ELSE 0 END) AS '301',
+            SUM(CASE WHEN s.rdType div 100 = 200 THEN s.rdFunds ELSE 0 END) AS '200',
+            SUM(CASE WHEN s.rdType div 100 = 201 THEN s.rdFunds ELSE 0 END) AS '201',
+            SUM(CASE WHEN s.rdType div 100 = 202 THEN s.rdFunds ELSE 0 END) AS '202',
+            SUM(CASE WHEN s.rdType div 100 = 203 THEN s.rdFunds ELSE 0 END) AS '203',
+            SUM(CASE WHEN s.rdType div 100 = 206 THEN s.rdFunds ELSE 0 END) AS '206',
+            SUM(CASE WHEN s.rdType div 100 = 205 THEN s.rdFunds ELSE 0 END) AS '205',
+            SUM(CASE WHEN s.rdType div 100 = 500 THEN s.rdFunds ELSE 0 END) AS '500',
+            SUM(CASE WHEN s.rdType div 100 = 400 THEN s.rdFunds ELSE 0 END) AS '400',
+            SUM(CASE WHEN s.rdType div 100 = 401 THEN s.rdFunds ELSE 0 END) AS '401',
+            SUM(CASE WHEN s.rdType div 100 = 402 THEN s.rdFunds ELSE 0 END) AS '402',
+            SUM(CASE WHEN s.rdType div 100 = 604 THEN s.rdFunds ELSE 0 END) AS '604',
+            SUM(CASE WHEN (s.rdType div 100 = 699) or
+            (s.rdType div 100 &lt;= 603 and s.rdType div 100 >= 600) THEN s.rdFunds ELSE 0 END) AS '699',
+            SUM(CASE WHEN s.rdType div 100 = 207 THEN s.rdFunds ELSE 0 END ) AS '207'
+        FROM p_project AS p
+                 inner JOIN p_summary AS s ON s.projectId = p.id
+        WHERE s.month >=#{beginMonth} AND s.month &lt;=#{endMonth} and p.hasChild=false and p.id in
+        (<foreach collection="projectIds" separator="," item="id">
+            #{id}
+        </foreach>)
+        and p.beginYear &lt;= #{year} and p.endYear &gt;= #{year}
+        group by p.id
+    </select>
+    <select id="getSummaryByProject" resultType="java.util.Map">
+        SELECT MONTH(s.month) `month`,
+               SUM(CASE WHEN s.rdType div 100 = 100 THEN s.rdFunds ELSE 0 END) AS '100',
+               SUM(CASE WHEN s.rdType div 100 = 101 THEN s.rdFunds ELSE 0 END) AS '101',
+               SUM(CASE WHEN s.rdType div 100 = 300 THEN s.rdFunds ELSE 0 END) AS '300',
+               SUM(CASE WHEN s.rdType div 100 = 301 THEN s.rdFunds ELSE 0 END) AS '301',
+               SUM(CASE WHEN s.rdType div 100 = 200 THEN s.rdFunds ELSE 0 END) AS '200',
+               SUM(CASE WHEN s.rdType div 100 = 201 THEN s.rdFunds ELSE 0 END) AS '201',
+               SUM(CASE WHEN s.rdType div 100 = 202 THEN s.rdFunds ELSE 0 END) AS '202',
+               SUM(CASE WHEN s.rdType div 100 = 203 THEN s.rdFunds ELSE 0 END) AS '203',
+               SUM(CASE WHEN s.rdType div 100 = 206 THEN s.rdFunds ELSE 0 END) AS '206',
+               SUM(CASE WHEN s.rdType div 100 = 205 THEN s.rdFunds ELSE 0 END) AS '205',
+               SUM(CASE WHEN s.rdType div 100 = 500 THEN s.rdFunds ELSE 0 END) AS '500',
+               SUM(CASE WHEN s.rdType div 100 = 400 THEN s.rdFunds ELSE 0 END) AS '400',
+               SUM(CASE WHEN s.rdType div 100 = 401 THEN s.rdFunds ELSE 0 END) AS '401',
+               SUM(CASE WHEN s.rdType div 100 = 402 THEN s.rdFunds ELSE 0 END) AS '402',
+               SUM(CASE WHEN s.rdType div 100 = 604 THEN s.rdFunds ELSE 0 END) AS '604',
+               SUM(CASE WHEN (s.rdType div 100 = 699) or
+               (s.rdType div 100 &lt;= 603 and s.rdType div 100 >= 600) THEN s.rdFunds ELSE 0 END) AS '699',
+               SUM(CASE WHEN s.rdType div 100 = 207 THEN s.rdFunds ELSE 0 END ) AS '207'
+        FROM p_project AS p
+                 inner JOIN p_summary AS s ON s.projectId = p.id
+        WHERE s.month >=#{beginMonth} AND s.month &lt;=#{endMonth} and p.hasChild=false and p.id = #{projectId}
+          and p.beginYear &lt;= #{year} and p.endYear &gt;= #{year}
+        group by s.month
+        order by s.month
+    </select>
+    <select id="getRdFunds" resultType="java.math.BigDecimal">
+        select sum(rdFunds) from p_summary where projectId=#{model.projectId} and `month`=#{model.month}
+        and rdType in(<foreach collection="rdTypes" separator="," item="rdType">#{rdType}</foreach>)
+    </select>
+    <select id="getMonthCostByRdType" resultType="com.yskc.rs.models.rdAgg.AggDetailModel">
+        SELECT s.projectId, s.month as rdMonth, rdTitle, pname as rdPname, SUM(rdFunds) as rdFunds
+        FROM p_project p left JOIN p_summary s ON p.id=s.projectId
+        WHERE s.month >= #{beginMonth} AND s.month &lt; #{endMonth} AND p.companyId = #{companyId} AND p.hasChild = false and
+        rdType in (
+            <foreach collection="rdTypes" item="rdType" separator=",">
+                #{rdType}
+            </foreach>
+        )
+        GROUP BY s.projectId, s.month
+    </select>
+</mapper>

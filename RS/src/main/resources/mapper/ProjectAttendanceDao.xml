@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.project.ProjectAttendanceDao">
+    <delete id="deleteData">
+        delete pa from p_attendance pa
+        inner join rdEmployee re on re.companyId=pa.companyId and re.year=#{year} and re.enumber=pa.enumber
+        inner join p_attendance_used pau on pau.companyId=pa.companyId and pau.enumber=pa.enumber and pau.workDate=pa.workDate
+        where pa.companyId=#{companyId} and pa.workDate>=#{begin} and pa.workDate &lt;= #{end}
+        and re.etype in(<foreach collection="etypes" separator="," item="etype">#{etype}</foreach>)
+    </delete>
+    <select id="getHourList" resultType="com.yskc.rs.models.projectattendance.ProjectHourAttendance">
+        select pre.id,pre.enumber,e.ename,ds.deptName,pre.rdHour,pre.attendanceHour,ds.workHours,re.etype
+        from p_rdEmployee pre
+        inner join rdEmployee re on re.year=#{year} and re.companyId = pre.companyId and re.enumber=pre.enumber
+        LEFT JOIN employee e on e.enumber = pre.enumber and e.companyId = pre.companyId
+        LEFT JOIN d_salary ds on ds.enumber = pre.enumber and ds.companyId = pre.companyId and ds.month = pre.month
+        where
+        pre.projectId = #{query.projectId} and pre.month = #{query.month}
+        <if test="query.ename != null and query.ename!= ''">
+            and e.ename like "%"#{query.ename}"%"
+        </if>
+        <if test="query.enumber != null and query.enumber!= ''">
+            and pre.enumber like "%"#{query.enumber}"%"
+        </if>
+        <if test="query.etype != null and query.etype > 0">
+            and re.etype = #{query.etype}
+        </if>
+    </select>
+
+    <select id="getRdAttendanceInfoList"
+            resultType="com.yskc.rs.models.projectattendance.BatchProjectHourAttendance">
+        select id, workHour,workDate,enumber,`owner`
+        from p_attendance
+        where
+        projectId = #{projectId}
+        and workDate >= #{monthBegin}
+        and workDate &lt;= #{monthEnd}
+        and enumber in
+        <foreach collection="enumbers" open="(" separator="," close=")" item="enumber">
+            #{enumber}
+        </foreach>
+    </select>
+    <select id="getRdAttendanceList" resultType="com.yskc.rs.models.projectattendance.ProjectAttendanceModel">
+        select
+        pre.id, pre.enumber, pre.rdHour
+        from p_rdEmployee pre
+        where pre.projectId = #{projectId}
+        and `month` = #{month}
+        and !attendanceEdit
+        <if test="ids != null and ids.size() > 0">
+            and pre.id in
+            <foreach collection="ids" open="(" separator="," close=")" item="id">
+                #{id}
+            </foreach>
+        </if>
+    </select>
+    <select id="getUseless" resultType="com.yskc.rs.models.projectattendance.BatchProjectAttendance">
+        select pa.id,pa.offTime1,pa.offTime2,pa.offTime3,pa.onTime1,pa.onTime2,pa.onTime3,pa.workHour,pau.timeRange,
+        pau.remainHours,pau.workHour as usedWorkHour,pau.id as usedId,pa.enumber,pa.workDate
+        from p_attendance pa
+        inner join p_attendance_used pau on pau.enumber = pa.enumber and pau.companyId = pa.companyId and pau.workDate =
+        pa.workDate
+        where
+        pa.projectId = #{projectId} and !pa.owner
+        and pa.enumber in
+        <foreach collection="enumbers" open="(" separator="," close=")" item="enumber">
+            #{enumber}
+        </foreach>
+        and pa.workDate >= #{monthBegin} and pa.workDate &lt;= #{monthEnd}
+    </select>
+    <select id="getExportData" resultType="com.yskc.rs.entity.project.ProjectAttendance">
+        select pe.enumber,pe.workHour,pe.workDate,pe.projectId
+        from p_attendance pe
+        LEFT JOIN employee as e on e.enumber = pe.enumber and e.companyId = pe.companyId
+        where pe.companyId=#{companyId}
+        <if test="query.all == null or !query.all">
+            and pe.projectId=#{query.projectId}
+        </if>
+        and pe.workDate >= #{monthBegin} and pe.workDate &lt;= #{monthEnd}
+        <if test="query.ename != null and query.ename!= ''">
+            and e.ename like "%"#{query.ename}"%"
+        </if>
+        <if test="query.enumber != null and query.enumber!= ''">
+            and pe.enumber like "%"#{query.enumber}"%"
+        </if>
+        order by pe.enumber
+    </select>
+    <select id="getTimeList" resultType="com.yskc.rs.models.projectattendance.TimeAttendanceModel">
+        select
+        pe.id,pe.enumber,e.ename,ds.deptName,pe.onTime1,pe.onTime2,pe.onTime3,pe.offTime1,pe.offTime2,pe.offTime3,
+        pe.workHour,pe.workDate,pe.projectId,re.etype
+        from p_attendance pe
+        inner join rdEmployee re on re.year=#{year} and re.companyId = pe.companyId and re.enumber=pe.enumber
+        LEFT JOIN employee e on e.enumber = pe.enumber and e.companyId = pe.companyId
+        LEFT JOIN d_salary ds on ds.enumber = pe.enumber and ds.companyId = pe.companyId and ds.month = #{monthBegin}
+        where pe.projectId = #{query.projectId}
+        and pe.workDate >= #{monthBegin} and pe.workDate &lt;= #{monthEnd}
+        <if test="query.ename != null and query.ename!= ''">
+            and e.ename like "%"#{query.ename}"%"
+        </if>
+        <if test="query.enumber != null and query.enumber!= ''">
+            and pe.enumber like "%"#{query.enumber}"%"
+        </if>
+        <if test="query.etype != null and query.etype > 0">
+            and re.etype = #{query.etype}
+        </if>
+    </select>
+    <select id="getByIds" resultType="com.yskc.rs.entity.project.ProjectAttendance">
+        select id,enumber,workHour,onTime1,offTime1,onTime2,offTime2,onTime3,offTime3
+        from p_attendance where id in
+        <foreach collection="ids" open="(" separator="," close=")" item="id">
+            #{id}
+        </foreach>
+        and owner = false
+    </select>
+    <select id="getAttData" resultType="java.util.Date">
+         select workDate from  p_attendance where projectId = #{projectId} and workDate >= #{monthBegin}
+        and workDate &lt;= #{monthEnd} group by workDate
+    </select>
+    <select id="getByMonth" resultType="com.yskc.rs.entity.project.ProjectAttendance">
+        select enumber,workDate,workHour from p_attendance where projectId = #{projectId}
+        and workDate &lt;= #{monthEnd} and workDate >= #{monthBegin}
+        order by workDate
+    </select>
+    <select id="getAllRdHour" resultType="com.yskc.rs.models.projectattendance.MiniRdHourModel">
+        select enumber,workDate,workHour,projectId,content
+        from p_attendance
+        where
+        projectId in (<foreach collection="projectIds" item="pId" separator=",">#{pId}</foreach>)
+        and workDate &lt;= #{end} and workDate >= #{begin}
+    </select>
+    <select id="getAllRdTime" resultType="com.yskc.rs.models.projectattendance.ProjectAllRdTimeModel">
+        select pa.id,pa.enumber,pa.workDate,pa.workHour,pa.onTime1,pa.onTime2,pa.onTime3,pa.offTime1,pa.offTime2,pa.offTime3,
+        pa.content,p.pname,p.rdTitle,e.ename,pa.projectId
+        from p_attendance pa
+        INNER JOIN p_project p on p.id = pa.projectId
+        INNER JOIN employee e on e.enumber = pa.enumber and e.companyId = pa.companyId
+        where e.companyId = #{companyId} and p.beginYear &lt;= #{query.year} and p.endYear >= #{query.year}
+        and p.hasChild = false
+        <if test="query.month != null">
+            and pa.workDate &lt;= #{query.monthEnd} and pa.workDate >= #{query.monthBegin}
+        </if>
+        <if test="query.ename!= null and query.ename!= ''">
+            and e.ename like "%"#{query.ename}"%"
+        </if>
+
+        and p.id in (<foreach collection="query.projectIds" separator="," item="pId">#{pId}</foreach>)
+        order by rdTitle,workDate,enumber
+    </select>
+    <select id="getForRdHour" resultType="com.yskc.rs.models.projectattendance.ProjectAllRdHourModel">
+        select p.pname,p.rdTitle,i.enumber,e.ename,#{query.month} as `month`,i.projectId,prp.planTime
+        from i_member i
+        left join p_rdEmployee_plan prp on prp.companyId = i.companyId and prp.projectId = i.projectId
+        and prp.enumber = i.enumber and prp.month = #{query.month}
+        INNER JOIN employee e on e.companyId = i.companyId and e.enumber = i.enumber
+        INNER JOIN p_project p on p.id = i.projectId
+        where e.companyId = #{companyId} and i.year=#{query.year} and p.beginYear &lt;= #{query.year} and p.endYear >= #{query.year}
+        and !p.hasChild
+        and p.id in (<foreach collection="query.projectIds" separator="," item="pId">#{pId}</foreach> )
+        <if test="query.ename!=null and query.ename!=''">
+            and e.ename like "%"#{query.ename}"%"
+        </if>
+        order by rdTitle,enumber
+    </select>
+    <select id="getMonthRdHour" resultType="com.yskc.rs.models.projectattendance.MiniRdHourModel">
+        select enumber,sum(workHour) as workHour from p_attendance where companyId = #{companyId} and projectId =
+        #{projectId} and workDate >= #{monthBegin}
+        and workDate &lt;=#{monthEnd} and enumber in
+        <foreach collection="enumbers" open="(" separator="," close=")" item="enumber">
+            #{enumber}
+        </foreach>
+        group by enumber
+    </select>
+    <!--  and `owner` = #{owner} -->
+    <select id="getHasSalaryEnumbers" resultType="java.lang.String">
+        select distinct pa.enumber from p_attendance pa
+        inner join d_salary ds on ds.companyId = pa.companyId and ds.enumber = ds.enumber and ds.month = #{month}
+        where pa.companyId = #{companyId} and pa.projectId = #{projectId} and pa.workDate >= #{monthBegin}
+        and pa.workDate &lt;=#{monthEnd}
+    </select>
+    <select id="getAttendances" resultType="com.yskc.rs.entity.project.ProjectAttendance">
+        select *
+        from p_attendance
+        where
+        <foreach collection="models" item="item" separator="or">
+            (projectId=#{item.projectId} and workDate=#{item.date} and enumber=#{item.enumber})
+        </foreach>
+    </select>
+    <select id="countOwner" resultType="java.lang.Integer">
+        select count(1) from p_attendance where companyId=#{companyId} and workDate>=#{start} and workDate &lt;=#{end} and `owner`
+    </select>
+    <select id="getBackData" resultType="java.lang.String">
+        select `data` from c_backup_data where companyId = #{companyId}
+    </select>
+    <select id="getUsedData" resultType="com.yskc.rs.models.projectattendance.BatchProjectHourAttendance">
+        select pa.id,pau.enumber,pau.workDate,pa.workHour,pau.remainHours,pa.projectId from p_attendance_used pau
+        left join p_attendance pa on pau.companyId=pa.companyId and pau.enumber=pa.enumber and pau.workDate=pa.workDate
+        where pau.companyId=#{companyId} and pau.enumber in
+        (<foreach collection="enumbers" separator="," item="enumber">#{enumber}</foreach>)
+        and pau.workDate>=#{begin} and pau.workDate&lt;=#{end}
+    </select>
+
+    <insert id="insertBatch">
+        INSERT INTO p_attendance
+        (enumber,projectId,companyId,creatorId,createTime,lastUpdateTime,lastUpdatorId,msCreatorId,
+        msLastUpdatorId,workHour, workDate,onTime1,offTime1,onTime2,offTime2,onTime3,offTime3)
+        VALUES
+        <foreach collection="list" separator="," item="l">
+            (#{l.enumber},#{l.projectId},#{l.companyId},#{l.creatorId},#{l.createTime},#{l.lastUpdateTime},
+            #{l.lastUpdatorId},#{l.msCreatorId}, #{l.msLastUpdatorId},#{l.workHour}, #{l.workDate},#{l.onTime1},
+            #{l.offTime1},#{l.onTime2},#{l.offTime2},#{l.onTime3},#{l.offTime3})
+        </foreach>
+    </insert>
+    <insert id="insertBatchAndId">
+        INSERT INTO p_attendance
+        (id,enumber,projectId,companyId,creatorId,createTime,lastUpdateTime,lastUpdatorId,msCreatorId,
+        msLastUpdatorId,workHour, workDate,onTime1,offTime1,onTime2,offTime2,onTime3,offTime3,`owner`,content)
+        VALUES
+        <foreach collection="list" separator="," item="l">
+            (#{l.id},#{l.enumber},#{l.projectId},#{l.companyId},#{l.creatorId},#{l.createTime},#{l.lastUpdateTime},
+            #{l.lastUpdatorId},#{l.msCreatorId}, #{l.msLastUpdatorId},#{l.workHour}, #{l.workDate},#{l.onTime1},
+            #{l.offTime1},#{l.onTime2},#{l.offTime2},#{l.onTime3},#{l.offTime3},#{l.owner},#{l.content})
+        </foreach>
+    </insert>
+    <update id="updateBatch">
+        UPDATE p_attendance
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix=" workHour =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.workHour != null">
+                        when id = #{l.id} then #{l.workHour}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" onTime1 =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    when id = #{l.id} then #{l.onTime1}
+                </foreach>
+            </trim>
+            <trim prefix=" onTime2 =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    when id = #{l.id} then #{l.onTime2}
+                </foreach>
+            </trim>
+            <trim prefix=" onTime3 =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    when id = #{l.id} then #{l.onTime3}
+                </foreach>
+            </trim>
+            <trim prefix=" offTime1 =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    when id = #{l.id} then #{l.offTime1}
+                </foreach>
+            </trim>
+            <trim prefix=" offTime2 =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    when id = #{l.id} then #{l.offTime2}
+                </foreach>
+            </trim>
+            <trim prefix=" offTime3 =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    when id = #{l.id} then #{l.offTime3}
+                </foreach>
+            </trim>
+            <trim prefix=" lastUpdatorId =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.lastUpdatorId != null">
+                        when id = #{l.id} then #{l.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" lastUpdateTime =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.lastUpdateTime != null">
+                        when id = #{l.id} then #{l.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" msLastUpdatorId =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.msLastUpdatorId != null">
+                        when id = #{l.id} then #{l.msLastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        WHERE
+        <foreach collection="list" item="l" separator="or">
+            id = #{l.id}
+        </foreach>
+    </update>
+    <update id="updateTime">
+          update p_attendance set msLastUpdatorId = #{pa.msLastUpdatorId},lastUpdatorId = #{pa.lastUpdatorId},
+          lastUpdateTime = #{pa.lastUpdateTime},workHour=#{pa.workHour},onTime1=#{pa.onTime1},offTime1=#{pa.offTime1},
+          onTime2=#{pa.onTime2},offTime2=#{pa.offTime2},onTime3=#{pa.onTime3},offTime3=#{pa.offTime3}
+         where id = #{pa.id}
+    </update>
+</mapper>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xxl.job.executor.dao.rs.ProjectAuditDao">
+    <update id="updateBatch">
+        update p_audit
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="sourceProjectId =case" suffix="end,">
+                <foreach collection="audits" item="i" index="index">
+                    <if test="i.sourceProjectId!=null">
+                        when id=#{i.id} then #{i.sourceProjectId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="status =case" suffix="end,">
+                <foreach collection="audits" item="i" index="index">
+                    <if test="i.status!=null">
+                        when id=#{i.id} then #{i.status}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="audits" separator="or" item="i" index="index">
+            id=#{i.id}
+        </foreach>
+    </update>
+    <update id="updateNodes">
+        update p_audit
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="status =case" suffix="end,">
+                <foreach collection="audits" item="i" index="index">
+                    when sourceProjectId = #{i.sourceProjectId} and moduleId = #{i.moduleId} then #{i.status}
+                </foreach>
+            </trim>
+        </trim>
+        ,lastUpdateTime=#{now}
+        where
+        <foreach collection="audits" separator="or" item="i">
+            (sourceProjectId = #{i.sourceProjectId} and moduleId = #{i.moduleId})
+        </foreach>
+    </update>
+    <select id="getAudits" resultType="com.xxl.job.executor.entity.rs.ProjectAuditEntity">
+        select id,moduleId,companyId,`year`,sourceProjectId,msLastUpdatorId,`status` from p_audit
+        where status = #{status}
+    </select>
+    <select id="getLastProjectIds" resultType="java.lang.Integer">
+        select distinct sourceProjectId from p_audit where lastUpdateTime >= #{lastTime}
+    </select>
+    <select id="getAuditCnt" resultType="com.xxl.job.executor.models.audit.ProjectAuditCntModel">
+        select sourceProjectId as projectId,companyId,
+        count(case when status = 0 then 1 else null end) ongoingCnt,
+        count(case when status = 1 then 1 else null end) doneCnt
+        from p_audit
+        where sourceProjectId in (<foreach collection="projectIds" item="pId" separator=",">#{pId}</foreach>)
+        group by sourceProjectId,companyId
+    </select>
+</mapper>

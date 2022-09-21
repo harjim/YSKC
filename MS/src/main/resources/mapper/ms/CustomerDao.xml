@@ -1,0 +1,418 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.CustomerDao">
+    <update id="updateOwnUser">
+        update customer set lastUpdatorId=#{userId},
+                            <if test="own.userId!=0">
+                                owerId = #{own.userId},deptId= #{deptId},effectDate = #{now},
+                            </if>
+                            <if test="own.userId==null or own.userId==0">
+                                status = 0,
+                            </if>
+                            lastUpdateTime = now()
+        where
+        id in
+        <foreach collection="own.customerIds" open="(" separator="," close=")" item="id">
+            #{id}
+        </foreach>
+    </update>
+
+    <select id="getOwnerDept" resultType="com.yskc.ms.models.customer.CustomerOwnerModel">
+        select c.id customerId,c.companyName,ud.userId ownerId,yu.realName ownerName,d.id deptId,d.deptName
+        from customer as c
+         left join user_dept as ud on ud.userId = c.owerId
+        left join ys_user yu on ud.userId = yu.id
+         left join ys_dept d on d.id = ud.depId
+        where companyName like concat('%',#{companyName},'%')
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.selectDept">
+            <property name="table" value="d"/>
+            <property name="userDept" value="ud"/>
+        </include>
+        order by ud.id limit 10
+    </select>
+    <select id="customerForSelect" resultType="com.yskc.ms.models.customer.MiniCustomerModel">
+        (select c.id,c.companyName,c.addressCode,c.deptId,d.deptName,d.fullPath,u.id as owerId,u.realName as
+        owerName,u.userName
+        from customer as c
+        left join ys_dept d on d.id = c.deptId
+        left join ys_user u on u.id = c.owerId
+        where companyName=#{customerName})
+        union
+        (select c.id,c.companyName,c.addressCode,c.deptId,d.deptName,d.fullPath,u.id as owerId,u.realName as
+        owerName,u.userName
+        from customer as c
+        left join ys_dept d on d.id = c.deptId
+        left join ys_user u on u.id = c.owerId
+        where companyName like "%"#{customerName}"%"
+        <if test="addressStr != null and addressStr != ''">
+            and c.addressCode like #{addressStr}"%"
+        </if>
+        <if test="deptId != null and deptId != 0">
+            and c.deptId = #{deptId}
+        </if>
+        limit 5)
+    </select>
+
+    <select id="findCustomerList" parameterType="com.yskc.ms.models.customer.FindCustomerModel"
+            resultType="com.yskc.ms.models.customer.FindCustomerModel">
+        SELECT c.id,c.companyName,d.deptName
+        from customer as c
+        left join ys_dept as d on d.id = c.deptId
+        where 1=1
+        <if test="query.companyName!=null">
+            AND c.companyName like "%"#{query.companyName}"%"
+        </if>
+    </select>
+
+    <select id="findSonCustomerList" parameterType="com.yskc.ms.models.customer.FindCustomerModel"
+            resultType="com.yskc.ms.models.customer.FindCustomerModel">
+        SELECT c.id,c.companyName,d.deptName
+        from customer as c
+        left join ys_dept d on d.id = c.deptId
+        where
+        <if test="model.groupId!=null and model.groupId!=0">
+             c.groupId = #{model.groupId}
+        </if>
+        <if test="model.groupId==null||model.groupId==0">
+            (c.companyType = 0 OR c.companyType = 1)
+        </if>
+        <if test="model.companyName!=null">
+            and c.companyName like "%"#{model.companyName}"%"
+        </if>
+        <if test="model.companyId!=null">
+            and (c.companyId != #{model.companyId} OR c.companyId is null)
+        </if>
+    </select>
+    <select id="getMobileList" resultType="com.yskc.ms.models.customer.CustomerModel">
+        select c.id,c.companyName,c.companyId,c.companyAddress,c.addressCode,u.realName as
+        ownerUser,c.industryCode,d.deptName,c.creatorId,c.creatorTime,yu.realName as creatorName,c.lastUpdateTime,
+        c.taxpayerId,c.creditCode,c.invoiceTitle,
+        c.mainIndustry,c.linkMan,c.linkTel,c.email,c.owner,c.capital,c.registerTime,c.firstDevFee,c.accountSystem,c.taxAuthorities,
+        c.realTaxAuthorities,c.hasDevAccount,c.highTec,c.highTecIndustry,c.from,c.capitalUnit,c.remark,u.id as owerId,u.realName owerName,
+        c.deptId,c.companyType,c.groupId,d.fullPath,c.companyLevel,c.status
+        from customer as c
+        left join ys_user as u on u.id = c.owerId
+        left join ys_user as yu on yu.id = c.creatorId
+        left join ys_dept as d on d.id = c.deptId
+        where 1 = 1
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.currentData">
+            <property name="alias" value="c"/>
+            <property name="perm" value="#{perm}"/>
+        </include>
+        <if test="query.companyName != null and query.companyName != ''">
+            and c.companyName like "%"#{query.companyName}"%"
+        </if>
+        <if test="query.lastUpdateTime != null">
+            and c.lastUpdateTime &lt; #{query.lastUpdateTime}
+        </if>
+        and c.status in (10,20,30)
+        /*order by c.lastUpdateTime desc
+        limit 10*/
+    </select>
+
+    <select id="getList" resultType="com.yskc.ms.models.customer.CustomerModel">
+        select c.id,c.companyName,c.companyId,c.companyAddress,c.addressCode,u.realName as
+        ownerUser,c.industryCode,d.deptName,c.creatorTime,c.lastUpdateTime,
+        c.taxpayerId,c.creditCode,c.invoiceTitle,
+        c.mainIndustry,c.linkMan,c.linkTel,c.email,c.owner,c.capital,c.registerTime,c.firstDevFee,c.accountSystem,c.taxAuthorities,
+        c.realTaxAuthorities,c.hasDevAccount,c.highTec,c.highTecIndustry,c.from,c.capitalUnit,c.remark,u.id as owerId,u.realName owerName,
+        c.deptId,c.companyType,c.groupId,d.fullPath,c.companyLevel,c.status
+        from customer as c
+        left join ys_user as u on u.id = c.owerId
+        left join ys_dept as d on d.id = c.deptId
+        where 1 = 1
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.currentData">
+            <property name="alias" value="c"/>
+            <property name="perm" value="#{perm}"/>
+        </include>
+        <if test="query.companyName != null and query.companyName != ''">
+            and c.companyName like "%"#{query.companyName}"%"
+        </if>
+        <if test="query.addressCode != null and query.addressCode != ''">
+            and c.addressCode like #{query.addressCode}"%"
+        </if>
+        <if test="query.industryCode != null and query.industryCode != ''">
+            and c.industryCode like "%"#{query.industryCode}"%"
+        </if>
+        <if test="query.userId != null and query.userId > 0">
+            and c.owerId = #{query.userId}
+        </if>
+        <if test="query.companyType != null">
+            and c.companyType = #{query.companyType}
+        </if>
+        <if test="query.fullPath != null and query.fullPath != ''">
+            and d.fullPath like #{query.fullPath}"%"
+        </if>
+        <if test="query.hasOpen != null">
+            <if test="query.hasOpen == 1">
+                and c.companyId > 0
+            </if>
+            <if test="query.hasOpen == 0">
+                and c.companyId &lt;= 0
+            </if>
+        </if>
+        and c.status in (10,20,30)
+    </select>
+    <select id="getMobileUnsignedList" resultType="com.yskc.ms.models.customer.CustomerModel">
+        select c.id,c.companyName,c.companyId,c.companyAddress,c.addressCode,u.realName as
+        ownerUser,c.industryCode,d.deptName,c.creatorId,c.creatorTime,yu.realName as creatorName,c.lastUpdateTime,
+        c.taxpayerId,c.creditCode,c.invoiceTitle,
+        c.mainIndustry,c.linkMan,c.linkTel,c.email,c.owner,c.capital,c.registerTime,c.firstDevFee,c.accountSystem,c.taxAuthorities,
+        c.realTaxAuthorities,c.hasDevAccount,c.highTec,c.highTecIndustry,c.from,c.capitalUnit,c.remark,u.id as owerId,u.realName owerName,
+        c.deptId,c.companyType,c.groupId,d.fullPath,c.companyLevel,c.status
+        from customer as c
+        left join ys_user as u on u.id = c.owerId
+        left join ys_user as yu on yu.id = c.creatorId
+        left join ys_dept as d on d.id = c.deptId
+        where 1 = 1
+        <if test="query.companyName != null and query.companyName != ''">
+            and c.companyName like "%"#{query.companyName}"%"
+        </if>
+        <if test="query.lastUpdateTime != null">
+            and c.lastUpdateTime &lt; #{query.lastUpdateTime}
+        </if>
+        and c.status = 0
+        /*order by c.lastUpdateTime desc
+        limit 10*/
+    </select>
+
+    <select id="getUnsignedList" resultType="com.yskc.ms.models.customer.CustomerModel">
+        select c.id,c.companyName,c.companyId,c.companyAddress,c.addressCode,u.realName as
+        ownerUser,c.industryCode,d.deptName,c.creatorTime,c.lastUpdateTime,
+        c.taxpayerId,c.creditCode,c.invoiceTitle,
+        c.mainIndustry,c.linkMan,c.linkTel,c.email,c.owner,c.capital,c.registerTime,c.firstDevFee,c.accountSystem,c.taxAuthorities,
+        c.realTaxAuthorities,c.hasDevAccount,c.highTec,c.highTecIndustry,c.from,c.capitalUnit,c.remark,u.id as owerId,u.realName owerName,
+        c.deptId,c.companyType,c.groupId,d.fullPath,c.companyLevel,c.status
+        from customer as c
+        left join ys_user as u on u.id = c.owerId
+        left join ys_dept as d on d.id = c.deptId
+        where 1 = 1
+        <if test="query.companyName != null and query.companyName != ''">
+            and c.companyName like "%"#{query.companyName}"%"
+        </if>
+        <if test="query.addressCode != null and query.addressCode != ''">
+            and c.addressCode like #{query.addressCode}"%"
+        </if>
+        <if test="query.industryCode != null and query.industryCode != ''">
+            and c.industryCode like "%"#{query.industryCode}"%"
+        </if>
+        <if test="query.userId != null and query.userId > 0">
+            and c.owerId = #{query.userId}
+        </if>
+        <if test="query.companyType != null">
+            and c.companyType = #{query.companyType}
+        </if>
+        <if test="query.fullPath != null and query.fullPath != ''">
+            and d.fullPath like #{query.fullPath}"%"
+        </if>
+        <if test="query.hasOpen != null">
+            <if test="query.hasOpen == 1">
+                and c.companyId > 0
+            </if>
+            <if test="query.hasOpen == 0">
+                and c.companyId &lt;= 0
+            </if>
+        </if>
+        and c.status = 0
+    </select>
+    <select id="checkCompanyName" resultType="com.yskc.ms.models.customer.CustomerModel">
+        SELECT  * FROM customer WHERE REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(companyName,'(',''),')',''),'（',''),'）',''),' ','') = #{companyName}
+    </select>
+    <select id="checkName" resultType="com.yskc.ms.models.customer.CustomerModel">
+        SELECT  * FROM customer WHERE companyName = #{companyName}
+    </select>
+    <select id="getMyCustomerList" resultType="com.yskc.ms.entity.rs.models.MyCustomerModel">
+        SELECT c.id,c.companyName,c.addressCode,c.linkMan,c.linkTel,c.companyId,c.companyLevel,yd.fullname as deptName
+        FROM customer AS c left join ys_dept yd on c.deptId = yd.id
+        WHERE c.companyId > 0
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.projectCustomer">
+            <property name="tableAlias" value="c"/>
+            <property name="dataPerm" value="#{dataPerm}"/>
+        </include>
+        <if test="query.companyName != null and query.companyName != ''">
+            and c.companyName like "%"#{query.companyName}"%"
+        </if>
+        <if test="null != query.companyLevel and query.companyLevel != ''">
+            and c.companyLevel = #{query.companyLevel}
+        </if>
+        <if test="query.deptId != null and query.deptId != ''">
+            and yd.fullPath like CONCAT('%/', #{query.deptId,jdbcType=VARCHAR}, '/%')
+        </if>
+        <if test="(query.year != null and query.year>0) or (query.tIds != null and query.tIds.length>0) or (query.fIds != null and query.fIds.length>0) or (query.productName != null and query.productName.length>0)">
+            and c.id in (select p.customerId from project p
+            <if test="query.tIds != null and query.tIds.length>0">
+                left join project_member pmt on p.id = pmt.projectId and pmt.mType=1
+            </if>
+            <if test="query.fIds != null and query.fIds.length>0">
+                left join project_member pmf on p.id = pmf.projectId and pmf.mType=2
+            </if>
+            <if test="query.productName != null and query.productName.length>0">
+                left join product pt on pt.id=p.productId
+            </if>
+            <where>
+                <if test="query.year != null and query.year>0">
+                    and p.`year` = #{query.year}
+                </if>
+                <if test="query.tIds != null and query.tIds.length>0">
+                    and pmt.memberId in
+                    <foreach collection="query.tIds" open="(" separator="," close=")" item="tId">
+                        #{tId}
+                    </foreach>
+                </if>
+                <if test="query.fIds != null and query.fIds.length>0">
+                    and pmf.memberId in
+                    <foreach collection="query.fIds" open="(" separator="," close=")" item="fId">
+                        #{fId}
+                    </foreach>
+                </if>
+                <if test="query.productName != null and query.productName.length>0">
+                    and pt.productName like "%"#{query.productName}"%"
+                </if>
+            </where>
+            )
+        </if>
+    </select>
+    <select id="getCompanySelect" resultType="com.yskc.ms.models.MiniModel">
+        (select companyId as id,companyName as title from customer where companyId > 0
+         and companyName=#{customerName})
+        union
+         (select companyId as id,companyName as title from customer where companyId > 0
+         and companyName like "%"#{customerName}"%" limit 5)
+    </select>
+
+    <select id="getCustomerSelect" resultType="com.yskc.ms.models.MiniModel">
+        (select id,companyName as title from customer where companyName=#{customerName})
+        union
+        (select id,companyName as title from customer where companyName like "%"#{customerName}"%" limit 5)
+    </select>
+    <select id="getByCompany" resultType="com.yskc.ms.models.company.CompanyInfoModel">
+        select c.deptId,c.id customerId,c.owerId,c.companyId,u.realName ownerName,d.deptName,c.companyLevel,c.status
+        from customer c
+        left join ys_user as u on u.id = c.owerId
+        left join ys_dept as d on d.id = c.deptId
+        where companyId=#{companyId}
+    </select>
+    <select id="getGroupSelect" resultType="com.yskc.ms.models.MiniModel">
+        (select companyId id,companyName title from customer where companyId=#{groupId})
+        union
+        (select companyId id,companyName title from customer where groupId=#{groupId} and companyId>0)
+    </select>
+    <select id="getByCompanyIds" resultType="com.yskc.ms.models.customer.CustomerModel">
+        select c.companyId,yu.realName as owner,yd.deptName
+        from customer c
+        left join ys_user yu on c.owerId=yu.id
+        left join ys_dept yd on c.deptId=yd.id
+        where c.companyId in (<foreach collection="companyIds" item="companyId" separator=",">#{companyId}</foreach>)
+    </select>
+
+    <update id="updateGroups">
+        update customer set
+        companyType=#{companyType},groupId=#{groupId},lastUpdateTime=#{now},lastUpdatorId = #{userId},
+        <trim prefix="companyId =case" suffix="end">
+            <foreach collection="list" item="i" index="index">
+                <if test="i.companyId!=null">
+                    when id=#{i.id} then #{i.companyId}
+                </if>
+            </foreach>
+        </trim>
+        WHERE id in
+        <foreach collection="list" separator="," index="index" item="l" open="(" close=")">
+            #{l.id}
+        </foreach>
+    </update>
+
+    <update id="upNotCustomer" parameterType="java.util.List">
+        update customer set
+        companyType = #{companyType},groupId = 0,lastUpdateTime = #{customer.lastUpdateTime},
+        lastUpdatorId = #{customer.lastUpdatorId}
+        WHERE companyId in
+        <foreach collection="ids" separator="," index="index" item="id" open="(" close=")">
+            #{id}
+        </foreach>
+    </update>
+    <update id="updateStatus">
+        update customer set
+            status = #{status}, effectDate = now(), owerId = #{userId},
+                          deptId = (select depId from user_dept
+                          where userId = #{userId} order by depId asc limit 1),
+            lastUpdatorId = #{userId},lastUpdateTime = now()
+        where id = #{id}
+    </update>
+    <update id="updateCompanyName">
+        update customer set
+        companyName = #{companyName},invoiceTitle = #{companyName}, lastUpdatorId = #{userId},lastUpdateTime = now()
+        WHERE id = #{id}
+    </update>
+    <update id="updateCustomer">
+        update customer set
+            companyLevel = #{model.companyLevel},owerId = #{model.owerId},
+            deptId = #{model.deptId},status = #{model.status},effectDate = #{date},
+            lastUpdatorId = #{model.owerId},lastUpdateTime = now()
+        WHERE id = #{model.id}
+    </update>
+    <update id="updateStatusList">
+        update customer set
+              status = #{status}, effectDate = now(),owerId = #{owerId},deptId = #{deptId},
+        lastUpdatorId = #{owerId},lastUpdateTime = now()
+        where id in (<foreach collection="ids" separator="," item="id">
+                    #{id}
+                    </foreach>)
+    </update>
+    <select id="getDeptName" resultType="com.yskc.ms.models.customer.FindCustomerModel">
+        SELECT d.deptName,c.companyId,c.id as id
+        from customer as c
+                 left join ys_dept d on d.id = c.deptId
+        where c.companyId in
+        <foreach collection="companyIds" separator="," open="(" close=")" item="id">
+            #{id}
+        </foreach>
+    </select>
+    <select id="getGroupList" resultType="com.yskc.ms.models.MiniModel">
+        select companyId id,companyName title from customer
+        where companyId in (<foreach collection="groupIds" separator="," item="gId">#{gId}</foreach>)
+    </select>
+    <select id="getCompanyId" resultType="java.lang.Integer">
+        select companyId from customer
+        where id = #{id}
+    </select>
+    <select id="checkCustomer" resultType="com.yskc.ms.entity.rs.models.CompanyModel">
+        select id from customer
+        where id in (<foreach collection="customerIds" separator="," item="id">#{id}</foreach>)
+              <if test="status!=null">
+                  and status = #{status}
+              </if>
+    </select>
+    <select id="getIdByCompanyName" resultType="java.lang.Integer">
+        select id from customer
+        where companyName = #{companyName}
+    </select>
+    <select id="getOwerList" resultType="com.yskc.ms.models.customer.CustomerOwerModel">
+        select c.id, c.owerId, yu.realName owerName from customer c
+        left join ys_user yu on c.owerId = yu.id
+        where c.id in
+        (<foreach collection="ids" item="id" separator=",">
+            #{id}
+        </foreach>)
+    </select>
+    <select id="getServiceCustomerList" resultType="com.yskc.ms.models.serviceApply.ServiceCustomerModel">
+        select id customerId,companyName
+        from customer
+        <where>
+            <if test="model.companyName!=null and model.companyName!=''">
+                and companyName like concat("%",#{model.companyName},"%")
+            </if>
+            <if test="model.customerIds!=null">
+                and id not in (<foreach collection="model.customerIds" item="item" separator=",">
+                #{item}
+            </foreach>)
+            </if>
+        </where>
+        limit 10
+    </select>
+    <select id="getCompanyName" resultType="java.lang.String">
+        select companyName from customer where id =#{id}
+    </select>
+
+
+</mapper>

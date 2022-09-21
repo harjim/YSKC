@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xxl.job.executor.dao.ms.UserDeptDao">
+    <select id="getUserDept" resultType="com.xxl.job.executor.models.userdept.UserDeptModel">
+        select min(yd.id) as deptId,ud.userId from ys_dept yd
+        inner join user_dept ud on ud.depId = yd.id
+        inner join (select max(yd1.level) as `level`,ud1.userId from user_dept ud1
+            inner join ys_dept yd1 on yd1.id = ud1.depId
+            where ud1.userId in(<foreach collection="userIds" separator="," item="uId">#{uId}</foreach>)
+            group by ud1.userId) ud2 on ud2.userId = ud.userId and ud2.level = yd.level
+        group by ud.userId
+    </select>
+    <select id="getAdminUser" resultType="com.xxl.job.executor.models.userdept.UserDeptModel">
+        select ud.depId as deptId,ud.userId,yd.parentId from user_dept ud
+        inner join ys_dept yd on yd.id = ud.depId
+         where ud.isAdmin and ud.depId in
+        (<foreach collection="deptIds" separator="," item="depId">#{depId}</foreach> )
+    </select>
+</mapper>

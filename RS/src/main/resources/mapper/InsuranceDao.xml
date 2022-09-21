@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.init.InsuranceDao">
+
+    <insert id="insertOrUpdate">
+        INSERT INTO `insuranceConfig`
+        (
+        `companyId`,
+        `endowment`,
+        `medical`,
+        `unemployment`,
+        `injury`,
+        `maternity`,
+        `house`,
+        `creatorId`,
+        `createTime`,
+        `updatorId`,
+        `lastUpdateTime`,
+        `endowmentOfCom`,
+        `medicalOfCom`,
+        `unemploymentOfCom`,
+        `injuryOfCom`,
+        `maternityOfCom`,
+        `houseOfCom`
+        )
+        VALUES
+        <foreach collection="insuranceConfigs" item="item" index="index" separator=",">
+            (
+            #{item.companyId},
+            #{item.endowment},
+            #{item.medical},
+            #{item.unemployment},
+            #{item.injury},
+            #{item.maternity},
+            #{item.house},
+            #{item.creatorId},
+            #{item.createTime},
+            #{item.updatorId},
+            #{item.lastUpdateTime},
+            #{item.endowmentOfCom},
+            #{item.medicalOfCom},
+            #{item.unemploymentOfCom},
+            #{item.injuryOfCom},
+            #{item.maternityOfCom},
+            #{item.houseOfCom}
+            )
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        endowment=values(endowment),
+        medical=values(medical),
+        unemployment=values(unemployment),
+        injury=values(injury),
+        maternity=values(maternity),
+        updatorId=values(updatorId),
+        lastUpdateTime=values(lastUpdateTime),
+        endowmentOfCom=values(endowmentOfCom),
+        medicalOfCom=values(medicalOfCom),
+        unemploymentOfCom=values(unemploymentOfCom),
+        injuryOfCom=values(injuryOfCom),
+        maternityOfCom=values(maternityOfCom),
+        houseOfCom=values(houseOfCom)
+    </insert>
+</mapper>

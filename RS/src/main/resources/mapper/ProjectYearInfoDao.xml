@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.project.ProjectYearInfoDao">
+    <insert id="insertOrUpdate">
+        INSERT INTO p_year_info
+        (creatorId,lastUpdatorId,createTime,lastUpdateTime,msCreatorId,msLastUpdatorId,projectId,`year`,budget,companyId)
+        VALUES
+        <foreach collection="list" separator="," item="l">
+            (#{l.creatorId},#{l.lastUpdatorId},#{l.createTime},#{l.lastUpdateTime},#{l.msCreatorId},
+            #{l.msLastUpdatorId},#{l.projectId},#{l.year},#{l.budget},#{l.companyId})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        lastUpdatorId = values(lastUpdatorId),
+        msLastUpdatorId = values(msLastUpdatorId),
+        lastUpdateTime = values(lastUpdateTime),
+        budget = values(budget)
+    </insert>
+    <insert id="addBatchMaster">
+        INSERT INTO p_year_info
+        (creatorId,lastUpdatorId,createTime,lastUpdateTime,msCreatorId,msLastUpdatorId,projectId,`year`,masterENumber,companyId)
+        VALUES
+        <foreach collection="list" separator="," item="l">
+            (#{l.creatorId},#{l.lastUpdatorId},#{l.createTime},#{l.lastUpdateTime},#{l.msCreatorId},
+            #{l.msLastUpdatorId},#{l.projectId},#{l.year},#{l.masterENumber},#{l.companyId})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        lastUpdatorId = values(lastUpdatorId),
+        msLastUpdatorId = values(msLastUpdatorId),
+        lastUpdateTime = values(lastUpdateTime),
+        masterENumber = values(masterENumber)
+    </insert>
+    <update id="updateBatch">
+        <foreach collection="list" separator=";" item="l">
+            update p_year_info set lastUpdatorId =#{l.lastUpdatorId},
+            msLastUpdatorId =#{l.msLastUpdatorId},
+            lastUpdateTime =#{l.lastUpdateTime},
+            masterENumber =#{l.masterENumber}
+            where projectId =#{l.projectId} and `year` =#{l.year} and companyId =#{l.companyId}
+        </foreach>
+    </update>
+    <select id="getMapByYear" resultType="java.util.Map">
+        select pyi.masterENumber enumber,e.ename
+        from p_year_info pyi
+                 inner join employee e on e.companyId=pyi.companyId and e.enumber = pyi.masterENumber
+        where pyi.projectId=#{projectId} and pyi.year=#{year}
+    </select>
+    <select id="getByYear" resultType="com.yskc.rs.entity.project.ProjectYearInfoEntity">
+        select *
+        from p_year_info
+        where projectId=#{projectId} and `year`=#{year}
+    </select>
+    <select id="getByProject" resultType="com.yskc.rs.entity.project.ProjectYearInfoEntity">
+        select * from p_year_info
+        where projectId=#{projectId}
+    </select>
+    <select id="getInfoByYear" resultType="com.yskc.rs.entity.project.ProjectYearInfoEntity">
+        select pyi.projectId,pyi.year,case when pyi.budget is null then 0.00 else pyi.budget end as budget
+        from p_year_info pyi
+        inner join p_project p on p.id=pyi.projectId
+        where p.id=#{projectId} and pyi.year &lt;=#{year} and pyi.year>=p.beginYear
+    </select>
+    <select id="getInfoByProjects" resultType="com.yskc.rs.entity.project.ProjectYearInfoEntity">
+        select projectId,`year`,case when budget is null then 0.00 else budget end budget
+        from p_year_info
+        where `year`=#{year} and  projectId in (<foreach collection="projectIds" item="projectId" separator=",">#{projectId}</foreach> )
+    </select>
+    <select id="getTotalBudget" resultType="java.math.BigDecimal">
+        select SUM(budget) as budget
+        from p_year_info
+        where projectId=#{projectId} and budget is not null
+    </select>
+    <select id="getBudgetByYear" resultType="java.math.BigDecimal">
+        select sum(budget)
+        from p_year_info
+        where projectId in (<foreach collection="projectIds" item="projectId" separator=",">#{projectId}</foreach> )
+        and companyId=#{companyId} and `year`=#{year} and budget is not null
+    </select>
+    <select id="getCostAnalysis" resultType="com.yskc.rs.models.projectDocFile.ProjectAnalysisModel">
+        select t.expectationTotal,t2.actualityTotal from
+            (select sum(budget) expectationTotal from p_year_info where projectId =#{projectId}) t join
+            (select sum(rdFunds) actualityTotal from p_summary where projectId =#{projectId}) t2
+    </select>
+</mapper>

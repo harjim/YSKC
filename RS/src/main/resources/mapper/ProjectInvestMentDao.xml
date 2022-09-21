@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.ProjectInvestMentDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.yskc.rs.entity.tech.ProjectInvestMentEntity" id="projectInvestMentMap">
+        <result property="id" column="id"/>
+        <result property="creatorId" column="creatorId"/>
+        <result property="createTime" column="createTime"/>
+        <result property="lastUpdatorId" column="lastUpdatorId"/>
+        <result property="lastUpdateTime" column="lastUpdateTime"/>
+        <result property="projectId" column="projectId"/>
+        <result property="companyId" column="companyId"/>
+        <result property="equipmentCostOfReport" column="equipmentCostOfReport"/>
+        <result property="equipmentCostOfPaid" column="equipmentCostOfPaid"/>
+        <result property="installationCostOfReport" column="installationCostOfReport"/>
+        <result property="installationCostOfPaid" column="installationCostOfPaid"/>
+        <result property="constructionCostOfReport" column="constructionCostOfReport"/>
+        <result property="constructionCostOfPaid" column="constructionCostOfPaid"/>
+        <result property="softwareKitOfReport" column="softwareKitOfReport"/>
+        <result property="softwareKitOfPaid" column="softwareKitOfPaid"/>
+        <result property="inspectionOfReport" column="InspectionOfReport"/>
+        <result property="inspectionOfPaid" column="InspectionOfPaid"/>
+        <result property="digitalIntegrationOfReport" column="digitalIntegrationOfReport"/>
+        <result property="digitalIntegrationOfPaid" column="digitalIntegrationOfPaid"/>
+        <result property="rdOutsourcingOfReport" column="rdOutsourcingOfReport"/>
+        <result property="rdOutsourcingOfPaid" column="rdOutsourcingOfPaid"/>
+        <result property="waterOfReport" column="waterOfReport"/>
+        <result property="waterOfPaid" column="waterOfPaid"/>
+    </resultMap>
+    <select id="selectByProjectId" resultType="com.yskc.rs.entity.tech.ProjectInvestMentEntity">
+        select * from t_projectInvestMent where companyId = #{companyId} and projectId = #{projectId}
+    </select>
+
+
+</mapper>

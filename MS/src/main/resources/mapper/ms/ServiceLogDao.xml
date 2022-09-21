@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.ServiceLogDao">
+    <select id="queryByParams" resultType="com.yskc.ms.models.servicelog.ServiceInfoModel">
+        select sL.id, sL.status,sL.serviceType,sL.days,
+        sL.totalTime,sL.totalStaff,sL.customerId,sL.submitDate,
+        sL.lastProblem,sL.nowProblem,sL.customerAdvice ,sL.customerParticipan,sL.serviceDept,
+        sL.startDate,sL.endDate,sL.filePath,sL.auditOpinion,ct.companyName as customerName
+        from serviceLog sL
+        left join customer ct on sL.customerId=ct.id
+        where 1=1
+        <if test="query.customerName!=null and query.customerName!= ''">
+            and ct.companyName like "%"#{query.customerName}"%"
+        </if>
+        <if test="query.serviceType!=null ">
+            and sL.serviceType= #{query.serviceType}
+        </if>
+        <if test="query.userIds!=null">
+            and sL.id in (select serviceId from serviceUser where userId in
+            <foreach collection="query.userIds" item="userId" open="(" separator="," close=")">
+                #{userId}
+            </foreach>
+            )
+        </if>
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.byMember">
+            <property name="tableAlias" value="sL"/>
+            <property name="colId" value="serviceId"/>
+            <property name="userTable" value="serviceUser"/>
+            <property name="memberId" value="userId"/>
+        </include>
+    </select>
+
+    <select id="getStat" resultType="java.util.Map">
+        select sum(sL.days) as daySum,COUNT(sL.id) as times
+        from serviceLog sL
+        left join customer ct on sL.customerId=ct.id
+        where 1=1
+        <if test="query.customerName!=null and query.customerName!= ''">
+            and ct.companyName like "%"#{query.customerName}"%"
+        </if>
+        <if test="query.serviceType!=null ">
+            and sL.serviceType= #{query.serviceType}
+        </if>
+        <if test="query.userIds!=null">
+            and sL.id in (select serviceId from serviceUser where userId in
+            <foreach collection="query.userIds" item="userId" open="(" separator="," close=")">
+                #{userId}
+            </foreach>
+            )
+        </if>
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.byMember">
+            <property name="tableAlias" value="sL"/>
+            <property name="colId" value="serviceId"/>
+            <property name="userTable" value="serviceUser"/>
+            <property name="memberId" value="userId"/>
+        </include>
+    </select>
+    <select id="getExportData" resultType="com.yskc.ms.models.servicelog.ExportServiceInfoModel">
+        select sL.serviceType,sL.days,sL.id,
+        sL.totalTime,sL.totalStaff,sL.lastProblem,sL.nowProblem,sL.customerAdvice ,sL.customerParticipan,sL.serviceDept,
+        sL.startDate,sL.endDate,ct.companyName as customerName
+        from serviceLog sL
+        left join customer ct on sL.customerId=ct.id
+        where 1=1
+        <if test="query.customerName!=null and query.customerName!= ''">
+            and ct.companyName like "%"#{query.customerName}"%"
+        </if>
+        <if test="query.serviceType!=null ">
+            and sL.serviceType= #{query.serviceType}
+        </if>
+        <if test="query.userIds!=null">
+            and sL.id in (select serviceId from serviceUser where userId in
+            <foreach collection="query.userIds" item="userId" open="(" separator="," close=")">
+                #{userId}
+            </foreach>
+            )
+        </if>
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.byMember">
+            <property name="tableAlias" value="sL"/>
+            <property name="colId" value="serviceId"/>
+            <property name="userTable" value="serviceUser"/>
+            <property name="memberId" value="userId"/>
+        </include>
+        order by sL.createTime desc
+    </select>
+
+</mapper>

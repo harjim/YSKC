@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.rs.ProjectRdEmployeeDao">
+    <update id="updateAttendanceUsed">
+        UPDATE p_attendance_used
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix=" remainHours =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.remainHours != null">
+                        when id = #{l.id} then #{l.remainHours}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" timeRange =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.timeRange != null">
+                        when id = #{l.id} then #{l.timeRange}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        ,lastUpdatorId=-1,msLastUpdatorId=#{msUserId},lastUpdateTime=#{now}
+        WHERE
+        <foreach collection="list" item="l" separator="or">
+            id = #{l.id}
+        </foreach>
+    </update>
+    <delete id="deleteRdEmployee">
+        delete from p_rdEmployee where projectId=#{projectId}
+        <if test="yearKeys != null">
+            and (
+            <foreach collection="yearKeys" item="yk" separator="or">
+                (`month`>=#{yk.begin} and `month` &lt;= #{yk.end}
+                and enumber in (<foreach collection="yk.keys" separator="," item="enumber">#{enumber}</foreach> ))
+            </foreach>
+            )
+        </if>
+    </delete>
+    <delete id="deleteAttendances">
+        delete from p_attendance where id in (<foreach collection="ids" separator="," item="id">#{id}</foreach>) and
+        !`owner`
+    </delete>
+    <delete id="deleteAttendanceUsed">
+        delete from p_attendance_used where id in(<foreach collection="ids" separator="," item="id">#{id}</foreach>)
+    </delete>
+
+    <select id="queryEmployeeList" resultType="com.yskc.ms.models.rs.RdEmployeeSummaryModel">
+        select e.ename,rd.deptName as rdDeptName,im.role,pr.rdHour as monthWorkOurs from
+        p_rdEmployee pr
+        LEFT JOIN employee e ON pr.companyId=e.companyId AND pr.enumber=e.enumber
+        LEFT JOIN i_member im ON im.companyId=pr.companyId AND im.projectId = pr.projectId AND im.enumber=pr.enumber
+        LEFT JOIN rdEmployee re ON re.companyId=pr.companyId AND re.enumber=pr.enumber and re.year=im.year
+        LEFT JOIN rdDept rd ON re.rdDeptId=rd.id
+        where im.companyId=#{companyId} and pr.month=#{month} and re.year=#{year} and pr.rdHour != 0
+        and im.projectId in
+        <foreach collection="projectIds" item="projectId" open="(" close=")" separator=",">
+            #{projectId}
+        </foreach>
+    </select>
+    <select id="queryListByYear" resultType="com.yskc.ms.models.rs.RdEmployeeSummaryModel">
+        SELECT e.ename,im.projectId,e.enumber,re.etype,rd.deptName AS rdDeptName,im.role,SUM(pr.rdHour) AS yearWorkOurs FROM
+        p_rdEmployee pr
+        LEFT JOIN employee e ON pr.companyId=e.companyId AND pr.enumber=e.enumber
+        LEFT JOIN i_member im ON im.companyId=pr.companyId AND im.projectId = pr.projectId AND im.enumber=pr.enumber
+        LEFT JOIN rdEmployee re ON re.companyId=pr.companyId AND re.enumber=pr.enumber and re.year = im.year
+        LEFT JOIN rdDept rd ON re.rdDeptId=rd.id
+        WHERE im.companyId=#{companyId} and im.year=#{year}
+        AND im.projectId in
+        <foreach collection="projectIds" item="projectId" open="(" close=")" separator=",">
+            #{projectId}
+        </foreach>
+        GROUP BY e.ename,im.projectId,e.enumber,rdDeptName,im.role,re.etype
+        order by re.etype
+    </select>
+    <select id="getList" resultType="com.yskc.ms.models.projectAudit.RdEmployeeListModel">
+        SELECT re.id,re.year,re.enumber,re.etype,re.rdDeptId,re.companyId,e.ename,rp.deptName,e.specialities,
+               (case when eo.id>0 then '是' else '否' end) hasBind FROM rdEmployee re
+       INNER JOIN employee e ON re.companyId=e.companyId AND re.enumber=e.enumber
+        left join employeeOpenid eo on eo.companyId=e.companyId and eo.enumber=e.enumber
+       left join rdDept rp on  rp.id=re.rdDeptId
+       where re.companyId=#{query.companyId} and re.year=#{query.year}
+    </select>
+    <select id="getTotal" resultType="java.util.Map">
+        select count(CASE WHEN etype = 1 then 1 else null end) as researchCnt,
+        count(CASE WHEN etype = 2 then 2 else null end) as techCnt,
+        count(CASE WHEN etype = 3 then 3 else null end) as assistCnt
+        from rdEmployee where companyId=#{query.companyId} and year=#{query.year}
+    </select>
+    <select id="getAttendanceList" resultType="com.yskc.ms.models.rs.summary.ProjectAttendanceModel">
+        select id,enumber,workDate,onTime1,offTime1,onTime2,offTime2,onTime3,offTime3,workHour from p_attendance
+        where projectId=#{projectId} and !`owner`
+        <if test="yearKeys!=null">
+            and (
+            <foreach collection="yearKeys" item="yk" separator="or">
+                (workDate>=#{yk.begin} and workDate &lt;= #{yk.end}
+                and enumber in (<foreach collection="yk.keys" separator="," item="enumber">#{enumber}</foreach> ))
+            </foreach>
+            )
+        </if>
+    </select>
+    <select id="getAttendanceUsed" resultType="com.yskc.ms.models.rs.summary.ProjectAttendanceUsedModel">
+        select id,enumber,workDate,remainHours,timeRange,workHour from p_attendance_used where companyId=#{companyId}
+        and
+        (<foreach collection="list" item="l" separator="or">(enumber=#{l.enumber} and workDate=#{l.workDate})</foreach>)
+    </select>
+    <select id="getMonths" resultType="java.util.Date">
+        select `month` from p_rdEmployee where projectId=#{projectId}
+        and (
+            <foreach collection="yearKeys" item="yk" separator="or">
+                (`month`>=#{yk.begin} and `month` &lt;= #{yk.end}
+                 and enumber in (<foreach collection="yk.keys" separator="," item="enumber">#{enumber}</foreach> ))
+            </foreach>
+        )
+        group by `month`
+    </select>
+    <select id="getSummary" resultType="com.yskc.ms.models.rs.summary.ProjectRdEmployeeTotalModel">
+        select sum(rdPay) as pay,sum(rdInsuranceFund) as insuranceFund,`month`
+        from p_rdEmployee
+        where projectId = #{projectId}
+        and `month` in
+        <foreach collection="months" open="(" separator="," close=")" item="m">
+            #{m}
+        </foreach>
+        group by `month`
+    </select>
+    <select id="getYearEnumbers" resultType="com.yskc.ms.models.rs.InitMemberModel">
+        select `year`,enumber from i_member where id in (<foreach collection="ids" separator="," item="id">#{id}</foreach>)
+    </select>
+    <select id="getEmployeeFees" resultType="com.yskc.ms.models.projectAudit.RdFeeEmployeeModel">
+        select i.enumber,e.ename,pre.rdHour,pre.rdInsuranceFund,
+               pre.rdPay,ifnull(ds.deptName,e.deptName) deptName,rde.etype,ds.insuranceFund,ds.pay,ds.workHours
+        from i_member i
+        LEFT JOIN p_rdEmployee pre on pre.enumber = i.enumber and pre.projectId = i.projectId
+                                          and pre.month = #{query.month} and pre.companyId = i.companyId
+        LEFT JOIN d_salary ds on ds.enumber = i.enumber and ds.companyId = i.companyId and ds.month = #{query.month}
+        LEFT JOIN rdEmployee rde on rde.enumber = i.enumber and rde.companyId = i.companyId and rde.year = #{year}
+        LEFT JOIN employee e on e.enumber = i.enumber and e.companyId = i.companyId
+        where
+        i.companyId = #{query.companyId} and i.year=#{year}
+        and ( i.entryDate is null or i.entryDate &lt;= #{monthend} )
+        and i.projectId = #{query.projectId}
+    </select>
+    <select id="getRangeMonths" resultType="java.util.Date">
+        select distinct `month` from p_rdEmployee where projectId=#{projectId}
+        and `month`>=#{begin} and `month` &lt;=#{end}
+    </select>
+</mapper>

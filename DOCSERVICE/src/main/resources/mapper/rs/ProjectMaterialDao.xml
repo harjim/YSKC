@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.docservice.dao.rs.project.ProjectMaterialDao">
+    <insert id="addBatch">
+        INSERT INTO `p_material`
+        ( `projectId`, `materialDataId`, `used`, `companyId`, `rdType`, `creatorId`, `createTime`, `lastUpdateTime`,
+        `lastUpdatorId`, `msCreatorId`, `msLastUpdatorId`, rdAmount,finishUnitPrice )
+        VALUES
+        <foreach collection="insertMaterialEntities" item="item" separator=",">
+            ( #{item.projectId}, #{item.materialDataId}, #{item.used}, #{item.companyId}, #{item.rdType},
+            #{item.creatorId}, #{item.createTime}, #{item.lastUpdateTime}, #{item.lastUpdatorId}, #{item.msCreatorId},
+            #{item.msLastUpdatorId}, #{item.rdAmount},#{item.finishUnitPrice} )
+        </foreach>
+    </insert>
+    <select id="getRdMaterialTotal"
+            resultType="com.yskc.docservice.models.rs.material.ProjectRdMaterialTotalModel">
+        select dm.acqDate,pm.projectId,pm.rdType,sum(pm.rdAmount) as total
+        from p_material pm
+        INNER JOIN d_material dm on pm.materialDataId=dm.id
+        where pm.projectId in
+        <foreach collection="projectIds" open="(" separator="," close=")" item="projectId">
+            #{projectId}
+        </foreach>
+        and dm.acqDate >= #{minDate} and dm.acqDate &lt;=#{maxDate}
+        group by dm.acqDate,pm.projectId,pm.rdType
+    </select>
+
+</mapper>

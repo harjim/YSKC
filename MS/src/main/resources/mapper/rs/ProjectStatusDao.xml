@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yskc.ms.dao.rs.ProjectStatusDao">
+    <insert id="addBatch">
+        INSERT INTO p_project_status
+        (rdType,companyId,projectId,`month`,`status`,createTime,lastUpdateTime,msCreatorId,msLastUpdatorId)
+        VALUES
+        <foreach collection="list" separator="," item="l">
+            (#{l.rdType},#{l.companyId},#{l.projectId},#{l.month},#{l.status},#{l.createTime},#{l.lastUpdateTime},
+            #{l.msCreatorId},#{l.msLastUpdatorId})
+        </foreach>
+    </insert>
+    <update id="updateStatus">
+        update p_project_status set `status`=#{status},lastUpdateTime=#{now},msLastUpdatorId=#{msUserId}
+        where id in <foreach collection="list" open="(" separator="," close=")" item="l">#{l.id}</foreach>
+    </update>
+    <select id="getExist" resultType="com.yskc.ms.entity.rs.ProjectStatus">
+        select id, projectId,`month` from p_project_status
+        where
+        <foreach collection="audits" separator=" or " item="a">
+            (projectId = #{a.projectId}
+            and `month` in <foreach collection="a.months" open="(" separator="," close=")" item="m">#{m}</foreach>)
+        </foreach>
+    </select>
+    <select id="getProjectStatus" resultType="com.yskc.ms.entity.rs.ProjectStatus">
+        select projectId,`status`,`month` from p_project_status where projectId in
+        <foreach collection="list" open="(" separator="," close=")" item="l">#{l.projectId}</foreach>
+    </select>
+</mapper>

@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.ProjectSummaryDataDao">
+    <select id="getHighTechData" resultType="com.yskc.ms.models.projectsummary.ProjectSummaryModel">
+        select pj.year,pd.productName,c.companyName,pj.id projectId,c.id customerId,pj.createTime,
+        yu.realName as owerName,d.fullname as deptName,c.companyId
+        from project pj
+        inner join product pd on pj.productId=pd.id
+        inner join customer c on pj.customerId=c.id
+         LEFT JOIN ys_dept d on pj.deptId=d.id
+        LEFT JOIN ys_user yu on yu.id = pj.owerId
+        where pd.productType=2
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.project">
+            <property name="tableAlias" value="pj"/>
+            <property name="dataPerm" value="#{dataPerm}"/>
+            <property name="userTable" value="project_member"/>
+            <property name="colId" value="projectId"/>
+        </include>
+        <if test="query.companyName!=null and query.companyName!=''">
+            and c.companyName like "%"#{query.companyName}"%"
+        </if>
+        <if test="query.year!=null and query.year>0">
+            and pj.year=#{query.year}
+        </if>
+        <if test="query.productName!=null and query.productName!=''">
+            and pd.productName like "%"#{query.productName}"%"
+        </if>
+        <if test="query.tIds != null and query.tIds.length>0">
+            and pj.id in (select projectId from project_member where mType=1 and memberId in
+            <foreach collection="query.tIds" open="(" separator="," close=")" item="tId">
+                #{tId}
+            </foreach>)
+        </if>
+        <if test="query.fIds != null and query.fIds.length>0">
+            and pj.id in (select projectId from project_member where mType=2 and memberId in
+            <foreach collection="query.fIds" open="(" separator="," close=")" item="fId">
+                #{fId}
+            </foreach>)
+        </if>
+        <if test="query.owerId!=null and query.owerId>0">
+           and yu.id= #{query.owerId}
+        </if>
+        <if test="query.fullPath != null and query.fullPath != ''">
+            and d.fullPath like #{query.fullPath}"%"
+        </if>
+    </select>
+
+    <select id="getByCustomerYear" resultType="com.yskc.ms.models.projectsummary.SummaryDataModel">
+        select distinct psd.id,psd.customerId,psd.cnt,psd.rdCount,psd.budget,psd.rdFunds,psd.docFileCount,psd.operationTime,psd.year,
+        psd.employeeCount,psd.equipmentCount,psd.rdEmployeeCount,psd.rdEquipmentCount,yu.realName as operationRealName,c.companyId,
+        c.companyName
+         from  project_summary_data psd
+         inner join ys_user yu on yu.id=psd.operationUserId
+         inner join customer c on c.id=psd.customerId
+         where
+         <foreach collection="list" item="item" separator="or">
+             (psd.customerId=#{item.customerId} and psd.year &lt;=#{item.year} and psd.year&gt;=#{item.year}-2)
+         </foreach>
+         order by psd.year desc
+    </select>
+
+    <select id="getByYear" resultType="com.yskc.ms.entity.ms.ProjectSummaryData">
+        select customerId,rdFunds,rdCount,`year` from project_summary_data
+        <if test="year != null">
+            where `year` = #{year}
+        </if>
+    </select>
+    <select id="getTotal" resultType="com.yskc.ms.models.CustomerTotalModel">
+         select sum(rdFunds) as rdFundsSum,sum(rdCount) as rdCount  from project_summary_data
+    </select>
+    <select id="getData" resultType="com.yskc.ms.models.projectAudit.ProjectSummaryDataModel">
+        select rdCount,docFileCount,rdEmployeeCount,rdEquipmentCount
+        from project_summary_data
+        where `year`=#{year} and customerId=#{customerId}
+    </select>
+    <select id="getTableData" resultType="com.yskc.ms.models.GroupRAndDManagementModel">
+        select crsd.deptId id,yd.deptName deptName,crsd.revenueFcst revenueFcst,crsd.salesRdFee salesRdFee,crsd.rdFee rdFee,crsd.rdPlanCount rdPlanCount,fd1.amount/10000 amount,
+               fd2.amount/10000 amount2,fd1.k20000/10000 material,fd2.k20000/10000 material2,(fd2.amount-fd2.k20000)/10000 aMinusK,fd1.revenue revenue,fd2.revenue revenue2,
+               fd2.amount/10000/fd2.revenue aDivideR,(fd2.amount-fd2.k20000)/10000/fd2.revenue aKDivideR,
+               fd1.amount amountTST,fd2.amount amountCompare,
+               crsd.employeeAmount employeeAmount,crsd.proposalCnt proposalCnt,crsd.rdCount rdCount, crsd.rdEmployeeCount rdEmployeeCount,
+               crsd.lastRdCnt lastRdCnt,crsd.nextRdCnt nextRdCnt,crsd.docFileCount docFileCount,crsd.buildCount buildCount,crsd.patentCnt patentCnt,
+               crsd.achievementCnt achievementCnt,crsd.levelFileCnt levelFileCnt
+        from c_rd_summary_district crsd inner join ys_dept yd on yd.id = crsd.deptId
+        LEFT JOIN c_rd_funds_district fd2 ON fd2.deptId = crsd.deptId AND fd2.YEAR = crsd.YEAR AND fd2.type = 1
+        LEFT JOIN c_rd_funds_district fd1 ON fd1.deptId = crsd.deptId AND fd1.MONTH = fd2.MONTH AND fd1.YEAR = crsd.YEAR AND fd1.type = 0
+        where fd2.year = #{year} and fd2.month = #{month} and yd.level = 1
+    </select>
+    <select id="getRDExpense" resultType="com.yskc.ms.models.GroupRAndDManagementModel">
+        select crsd.deptId id,fd2.amount amountCompare,fd1.amount amountTST
+        from c_rd_summary_district crsd inner join ys_dept yd on yd.id = crsd.deptId
+        LEFT JOIN c_rd_funds_district fd2 ON fd2.deptId = crsd.deptId AND fd2.YEAR = crsd.YEAR AND fd2.type = 1
+        LEFT JOIN c_rd_funds_district fd1 ON fd1.deptId = crsd.deptId AND fd1.MONTH = fd2.MONTH AND fd1.YEAR = crsd.YEAR AND fd1.type = 0
+        where fd2.year = #{year} and fd2.month = #{month} and yd.level = 1
+    </select>
+    <select id="getTotalCast" resultType="com.yskc.ms.models.TotalCostModel">
+        select SUM(psd.revenueFcst) totalRevenueFcst,SUM(psd.salesRdFee) totalSalesRdFee,SUM(psd.rdFee) totalRdFee,SUM(psd.rdPlanCount) totalRdPlanCount,SUM(fd1.amount)/10000 totalAmount,
+               SUM(fd2.amount)/10000 totalAmount2,SUM(fd1.k20000)/10000 totalMaterial,SUM(fd2.k20000)/10000 totalMaterial2,(SUM(fd2.amount)-SUM(fd2.k20000))/10000 totalAMinusK,SUM(fd1.revenue) totalRevenue,
+               SUM(fd2.revenue) totalRevenue2,SUM(psd.employeeAmount) totalEmployeeAmount,SUM(psd.proposalCnt) totalProposalCnt,SUM(psd.rdCount) totalRdCount, SUM(psd.rdEmployeeCount) totalRdEmployeeCount,
+               SUM(psd.lastRdCnt) totalLastRdCnt,SUM(psd.nextRdCnt) totalNextRdCnt,SUM(psd.docFileCount) totalDocFileCount,SUM(psd.buildCount) totalBuildCount,SUM(psd.patentCnt) totalPatentCnt,
+               SUM(psd.achievementCnt) totalAchievementCnt,SUM(psd.levelFileCnt) totalLevelFileCnt
+        from c_rd_summary_district psd inner join ys_dept yd on yd.id = psd.deptId
+        LEFT JOIN c_rd_funds_district fd2 ON fd2.deptId = psd.deptId AND fd2.YEAR = psd.YEAR AND fd2.type = 1
+        LEFT JOIN c_rd_funds_district fd1 ON fd1.deptId = psd.deptId AND fd1.MONTH = fd2.MONTH AND fd1.YEAR = psd.YEAR AND fd1.type = 0
+        where fd2.year = #{year} and fd2.month = #{month} and yd.level = 1
+    </select>
+</mapper>

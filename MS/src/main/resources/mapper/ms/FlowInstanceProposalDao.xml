@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.FlowInstanceProposalDao">
+    <select id="getProposalAuditStatus" resultType="com.yskc.ms.entity.ms.FlowInstanceProposal">
+        select distinct fp.proposalId,fi.status,fu.userId
+        from flowInstance_proposal fp
+        inner join flowInstance fi on fi.id=fp.instanceId and fi.status=0
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id
+        inner join flowInstance_user fu on fi.id=fu.instanceId and fic.curNodeId=fu.nodeId and fu.status is null and
+        fu.userId=#{userId}
+        where fp.proposalId in (<foreach collection="proposalIds" item="proposalId" separator=",">#{proposalId}</foreach>)
+    </select>
+    <select id="getInstanceInfo" resultType="com.yskc.ms.models.flowInstance.FlowInstanceInfoModel">
+        select proposalId dataId,moduleId from flowInstance_proposal where instanceId=#{instanceId} limit 1
+    </select>
+    <select id="getProposalInstanceUsers" resultType="com.yskc.ms.entity.ms.FlowInstanceUser">
+        select fu.id,fu.instanceId,fu.nodeId,fi.lastSubmiter from flowInstance fi
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id
+        inner join flowInstance_proposal fp on fp.instanceId = fi.id
+        inner join flowInstance_user fu on fu.instanceId=fi.id and fu.nodeId=fic.curNodeId
+        where fp.proposalId in (<foreach collection="proposalIds" item="proposalId" separator=",">#{proposalId}</foreach>)
+        and fu.userId = #{userId} and fi.status = 0
+        and fp.moduleId=11
+    </select>
+    <select id="getProposalInstances" resultType="com.yskc.ms.entity.ms.FlowInstanceCurNode">
+        select fic.instanceId,fic.curNodeId,fic.nodeStatus from flowInstance fi
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id
+        inner join flowInstance_proposal fp on fp.instanceId = fi.id
+        where fp.proposalId in (<foreach collection="proposalIds" item="proposalId" separator=",">#{proposalId}</foreach>)
+        and fic.nodeStatus = 1
+        and fp.moduleId=11
+    </select>
+    <select id="getAuditStatus" resultType="com.yskc.ms.models.projectAudit.AuditStatusModel">
+        select fip.moduleId,fm.modeName,fn.nodeName,fi.flowId,fi.status,fic.nodeStatus,fic.curNodeId,fip.instanceId
+        from flowInstance_proposal fip
+                 inner join flowInstance fi on fi.id = fip.instanceId
+                 inner join flowInstance_curNode fic on fic.instanceId=fi.id
+                 inner join flowModule fm on fm.id=fip.moduleId
+                 inner join flowNode fn on fn.id=fic.curNodeId
+        where fip.proposalId=#{proposalId}
+        limit 1
+    </select>
+    <select id="getProposalAudits" resultType="com.yskc.ms.entity.ms.FlowInstanceProposal">
+        select distinct fp.proposalId,fp.moduleId
+        from flowInstance_proposal fp
+        inner join flowInstance fi on fp.instanceId=fi.id
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id and fic.nodeStatus=0
+        inner join flowInstance_user fu on fu.instanceId=fi.id and fic.curNodeId=fu.nodeId and fu.status is null and
+        fu.userId=#{userId}
+        where fp.moduleId=11 and fp.proposalId in
+        <foreach collection="proposalIds" item="proposalId" open="(" separator="," close=")">
+            #{proposalId}
+        </foreach>
+    </select>
+    <select id="getProposalInfo" resultType="com.yskc.ms.models.flowInstance.RdInstanceModel">
+        select proposalId dataId,instanceId,companyId from flowInstance_proposal
+        where instanceId in (<foreach collection="instanceIds" item="instanceId" separator=",">#{instanceId}</foreach>)
+    </select>
+</mapper>

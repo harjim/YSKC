@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.rs.ProjectEnergyDao">
+    <select id="getCollectionList" resultType="com.yskc.ms.models.rdfunds.EnergyFeesModel">
+        select e.ename,e.accNumber,e.occDate,e.unitPrice,e.unit,e.totalAmount,
+        e.quantity,pe.rdAmount, e.amount
+        from d_energy as e
+        LEFT JOIN p_energy as pe on e.id = pe.energyDataId
+        where pe.companyId = #{model.companyId}
+        and pe.projectId = #{model.projectId}
+        and e.occDate &lt;= #{monthEnd}
+        and e.occDate &gt;= #{model.month}
+        <if test="null != model.rdTypes and model.rdTypes.size()>0">
+            and pe.etype in (
+            <foreach collection="model.rdTypes" separator="," item="etype">
+                #{etype}
+            </foreach>
+            )
+        </if>
+    </select>
+</mapper>

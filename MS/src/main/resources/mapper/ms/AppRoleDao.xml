@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.AppRoleDao">
+    <select id="getAppRoleList" resultType="com.yskc.ms.models.role.AppRoleModel">
+        select a.id,a.roleName,a.remark,a.createTime,y.realName as creatorName from app_role
+        as a
+        join ys_user as y on y.id=a.creatorId
+        where 1=1
+        <if test="query.roleName != null and query.roleName.length()>0">
+            and a.roleName like "%"#{query.roleName}"%"
+        </if>
+    </select>
+    <select id="getRoleCountByName" resultType="java.lang.Integer">
+          select count(1) from app_role where roleName=#{roleName}
+    </select>
+
+    <select id="getUserByRoleId" resultType="com.yskc.ms.models.dept.DeptUserInfo">
+        SELECT
+        y.id,
+        y.userName,
+        y.realName,
+        y.tel,
+        y.gender,
+        y.depId,
+        y.postion,
+        y.remark,
+        y.status,
+        ar.id AS roleId,
+        (SELECT GROUP_CONCAT(u1.depId ORDER BY u1.userId) FROM user_dept u1 WHERE u1.userId = y.`id`) AS deptIdArrStr,
+        (SELECT GROUP_CONCAT(distinct d1.fullname order by d1.id) FROM user_dept ud1 left join ys_dept d1 on d1.id =
+        ud1.depId WHERE ud1.userId = y.`id`) AS deptName,
+        ur.serviceDeptIds
+        FROM
+        app_role ar
+        inner JOIN app_user_role ur ON ar.id = ur.roleId
+        inner JOIN ys_user AS y ON ur.userId = y.id
+        where y.userName != 'ysadmin' and ar.id = #{query.roleId}
+        <if test="query.status != null">
+            and y.status=#{query.status}
+        </if>
+        <if test="query.realName != null and query.realName != ''">
+            and y.realName like "%"#{query.realName}"%"
+        </if>
+        <if test="query.fullPath != null and query.fullPath != ''">
+            and ur.userId in (select ud.userId from user_dept ud inner join ys_dept d on ud.depId = d.id where d.fullPath like #{query.fullPath}"%")
+        </if>
+    </select>
+
+    <select id="selectUserData" resultType="com.yskc.ms.models.dept.DeptUserInfo">
+        SELECT
+        y.id,
+        y.userName,
+        y.realName,
+        y.tel,
+        y.gender,
+        y.depId,
+        y.postion,
+        y.remark,
+        (SELECT GROUP_CONCAT(u1.depId ORDER BY u1.userId) FROM user_dept u1 WHERE u1.userId = y.`id`) AS deptIdArrStr,
+        (SELECT GROUP_CONCAT(distinct d1.deptName order by d1.id) FROM user_dept ud1 left join ys_dept d1 on d1.id =
+        ud1.depId WHERE ud1.userId = y.`id`) AS deptName
+        FROM
+        ys_user AS y
+        LEFT JOIN app_user_role AS ur ON ur.userId = y.id and ur.roleId = #{roleId}
+        LEFT JOIN app_role ar on ar.id = ur.roleId
+        LEFT JOIN user_dept as ud on ud.userId = y.id
+        LEFT JOIN ys_dept as d on ud.depId = d.id
+        WHERE ur.roleId IS NULL and y.userName != 'ysadmin'
+        <if test="realName != null and realName != ''">
+            and y.realName like "%"#{realName}"%"
+        </if>
+        <if test="fullPath != null and fullPath != ''">
+            and d.fullPath like #{fullPath}"%"
+        </if>
+        GROUP BY y.id
+    </select>
+    <select id="getRoleList" resultType="com.yskc.ms.models.role.AppRoleModel">
+        select id,roleName from app_role where 1=1
+        <if test="roleName!=null and roleName!=''">
+            and roleName like "%"#{roleName}"%"
+        </if>
+        limit 5
+    </select>
+
+    <delete id="deleteBatchUser">
+        DELETE FROM app_user_role where
+        userId in
+        <foreach item="item" index="index" collection="userIds" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and roleId = #{roleId}
+    </delete>
+
+    <update id="updateServiceDept" parameterType="com.yskc.ms.models.role.UserDept">
+        update app_user_role set serviceDeptIds =#{userDept.deptStr} where
+        userId in
+        <foreach item="item" index="index" collection="userDept.userIds" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and roleId = #{userDept.roleId}
+    </update>
+
+</mapper>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.rs.SysDocumentDao">
+    <select id="queryDocList" resultType="com.yskc.ms.entity.rs.models.DocListModel">
+        SELECT l.id,l.docName,l.desciption,l.seq,l.companyId,l.classify,l.rdActivities,l.subClassify,l.samplePath,o.operators
+        FROM sys_docList l
+                 left join sys_docOperator o on o.listId = l.id AND o.companyId = #{companyId}
+        WHERE l.listType = #{listType} AND l.companyId in (0,#{companyId}) ORDER BY companyId ASC, seq ASC
+    </select>
+    <select id="queryDocForDocList" resultType="com.yskc.ms.models.SysDocumentModel">
+        select d.*,u.realName from sys_document d
+        left join user u on u.id = d.creatorId
+        where d.companyId = #{companyId}
+        <if test="year != 0">
+            and d.year = #{year}
+        </if>
+        <if test="projectId != null and projectId != '' and projectId != 0">
+            and d.projectId = #{projectId}
+        </if>
+        <if test="patentNo != null and patentNo != ''">
+            and d.patentNo = #{patentNo}
+        </if>
+        and d.listId in
+        <foreach collection="ids" open="(" close=")" item="id" separator=",">
+            #{id}
+        </foreach>
+    </select>
+    <select id="getReportByProject" resultType="com.yskc.ms.entity.rs.SysDocumentEntity">
+        select fileName,filePath,projectId
+        from sys_document
+        where projectId=#{projectId} and listId=3
+    </select>
+</mapper>

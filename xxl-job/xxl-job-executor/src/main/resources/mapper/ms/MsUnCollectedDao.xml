@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xxl.job.executor.dao.ms.MsUnCollectedDao">
+    <insert id="insertUncollectedRds">
+        insert into rsProject_uncollected
+            (rsProjectId,pname,companyId,rdTitle,year,createTime,lastUpdateTime)
+        values
+        <foreach collection="list" item="model" separator=",">
+               <foreach collection="model.years" item="item" separator=",">
+                   (#{model.rsProjectId},#{model.pname},#{model.companyId},#{model.rdTitle},#{item},#{date},#{date})
+               </foreach>
+        </foreach>
+        on duplicate key update
+            rsProjectId = values(rsProjectId),
+            pname = values(pname),
+            companyId = values(companyId),
+            rdTitle = values(rdTitle),
+            year = values(year),
+            lastUpdateTime = values(lastUpdateTime)
+    </insert>
+
+    <delete id="delCollected">
+        delete from rsProject_uncollected
+        where id in
+        <foreach collection="list" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </delete>
+
+
+    <select id="getCollectedIds" resultType="integer">
+        select id
+        from rsProject_uncollected
+        where
+        <foreach collection="list" item="item" index="index" open="(" close=")" separator=" or ">
+            rsProjectId =#{item.rsProjectId}
+            and (year in
+            <foreach collection="item.years" item="year" index="index" open="(" close=")" separator=",">
+                #{year}
+            </foreach>
+            or (year not between #{item.beginYear} and #{item.endYear}))
+        </foreach>
+    </select>
+</mapper>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.docservice.dao.rs.project.RdEmployeePlanDao">
+
+    <insert id="insertOrUpdate">
+        insert into p_rdEmployee_plan (creatorId,lastUpdatorId,createTime,lastUpdateTime,
+        msCreatorId,msLastUpdatorId,companyId,projectId,`month`,enumber,planTime)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.creatorId},#{item.lastUpdatorId},#{item.createTime},#{item.lastUpdateTime},#{item.msCreatorId},#{item.msLastUpdatorId},#{item.companyId},
+            #{item.projectId},#{item.month},#{item.enumber},#{item.planTime})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        lastUpdatorId=values(lastUpdatorId),
+        lastUpdateTime=values(lastUpdateTime),
+        msLastUpdatorId=values(msLastUpdatorId),
+        planTime=values(planTime)
+    </insert>
+    <delete id="deleteData">
+        delete from p_rdEmployee_plan where companyId=#{info.companyId} and
+        `month` in (<foreach collection="info.months" separator="," item="m">#{m}</foreach>)
+        and enumber in (<foreach collection="info.enumbers" separator="," item="enumber">#{enumber}</foreach>)
+    </delete>
+</mapper>

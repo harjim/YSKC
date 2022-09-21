@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.docservice.dao.rs.BudgetDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.yskc.docservice.entity.rs.BudgetEntity" id="budgetMap">
+        <result property="id" column="id"/>
+        <result property="creatorId" column="creatorId"/>
+        <result property="lastUpdatorId" column="lastUpdatorId"/>
+        <result property="createTime" column="createTime"/>
+        <result property="lastUpdateTime" column="lastUpdateTime"/>
+        <result property="msCreatorId" column="msCreatorId"/>
+        <result property="msLastUpdatorId" column="msLastUpdatorId"/>
+        <result property="companyId" column="companyId"/>
+        <result property="projectId" column="projectId"/>
+        <result property="type" column="type"/>
+        <result property="key" column="key"/>
+        <result property="value" column="value"/>
+    </resultMap>
+
+    <insert id="addBatch">
+        INSERT INTO `p_budget`
+        (
+        `creatorId`,
+        `lastUpdatorId`,
+        `createTime`,
+        `lastUpdateTime`,
+        `msCreatorId`,
+        `msLastUpdatorId`,
+        `companyId`,
+        `projectId`,
+        `type`,
+        `key`,
+        `value`,
+        `month`,
+        `year`
+        )
+        VALUES
+        <foreach collection="budgetEntitys" item="item" separator=",">
+            (
+            #{item.creatorId},
+            #{item.lastUpdatorId},
+            #{item.createTime},
+            #{item.lastUpdateTime},
+            #{item.msCreatorId},
+            #{item.msLastUpdatorId},
+            #{item.companyId},
+            #{item.projectId},
+            #{item.type},
+            #{item.key},
+            #{item.value},
+            #{item.month},
+            #{item.year}
+            )
+        </foreach>
+    </insert>
+
+    <update id="updateBatch" parameterType="java.util.List">
+        update p_budget
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="lastUpdatorId =case" suffix="end,">
+                <foreach collection="budgetEntitys" item="i" index="index">
+                    <if test="i.lastUpdatorId!=null">
+                        when id=#{i.id} then #{i.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdateTime =case" suffix="end,">
+                <foreach collection="budgetEntitys" item="i" index="index">
+                    <if test="i.lastUpdateTime!=null">
+                        when id=#{i.id} then #{i.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+
+            <trim prefix="msLastUpdatorId =case" suffix="end,">
+                <foreach collection="budgetEntitys" item="i" index="index">
+                    <if test="i.msLastUpdatorId!=null">
+                        when id=#{i.id} then #{i.msLastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+
+            <trim prefix="projectId =case" suffix="end,">
+                <foreach collection="budgetEntitys" item="i" index="index">
+                    <if test="i.projectId!=null">
+                        when id=#{i.id} then #{i.projectId}
+                    </if>
+                </foreach>
+            </trim>
+
+            <trim prefix="type =case" suffix="end,">
+                <foreach collection="budgetEntitys" item="i" index="index">
+                    <if test="i.type!=null">
+                        when id=#{i.id} then #{i.type}
+                    </if>
+                </foreach>
+            </trim>
+
+            <trim prefix="`key` =case" suffix="end,">
+                <foreach collection="budgetEntitys" item="i" index="index">
+                    <if test="i.key!=null">
+                        when id=#{i.id} then #{i.key}
+                    </if>
+                </foreach>
+            </trim>
+
+            <trim prefix="`value` =case" suffix="end,">
+                <foreach collection="budgetEntitys" item="i" index="index">
+                    <if test="i.value!=null">
+                        when id=#{i.id} then #{i.value}
+                    </if>
+                </foreach>
+            </trim>
+
+            <trim prefix="companyId =case" suffix="end,">
+                <foreach collection="budgetEntitys" item="i" index="index">
+                    <if test="i.companyId!=null">
+                        when id=#{i.id} then #{i.companyId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="month =case" suffix="end,">
+                <foreach collection="budgetEntitys" item="i" index="index">
+                    <if test="i.month!=null">
+                        when id=#{i.id} then #{i.month}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="budgetEntitys" separator="or" item="i" index="index">
+            id=#{i.id}
+        </foreach>
+    </update>
+    <!--/*
+    select *
+    from p_budget where  projectId= #{projectId} and `type`=4*/-->
+    <select id="getListByProject" resultType="com.yskc.docservice.entity.rs.BudgetEntity">
+        select *
+        from p_budget where  projectId= #{projectId} and `type`=4
+        <if test="null != beginYear">
+            and `year` >= #{beginYear}
+        </if>
+        <if test="null != endYear">
+            and `year` &lt;= #{endYear}
+        </if>
+    </select>
+    <select id="getTotal" resultType="com.yskc.docservice.entity.rs.BudgetEntity">
+        select `key`,SUM(`value`) as `value`
+        from p_budget where  projectId= #{projectId} and `type`=4
+        group by `key`
+    </select>
+    <select id="getYearMonth" resultType="java.util.Map">
+        select
+            SUM(CASE WHEN `key` = 'source01' THEN `value`/10000 ELSE 0 END) AS source01,
+            SUM(CASE WHEN `key` = 'source02' THEN `value`/10000 ELSE 0 END) AS source02,
+            SUM(CASE WHEN `key` = 'source03' THEN `value`/10000 ELSE 0 END) AS source03,
+            SUM(CASE WHEN `key` = 'source04' THEN `value`/10000 ELSE 0 END) AS source04,
+            SUM(CASE WHEN `key` = 'source05' THEN `value`/10000 ELSE 0 END) AS source05
+        from p_budget where companyId = #{companyId} and projectId = #{projectId} and `month` is null
+    </select>
+</mapper>

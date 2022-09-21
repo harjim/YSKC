@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.DocFileStageDao">
+    <select id="getByStages" resultType="com.yskc.rs.models.docFile.DocFileStageModel">
+        select ds.id,ds.seq,ds.stageKey,ds.docFileId,ds.autoAdd,ds.monthly,ds.mPrefix,d.needEdit,d.docName,dt.id as docTemplateId
+        from docFileStage ds
+        inner join docFile d on d.id=ds.docFileId
+        inner join docFileTemplate dt on dt.docFileId=d.id
+        where stageKey in
+        <foreach collection="stageKeys" item="stageKey" open="(" separator="," close=")">
+            #{stageKey}
+        </foreach>
+        <if test="type == 0">
+            and dt.defaultTemplate
+        </if>
+        <if test="autoAdd!=null and autoAdd>0">
+            and autoAdd
+        </if>
+        and dt.type=#{type}
+        order by ds.stageKey,ds.seq
+    </select>
+    <select id="getByDocFileId" resultType="com.yskc.rs.entity.DocFileStageEntity">
+        select stageKey,id,seq,autoAdd
+        from docFileStage
+        where docFileId=#{docFileId}
+        limit 1
+    </select>
+</mapper>

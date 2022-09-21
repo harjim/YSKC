@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.PatentDetailDao">
+    <select id="checkPatentSole" resultType="com.yskc.rs.entity.PatentDetailEntity">
+        select * from patent
+        where patentNo=#{patentNo}
+    </select>
+
+    <select id="getPatentList" resultType="com.yskc.rs.models.Patent.PatentDetailModel">
+        select p.id, p.patentNo,p.patentName,p.mainType,p.applyDateTime,p.inventor,p.authDate,
+        p.caseStatus,p.expiryDate,p.expiryAmount,p.projectId,pp.pname,pa.applyName,pp.beginYear,pp.rdTitle,p.source,
+        p.claimNum,p.usedCnt,p.summary
+        from patent p
+        left join p_project pp on p.projectId=pp.id
+        left join patent_apply pa on p.patentNo=pa.patentNo
+        where p.companyId=#{companyId}
+        <if test="query.patentNo!=null and query.patentNo!=''">
+            and p.patentNo like "%"#{query.patentNo}"%"
+        </if>
+        <if test="query.patentName!=null and query.patentName!=''">
+            and p.patentName like "%"#{query.patentName}"%"
+        </if>
+        <if test="query.mainType!=null and query.mainType!=''">
+            and p.mainType=#{query.mainType}
+        </if>
+        <if test="query.applyName!=null and query.applyName!=''">
+            and pa.applyName like "%"#{query.applyName}"%"
+        </if>
+    </select>
+
+    <select id="getListByPatentNos" resultType="com.yskc.rs.entity.PatentDetailEntity">
+        select * from patent
+        where companyId=#{companyId}
+    </select>
+    <select id="getByPatentNos" resultType="com.yskc.rs.entity.PatentDetailEntity">
+        select * from patent where patentNo in
+        <foreach collection="patentNos" open="(" separator="," close=")" item="patentNo">
+            #{patentNo}
+        </foreach>
+    </select>
+
+    <select id="getListByProject" resultType="com.yskc.rs.entity.PatentDetailEntity">
+        select * from patent
+        where companyId=#{companyId} and projectId in
+        <foreach collection="projectIds" item="projectId" open="(" separator="," close=")">
+            #{projectId}
+        </foreach>
+    </select>
+    <select id="getSpecification" resultType="java.util.Map">
+        select claimContent,specification from patent where id=#{id}
+    </select>
+    <select id="getHighTechPatents" resultType="com.yskc.rs.models.highscore.HighTechPatentModel">
+        (select (case when mainType='发明专利' then 1 else 2 end) `type`,`source`,claimNum,usedCnt,authDate issueDate
+        from patent where companyId=#{companyId} and year(authDate)&lt;#{year})
+        union all
+        (select 1 as type,`source`,claimNum,usedCnt,issueDate
+        from ICRegistration where companyId=#{companyId} and year(issueDate)&lt;#{year})
+        union all
+        (select 2 as type,`source`,claimNum,usedCnt,issueDate
+        from softRegistration where companyId=#{companyId} and year(issueDate)&lt;#{year})
+    </select>
+    <select id="getTecIndustries" resultType="java.lang.String">
+        (select distinct p.tecIndustry from patent pt
+            inner join p_project p on p.id=pt.projectId
+            where pt.companyId=#{companyId} and year(pt.authDate)&lt;#{year} and pt.projectId is not null)
+            union
+            (select distinct p.tecIndustry from ICRegistration ic
+            inner join p_project p on p.id=ic.projectId where ic.companyId=#{companyId} and year(ic.issueDate)&lt;#{year}
+            and ic.projectId is not null)
+            union
+            (select distinct p.tecIndustry from softRegistration sr
+            inner join p_project p on p.id=sr.projectId where sr.companyId=#{companyId} and year(sr.issueDate)&lt;#{year}
+            and sr.projectId is not null) limit 2
+    </select>
+
+    <insert id="insertPatents">
+        insert into patent
+        (`creatorId`,`lastUpdatorId`,`createTime`,`lastUpdateTime`,`msCreatorId`,`msLastUpdatorId`,
+        `companyId`,`patentNo`,`patentName`,`mainType`,`applyDateTime`,`inventor`,
+        `claimNum`,`claimContent`,`usedCnt`,`specification`,`authDate`,`summary`)
+        VALUES
+        <foreach collection="patentDetails" item="l" separator=",">
+            (#{l.creatorId},#{l.lastUpdatorId},#{l.createTime},#{l.lastUpdateTime},#{l.msCreatorId},#{l.msLastUpdatorId},
+            #{companyId},#{l.patentNo},#{l.patentName},#{l.mainType},#{l.applyDateTime},#{l.inventor},
+            #{l.claimNum},#{l.claimContent},#{l.usedCnt},#{l.specification},#{l.authDate},#{l.summary})
+        </foreach>
+    </insert>
+
+    <update id="updatePatents">
+        <foreach collection="patentDetails" item="item" index="index" open="" close="" separator=";">
+            update patent set
+            lastUpdatorId=#{item.lastUpdatorId},
+            lastUpdateTime=#{item.lastUpdateTime},
+            patentName=#{item.patentName},
+            mainType=#{item.mainType},
+            applyDateTime=#{item.applyDateTime},
+            inventor=#{item.inventor},
+            claimNum=#{item.claimNum},
+            claimContent=#{item.claimContent},
+            usedCnt=#{item.usedCnt},
+            specification=#{item.specification},
+            authDate=#{item.authDate},
+            summary=#{item.summary},
+            msLastUpdatorId=#{item.msLastUpdatorId}
+            where patentNo=#{item.patentNo} and companyId=#{companyId}
+        </foreach>
+    </update>
+
+    <update id="updateProjectId">
+        update patent set
+        projectId=#{projectId},
+        lastUpdateTime=#{updateTime},
+        lastUpdatorId=#{userId},
+        msLastUpdatorId=#{msUserId}
+        where patentNo in
+        <foreach collection="patentNos" open="(" separator="," close=")" item="patentNo">
+            #{patentNo}
+        </foreach>
+    </update>
+
+
+
+</mapper>

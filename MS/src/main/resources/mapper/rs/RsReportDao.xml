@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.rs.RsReportDao">
+
+
+    <select id="queryCnt" resultType="com.yskc.ms.entity.rs.ReportEntity">
+        select id,companyId,ryear,cnt from p_report
+        where
+        <foreach collection="list" item="item" separator="or">
+            companyId=#{item.companyId} and ryear = #{item.year}
+        </foreach>
+    </select>
+
+    <select id="getTechIntro" resultType="java.lang.String">
+        select techIntro from p_report where companyId = #{companyId} and ryear = #{year}
+    </select>
+</mapper>

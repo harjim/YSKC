@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yskc.rs.dao.DocFileTemplateDao">
+
+    <select id="getByDocId" resultType="com.yskc.rs.entity.DocFileTemplateEntity">
+        select id,docFileId,templateName,docTemplateName
+        from docFileTemplate
+        where docFileId=#{docFileId} and defaultTemplate
+    </select>
+    <select id="getTemplates" resultType="com.yskc.rs.entity.DocFileTemplateEntity">
+        select id,docFileId,templateName,defaultTemplate,docTemplateName
+        from docFileTemplate
+        where docFileId in (<foreach collection="docFileIds" item="docFileId" separator=",">#{docFileId}</foreach> ) and enabled
+    </select>
+    <select id="getEquipmentTemplate" resultType="com.yskc.rs.models.docFile.DocFileTemplateModel">
+        select id,docFileId,templateName,defaultTemplate,docTemplateName
+        from docFileTemplate
+        where docFileId = 22
+    </select>
+</mapper>

@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.project.BudgetDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.yskc.rs.entity.project.BudgetEntity" id="budgetMap">
+        <result property="id" column="id"/>
+        <result property="creatorId" column="creatorId"/>
+        <result property="lastUpdatorId" column="lastUpdatorId"/>
+        <result property="createTime" column="createTime"/>
+        <result property="lastUpdateTime" column="lastUpdateTime"/>
+        <result property="msCreatorId" column="msCreatorId"/>
+        <result property="msLastUpdatorId" column="msLastUpdatorId"/>
+        <result property="companyId" column="companyId"/>
+        <result property="projectId" column="projectId"/>
+        <result property="type" column="type"/>
+        <result property="key" column="key"/>
+        <result property="value" column="value"/>
+    </resultMap>
+
+    <select id="querySourceBudget" resultType="com.yskc.rs.models.project.BudgetModel">
+        SELECT
+        p.id,
+        p.companyId,
+        p.projectId,
+        p.month,
+        p.type,
+        p.key as sole,
+        p.VALUE,
+        s.`value` as name
+        FROM
+        p_budget p
+        LEFT JOIN sys_dictionary s ON p.key = s.key
+        where
+        companyId = #{companyId}
+        and projectId = #{projectId}
+        <if test="month == null">
+            and month is null
+        </if>
+        <if test="month != null">
+            and month = #{month}
+        </if>
+
+        ORDER BY createTime
+
+    </select>
+
+    <select id="getBudgetByProjectIds" resultType="com.yskc.rs.models.summary.TotalSummaryModel">
+        SELECT
+        b.projectId as id,
+        SUM(CASE WHEN b.key = 10000 THEN b.value ELSE 0 END) AS salaryValue,
+        SUM(CASE WHEN b.key = 10100 THEN b.value ELSE 0 END) AS insuranceValue,
+        SUM(CASE WHEN b.key = 20000 THEN b.value ELSE 0 END) AS materialValue,
+        SUM(CASE WHEN b.key = 20100 THEN b.value ELSE 0 END) AS stimulusValue,
+        SUM(CASE WHEN b.key = 20200 THEN b.value ELSE 0 END) AS fuelValue,
+        SUM(CASE WHEN b.key = 20300 THEN b.value ELSE 0 END) AS trialProdValue,
+        SUM(CASE WHEN b.key = 20400 THEN b.value ELSE 0 END) AS trialTestValue,
+        SUM(CASE WHEN b.key = 20500 THEN b.value ELSE 0 END) AS inspectionValue,
+        SUM(CASE WHEN b.key = 30100 THEN b.value ELSE 0 END) AS prodValue,
+        SUM(CASE WHEN b.key = 30000 THEN b.value ELSE 0 END) AS labValue,
+        SUM(CASE WHEN b.key = 40000 THEN b.value ELSE 0 END) AS softAmortizationValue,
+        SUM(CASE WHEN b.key = 40100 THEN b.value ELSE 0 END) AS patentAmortizationValue,
+        SUM(CASE WHEN b.key = 40200 THEN b.value ELSE 0 END) AS otherAmortizationValue,
+        SUM(CASE WHEN b.key = 50000 THEN b.value ELSE 0 END) AS designValue,
+        SUM(CASE WHEN b.key = 50100 THEN b.value ELSE 0 END) AS techProcedureValue,
+        SUM(CASE WHEN b.key = 50200 THEN b.value ELSE 0 END) AS clinicalTrialsValue,
+        SUM(CASE WHEN b.key = 50300 THEN b.value ELSE 0 END) AS exploreValue,
+        SUM(CASE WHEN b.key = 60000 THEN b.value ELSE 0 END) AS bookValue,
+        SUM(CASE WHEN b.key = 60100 THEN b.value ELSE 0 END) AS rdProductionValue,
+        SUM(CASE WHEN b.key = 60200 THEN b.value ELSE 0 END) AS copyRightValue,
+        SUM(CASE WHEN b.key = 60300 THEN b.value ELSE 0 END) AS benefitsValue,
+        SUM(CASE WHEN b.key = 60400 THEN b.value ELSE 0 END) AS travelValue,
+        SUM(CASE WHEN b.key = 69900 THEN b.value ELSE 0 END) AS otherValue
+        FROM
+        p_budget b
+        where b.projectId in
+        <foreach collection="projectIds" item="projectId" open="(" separator="," close=")">
+            #{projectId}
+        </foreach>
+        and month is null
+        GROUP BY b.projectId
+    </select>
+
+    <select id="getYearBudget" resultType="java.util.Map">
+           SELECT
+             SUM(CASE WHEN b.key = 10000 THEN b.value ELSE 0 END) AS salary,
+             SUM(CASE WHEN b.key = 10100 THEN b.value ELSE 0 END) AS insurance,
+			 SUM(CASE WHEN b.key = 20000 THEN b.value ELSE 0 END) AS material,
+			 SUM(CASE WHEN b.key = 20100 THEN b.value ELSE 0 END) AS stimulus,
+			 SUM(CASE WHEN b.key = 20200 THEN b.value ELSE 0 END) AS fuel,
+			 SUM(CASE WHEN b.key = 20300 THEN b.value ELSE 0 END) AS trialProd,
+			 SUM(CASE WHEN b.key = 20600 THEN b.value ELSE 0 END) AS repair,
+			 SUM(CASE WHEN b.key = 20500 THEN b.value ELSE 0 END) AS inspection,
+			 SUM(CASE WHEN b.key = 30100 THEN b.value ELSE 0 END) AS prod,
+			 SUM(CASE WHEN b.key = 30000 THEN b.value ELSE 0 END) AS lab,
+			 SUM(CASE WHEN b.key div 1000 =40 THEN b.value ELSE 0 END) AS amortization,
+			 SUM(CASE WHEN b.key = 50000 THEN b.value ELSE 0 END) AS design,
+			 SUM(CASE WHEN b.key = 60400 THEN b.value ELSE 0 END) AS travel,
+			 SUM(CASE WHEN b.key = 69900 THEN b.value ELSE 0 END) AS other,
+			 SUM(CASE WHEN b.key=20700 THEN b.value ELSE 0 END) AS sampleMachine
+                FROM
+                    p_budget b
+                    INNER JOIN p_project p on p.id = b.projectId
+                where b.month is null and p.companyId = #{companyId} and p.beginYear = #{year}
+    </select>
+
+
+    <insert id="addBatch">
+        INSERT INTO `p_budget`
+        (
+        `creatorId`,
+        `lastUpdatorId`,
+        `createTime`,
+        `lastUpdateTime`,
+        `msCreatorId`,
+        `msLastUpdatorId`,
+        `companyId`,
+        `projectId`,
+        `type`,
+        `key`,
+        `value`,
+        `month`,
+        `year`
+        )
+        VALUES
+        <foreach collection="budgetEntitys" item="item" separator=",">
+            (
+            #{item.creatorId},
+            #{item.lastUpdatorId},
+            #{item.createTime},
+            #{item.lastUpdateTime},
+            #{item.msCreatorId},
+            #{item.msLastUpdatorId},
+            #{item.companyId},
+            #{item.projectId},
+            #{item.type},
+            #{item.key},
+            #{item.value},
+            #{item.month},
+            #{item.year}
+            )
+        </foreach>
+    </insert>
+
+    <update id="updateBatch" parameterType="java.util.List">
+        update p_budget
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="lastUpdatorId =case" suffix="end,">
+                <foreach collection="budgetEntitys" item="i" index="index">
+                    <if test="i.lastUpdatorId!=null">
+                        when id=#{i.id} then #{i.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdateTime =case" suffix="end,">
+                <foreach collection="budgetEntitys" item="i" index="index">
+                    <if test="i.lastUpdateTime!=null">
+                        when id=#{i.id} then #{i.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+
+            <trim prefix="msLastUpdatorId =case" suffix="end,">
+                <foreach collection="budgetEntitys" item="i" index="index">
+                    <if test="i.msLastUpdatorId!=null">
+                        when id=#{i.id} then #{i.msLastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+
+            <trim prefix="projectId =case" suffix="end,">
+                <foreach collection="budgetEntitys" item="i" index="index">
+                    <if test="i.projectId!=null">
+                        when id=#{i.id} then #{i.projectId}
+                    </if>
+                </foreach>
+            </trim>
+
+            <trim prefix="type =case" suffix="end,">
+                <foreach collection="budgetEntitys" item="i" index="index">
+                    <if test="i.type!=null">
+                        when id=#{i.id} then #{i.type}
+                    </if>
+                </foreach>
+            </trim>
+
+            <trim prefix="`key` =case" suffix="end,">
+                <foreach collection="budgetEntitys" item="i" index="index">
+                    <if test="i.key!=null">
+                        when id=#{i.id} then #{i.key}
+                    </if>
+                </foreach>
+            </trim>
+
+            <trim prefix="`value` =case" suffix="end,">
+                <foreach collection="budgetEntitys" item="i" index="index">
+                    <if test="i.value!=null">
+                        when id=#{i.id} then #{i.value}
+                    </if>
+                </foreach>
+            </trim>
+
+            <trim prefix="companyId =case" suffix="end,">
+                <foreach collection="budgetEntitys" item="i" index="index">
+                    <if test="i.companyId!=null">
+                        when id=#{i.id} then #{i.companyId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="month =case" suffix="end,">
+                <foreach collection="budgetEntitys" item="i" index="index">
+                    <if test="i.month!=null">
+                        when id=#{i.id} then #{i.month}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="budgetEntitys" separator="or" item="i" index="index">
+            id=#{i.id}
+        </foreach>
+    </update>
+
+    <select id="queryAllBudget" resultType="com.yskc.rs.models.project.BudgetModel">
+        SELECT `month`,`value` FROM p_budget WHERE projectId = #{projectId} AND `key` = 'spending01'
+        <if test="onlyYear">
+            and `month` is null
+        </if>
+    </select>
+    <select id="queryProjectBudget" resultType="com.yskc.rs.models.project.ReportBudgetModel">
+        SELECT YEAR(`month`) AS `year`,
+         SUM(CASE  WHEN `key` = 'source01' THEN `value` ELSE 0 END) AS ksource01,
+         SUM(CASE  WHEN `key` = 'source02' THEN `value` ELSE 0 END) AS ksource02,
+         SUM(CASE  WHEN `key` = 'source03' THEN `value` ELSE 0 END) AS ksource03,
+         SUM(CASE  WHEN `key` = 'source04' THEN `value` ELSE 0 END) AS ksource04,
+         SUM(CASE  WHEN `key` = 'source05' THEN `value` ELSE 0 END) AS ksource05,
+         SUM(CASE  WHEN `key` = 'spending01' THEN `value` ELSE 0 END) AS kspending01,
+         SUM(CASE  WHEN `key` = '100' THEN `value` ELSE 0 END) AS k100,
+         SUM(CASE  WHEN `key` = '10000' THEN `value` ELSE 0 END) AS k10000,
+         SUM(CASE  WHEN `key` = '10100' THEN `value` ELSE 0 END) AS k10100,
+         SUM(CASE  WHEN `key` = '200' THEN `value` ELSE 0 END) AS k200,
+         SUM(CASE  WHEN `key` = '20000' THEN `value` ELSE 0 END) AS k20000,
+         SUM(CASE  WHEN `key` = '20100' THEN `value` ELSE 0 END) AS k20100,
+         SUM(CASE  WHEN `key` = '20200' THEN `value` ELSE 0 END) AS k20200,
+         SUM(CASE  WHEN `key` = '20300' THEN `value` ELSE 0 END) AS k20300,
+         SUM(CASE  WHEN `key` = '20400' THEN `value` ELSE 0 END) AS k20400,
+         SUM(CASE  WHEN `key` = '20500' THEN `value` ELSE 0 END) AS k20500,
+         SUM(CASE  WHEN `key` = '300' THEN `value` ELSE 0 END) AS k300,
+         SUM(CASE  WHEN `key` = '30000' THEN `value` ELSE 0 END) AS k30000,
+         SUM(CASE  WHEN `key` = '30100' THEN `value` ELSE 0 END) AS k30100,
+         SUM(CASE  WHEN `key` = '400' THEN `value` ELSE 0 END) AS k400,
+         SUM(CASE  WHEN `key` = '40000' THEN `value` ELSE 0 END) AS k40000,
+         SUM(CASE  WHEN `key` = '40100' THEN `value` ELSE 0 END) AS k40100,
+         SUM(CASE  WHEN `key` = '40200' THEN `value` ELSE 0 END) AS k40200,
+         SUM(CASE  WHEN `key` = '500' THEN `value` ELSE 0 END) AS k500,
+         SUM(CASE  WHEN `key` = '50000' THEN `value` ELSE 0 END) AS k50000,
+         SUM(CASE  WHEN `key` = '50100' THEN `value` ELSE 0 END) AS k50100,
+         SUM(CASE  WHEN `key` = '50200' THEN `value` ELSE 0 END) AS k50200,
+         SUM(CASE  WHEN `key` = '50300' THEN `value` ELSE 0 END) AS k50300,
+         SUM(CASE  WHEN `key` = '600' THEN `value` ELSE 0 END) AS k600,
+         SUM(CASE  WHEN `key` = '60000' THEN `value` ELSE 0 END) AS k60000,
+         SUM(CASE  WHEN `key` = '60100' THEN `value` ELSE 0 END) AS k60100,
+         SUM(CASE  WHEN `key` = '60200' THEN `value` ELSE 0 END) AS k60200,
+         SUM(CASE  WHEN `key` = '60300' THEN `value` ELSE 0 END) AS k60300,
+         SUM(CASE  WHEN `key` = '60400' THEN `value` ELSE 0 END) AS k60400,
+         SUM(CASE  WHEN `key` = '69900' THEN `value` ELSE 0 END) AS k69900
+        FROM p_budget WHERE projectId = #{projectId} GROUP BY YEAR(`month`)
+
+    </select>
+    <select id="getOtherMonth" resultType="java.util.Map">
+        select
+        SUM(CASE WHEN `key` = 'source01' THEN `value` ELSE 0 END) AS source01,
+        SUM(CASE WHEN `key` = 'source02' THEN `value` ELSE 0 END) AS source02,
+        SUM(CASE WHEN `key` = 'source03' THEN `value` ELSE 0 END) AS source03,
+        SUM(CASE WHEN `key` = 'source04' THEN `value` ELSE 0 END) AS source04,
+        SUM(CASE WHEN `key` = 'source05' THEN `value` ELSE 0 END) AS source05,
+        SUM(CASE WHEN `key` = 'spending01' THEN `value` ELSE 0 END) AS spending01,
+        SUM(CASE WHEN `key` = '100' THEN `value` ELSE 0 END) AS `100`,
+        SUM(CASE WHEN `key` = '10000' THEN `value` ELSE 0 END) AS `10000`,
+        SUM(CASE WHEN `key` = '10100' THEN `value` ELSE 0 END) AS `10100`,
+        SUM(CASE WHEN `key` = '200' THEN `value` ELSE 0 END) AS `200`,
+        SUM(CASE WHEN `key` = '20000' THEN `value` ELSE 0 END) AS `20000`,
+        SUM(CASE WHEN `key` = '20100' THEN `value` ELSE 0 END) AS `20100`,
+        SUM(CASE WHEN `key` = '20200' THEN `value` ELSE 0 END) AS `20200`,
+        SUM(CASE WHEN `key` = '20300' THEN `value` ELSE 0 END) AS `20300`,
+        SUM(CASE WHEN `key` = '20400' THEN `value` ELSE 0 END) AS `20400`,
+        SUM(CASE WHEN `key` = '20500' THEN `value` ELSE 0 END) AS `20500`,
+        SUM(CASE WHEN `key` = '300' THEN `value` ELSE 0 END) AS `300`,
+        SUM(CASE WHEN `key` = '30000' THEN `value` ELSE 0 END) AS `30000`,
+        SUM(CASE WHEN `key` = '30100' THEN `value` ELSE 0 END) AS `30100`,
+        SUM(CASE WHEN `key` = '400' THEN `value` ELSE 0 END) AS `400`,
+        SUM(CASE WHEN `key` = '40000' THEN `value` ELSE 0 END) AS `40000`,
+        SUM(CASE WHEN `key` = '40100' THEN `value` ELSE 0 END) AS `40100`,
+        SUM(CASE WHEN `key` = '40200' THEN `value` ELSE 0 END) AS `40200`,
+        SUM(CASE WHEN `key` = '500' THEN `value` ELSE 0 END) AS `500`,
+        SUM(CASE WHEN `key` = '50000' THEN `value` ELSE 0 END) AS `50000`,
+        SUM(CASE WHEN `key` = '50100' THEN `value` ELSE 0 END) AS `50100`,
+        SUM(CASE WHEN `key` = '50200' THEN `value` ELSE 0 END) AS `50200`,
+        SUM(CASE WHEN `key` = '50300' THEN `value` ELSE 0 END) AS `50300`,
+        SUM(CASE WHEN `key` = '600' THEN `value` ELSE 0 END) AS `600`,
+        SUM(CASE WHEN `key` = '60000' THEN `value` ELSE 0 END) AS `60000`,
+        SUM(CASE WHEN `key` = '60100' THEN `value` ELSE 0 END) AS `60100`,
+        SUM(CASE WHEN `key` = '60200' THEN `value` ELSE 0 END) AS `60200`,
+        SUM(CASE WHEN `key` = '60300' THEN `value` ELSE 0 END) AS `60300`,
+        SUM(CASE WHEN `key` = '60400' THEN `value` ELSE 0 END) AS `60400`,
+        SUM(CASE WHEN `key` = '69900' THEN `value` ELSE 0 END) AS `69900`
+        from p_budget where companyId = #{companyId} and projectId = #{projectId} and `month` is not null
+        <if test="month != null">
+            and `month` != #{month}
+        </if>
+    </select>
+    <select id="getYearMonth" resultType="java.util.Map">
+        select
+        SUM(CASE WHEN `key` = 'source01' THEN `value`/10000 ELSE 0 END) AS source01,
+        SUM(CASE WHEN `key` = 'source02' THEN `value`/10000 ELSE 0 END) AS source02,
+        SUM(CASE WHEN `key` = 'source03' THEN `value`/10000 ELSE 0 END) AS source03,
+        SUM(CASE WHEN `key` = 'source04' THEN `value`/10000 ELSE 0 END) AS source04,
+        SUM(CASE WHEN `key` = 'source05' THEN `value`/10000 ELSE 0 END) AS source05
+        from p_budget where companyId = #{companyId} and projectId = #{projectId} and `month` is null
+    </select>
+    <select id="getBudgetStatus" resultType="java.lang.Integer">
+        select status from p_budget_status where projectId = #{projectId}
+    </select>
+    <select id="getByProject" resultType="com.yskc.rs.entity.project.BudgetEntity">
+        select *
+        from p_budget where  projectId= #{projectId} and `month` is null and `type`=3
+    </select>
+    <select id="getListByProject" resultType="com.yskc.rs.entity.project.BudgetEntity">
+        select *
+        from p_budget where  projectId= #{projectId} and `type`=4
+        <if test="null != beginYear">
+            and `year` >= #{beginYear}
+        </if>
+        <if test="null != endYear">
+            and `year` &lt;= #{endYear}
+        </if>
+    </select>
+    <select id="getTotal" resultType="com.yskc.rs.entity.project.BudgetEntity">
+        select `key`,SUM(`value`) as `value`
+        from p_budget where  projectId= #{projectId} and `type`=4
+        group by `key`
+    </select>
+</mapper>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yskc.rs.dao.tech.BeianDao">
+
+    <select id="getList" resultType="com.yskc.rs.models.tech.BeianInfoModel">
+        select
+        b.id,b.year,b.pname,b.constructionPlace,b.economyType,b.content,b.beginDate,b.endDate,b.beianNo,b.beianDate,
+        b.filePath,b.scanFilePath,b.change,b.sourceProjectId,b.remark,b.applicant,p.productName,b.changedDates,b.projectNo,
+        b.accountName,b.accountPassword,b.powerUsed,b.energyUsed,b.equipmentCnt,b.equipmentQuantity,
+        bs.totalAmount, bs.totalAmountTax, bs.amount, bs.amountTax, bs.equipment, bs.equipmentTax, bs.initWorkCapital,
+        bs.initWorkCapitalTax, bs.construction, bs.constructionTax
+        from t_beian b
+        left join t_beian_summary bs on bs.beianId = b.id and bs.companyId = b.companyId
+        left join t_product p on b.productId=p.id
+        where b.companyId=#{companyId}
+        <if test="query.pname!=null and query.pname!=''">
+            and b.pname like "%"#{query.pname}"%"
+        </if>
+        <if test="query.productName!=null and query.productName!=''">
+            and p.productName like "%"#{query.productName}"%"
+        </if>
+        <if test="query.year!=null and query.year>0">
+            and b.year=#{query.year}
+        </if>
+    </select>
+    <select id="getInfo" resultType="com.yskc.rs.models.tech.BeianInfoModel">
+        select
+        b.id,b.year,b.pname,b.constructionPlace,b.economyType,b.content,b.beginDate,b.endDate,b.beianNo,b.beianDate,
+        b.filePath,b.scanFilePath,b.change,b.sourceProjectId,b.remark,b.applicant,p.productName,b.changedDates,b.projectNo,
+        b.accountName,b.accountPassword,b.powerUsed,b.energyUsed,b.equipmentCnt,b.equipmentQuantity,
+        bs.totalAmount, bs.totalAmountTax, bs.amount, bs.amountTax, bs.equipment, bs.equipmentTax, bs.initWorkCapital,
+        bs.initWorkCapitalTax, bs.construction, bs.constructionTax
+        from t_beian b
+        left join t_beian_summary bs on bs.beianId = b.id and bs.companyId = b.companyId
+        left join t_product p on b.productId=p.id
+        where b.companyId=#{companyId} and b.id=#{beianId}
+    </select>
+</mapper>

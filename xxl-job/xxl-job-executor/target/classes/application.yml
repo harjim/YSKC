@@ -1,0 +1,27 @@
+# web port
+server:
+  port: 8081
+logging:
+  config: classpath:logback.xml
+  level:
+    com.xxl.job.executor.dao: debug
+xxl:
+  job:
+    admin:
+      addresses: http://127.0.0.1:8080/xxl-job-admin
+    accessToken:
+    executor:
+      appname: xxl-job-executor
+      address:
+      ip:
+      port: 9999
+      logpath: /mydata/applogs/xxl-job/jobhandler
+      logretentiondays: 30
+h3:
+  spiltCount: 500
+  url: https://www.h3yun.com/OpenApi/Invoke
+  engineCode: mx8jxtbuzzqv7c31tx3d4u9r3
+  engineSecret: 56Q1ipic4lt+t7PaBBSrU0toB30TAwbwLaclNoo/rRDG0spzW/9FGw==
+spring:
+  profiles:
+    active: dev

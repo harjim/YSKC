@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.rs.FinancialInfoDao">
+    <insert id="insertOrUpdate">
+        insert into c_financial_info (creatorId,lastUpdatorId,createTime,lastUpdateTime,msCreatorId,
+        msLastUpdatorId,companyId,`year`,`value`,`key`)
+        values <foreach collection="finances" item="item" separator=",">
+        (
+        #{item.creatorId},#{item.lastUpdatorId},#{item.createTime},#{item.lastUpdateTime},#{item.msCreatorId},#{item.msLastUpdatorId},
+        #{item.companyId},#{item.year},#{item.value},#{item.key}
+        )
+    </foreach>
+        ON DUPLICATE KEY UPDATE
+        lastUpdatorId = values(lastUpdatorId),
+        lastUpdateTime = values(lastUpdateTime),
+        msLastUpdatorId = values(msLastUpdatorId),
+        `value` = values(`value`)
+    </insert>
+    <select id="getFinanceInfo" resultType="com.yskc.ms.models.company.FinanceInfoModel">
+        select companyId,`year`,`value`,`key` from c_financial_info
+        where companyId=#{companyId} and `year` in
+        <foreach collection="years" item="year" open="(" close=")" separator=",">
+            #{year}
+        </foreach>
+    </select>
+</mapper>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.CustomerAccountDao">
+
+    <select id="queryCustomerAccount" resultType="com.yskc.ms.entity.ms.models.CustomerAccountModel">
+        SELECT
+        ca.id,
+        ca.customerId,
+        ca.platform,
+        ca.pUrl,
+        ca.username,
+        ca.password,
+        ca.remark,
+        c.companyName,
+        ys.realName AS creatorName,
+        ca.createTime,
+        c.addressCode
+        FROM
+        customer_account ca
+        LEFT JOIN customer c ON ca.customerId = c.id
+        LEFT JOIN ys_user ys ON ca.creatorId = ys.id
+        where 1=1
+          <include refid="com.yskc.ms.dao.ms.BaseDataDao.byCreator">
+              <property name="tableAlias" value="ca"/>
+              <property name="perm" value="#{perm}"/>
+          </include>
+        <if test="query.companyName!=null and query.companyName!=''">
+            and c.companyName like "%"#{query.companyName}"%"
+        </if>
+        <if test="query.platform!=null and query.platform!=''">
+            and ca.platform like "%"#{query.platform}"%"
+        </if>
+        <if test="query.pUrl!=null and query.pUrl!=''">
+            and ca.pUrl like "%"#{query.pUrl}"%"
+        </if>
+        <if test="query.addressCode!=null and query.addressCode!=''">
+            and c.addressCode like #{query.addressCode}"%"
+        </if>
+    </select>
+
+    <select id="getDataByPlatform" resultType="com.yskc.ms.entity.ms.models.QueryCustomerAccountModel">
+        select distinct platform from customer_account
+        where 1=1
+        <if test="platform != null and platform != ''">
+            and platform like "%"#{platform}"%"
+        </if>
+    </select>
+
+    <select id="getDataBypUrl" resultType="com.yskc.ms.entity.ms.models.QueryCustomerAccountModel">
+        select distinct pUrl from customer_account
+        where 1=1
+        <if test="pUrl != null and pUrl != ''">
+            and pUrl like "%"#{pUrl}"%"
+        </if>
+    </select>
+
+</mapper>

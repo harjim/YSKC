@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.ICRegistrationDao">
+    <select id="getList" resultType="com.yskc.rs.models.ICRegistrationModel">
+        select s.id,s.desginName,s.registerNo,s.applyDate,s.ownerName,
+               s.ownerAddress,s.issueDate,s.certificateNo,s.filepath,s.projectId,pp.rdTitle,s.source
+        from ICRegistration s
+            left join p_project pp on s.projectId = pp.id
+        <where>
+            s.companyId = #{model.companyId}
+            <if test="null != model.desginName and '' != model.desginName">
+                and s.desginName like "%"#{model.desginName}"%"
+            </if>
+            <if test="null != model.registerNo and '' != model.registerNo">
+                and s.registerNo like "%"#{model.registerNo}"%"
+            </if>
+            <if test="null != model.certificateNo and '' != model.certificateNo">
+                and s.certificateNo like "%"#{model.certificateNo}"%"
+            </if>
+            <if test="null != model.ownerName and '' != model.ownerName">
+                and s.ownerName like "%"#{model.ownerName}"%"
+            </if>
+        </where>
+    </select>
+    <select id="checkRegisterNo" resultType="java.lang.String">
+        select registerNo from ICRegistration where companyId = #{companyId}
+        and registerNo = #{registerNo}
+        <if test="null != id">
+            and id != #{id}
+        </if>
+    </select>
+    <select id="checkCertificateNo" resultType="java.lang.String">
+        select certificateNo from ICRegistration where companyId = #{companyId}
+        and certificateNo = #{certificateNo}
+        <if test="null != id">
+            and id != #{id}
+        </if>
+    </select>
+    <select id="getListByCompany" resultType="com.yskc.rs.entity.ICRegistrationEntity">
+        select registerNo,certificateNo from ICRegistration
+        where companyId=#{companyId}
+    </select>
+    <update id="updateICs">
+        <foreach collection="icRegistrations" item="item" index="index" open="" close="" separator=";">
+            update ICRegistration set
+            lastUpdatorId=#{item.lastUpdatorId},
+            lastUpdateTime=#{item.lastUpdateTime},
+            msLastUpdatorId=#{item.msLastUpdatorId},
+            desginName=#{item.desginName},
+            ownerName=#{item.ownerName},
+            ownerAddress=#{item.ownerAddress},
+            applyDate=#{item.applyDate},
+            issueDate=#{item.issueDate},
+            certificateNo=#{item.certificateNo},
+            `source`=#{item.source}
+            where registerNo=#{item.registerNo} and companyId=#{companyId}
+        </foreach>
+    </update>
+    <insert id="insertICs">
+        insert into ICRegistration
+        (`creatorId`,
+        `lastUpdatorId`,
+        `createTime`,
+        `lastUpdateTime`,
+        `msCreatorId`,
+        `msLastUpdatorId`,
+        `companyId`,
+        `desginName`,
+        `ownerName`,
+        `ownerAddress`,
+        `issueDate`,
+        `applyDate`,
+        `registerNo`,
+        `certificateNo`,
+        `source`)
+        VALUES
+        <foreach collection="icRegistrations" item="item" separator=",">
+            (
+            #{item.creatorId},
+            #{item.lastUpdatorId},
+            #{item.createTime},
+            #{item.lastUpdateTime},
+            #{item.msCreatorId},
+            #{item.msLastUpdatorId},
+            #{companyId},
+            #{item.desginName},
+            #{item.ownerName},
+            #{item.ownerAddress},
+            #{item.issueDate},
+            #{item.applyDate},
+            #{item.registerNo},
+            #{item.certificateNo},
+            #{item.source}
+            )
+        </foreach>
+    </insert>
+    <update id="editIC">
+        update ICRegistration set
+           lastUpdatorId=#{entity.lastUpdatorId},
+           lastUpdateTime=#{entity.lastUpdateTime},
+           msLastUpdatorId=#{entity.msLastUpdatorId},
+           desginName=#{entity.desginName},
+           ownerName=#{entity.ownerName},
+           ownerAddress=#{entity.ownerAddress},
+           applyDate=#{entity.applyDate},
+           issueDate=#{entity.issueDate},
+           filepath=#{entity.filepath},
+           projectId=#{entity.projectId},
+           registerNo=#{entity.registerNo},
+           certificateNo=#{entity.certificateNo},
+           `source`=#{entity.source}
+           where id=#{entity.id}
+    </update>
+    <select id="getText" resultType="com.yskc.rs.models.ICRegistrationModel">
+        select specification,claimContent from ICRegistration where id = #{id}
+    </select>
+</mapper>

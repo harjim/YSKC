@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.rs.RsTProjectDao">
+
+    <select id="getBySourceIds" resultType="com.yskc.ms.models.rs.TechProjectResultModel">
+        select tp.id,tp.pyear,tp.pname,tp.reportType,tp.productId,pd.addressCode,tp.sourceProjectId,pd.year as
+        reportYear
+        from t_project tp
+        left join t_product pd on pd.id=tp.productId
+        where tp.sourceProjectId in
+        <foreach collection="projectIds" item="projectId" open="(" separator="," close=")">
+            #{projectId}
+        </foreach>
+    </select>
+    <select id="getBySourceProject" resultType="com.yskc.ms.entity.rs.RsProjectEntity">
+        select * from t_project
+        where sourceProjectId=#{souceProjecId}
+    </select>
+    <select id="getByProjectId" resultType="com.yskc.ms.models.rs.RelatedProjectModel">
+        select tp.id as projectId,
+        tp.pyear,tp.sourceProjectId,tp.directionId,tp.productId,tp.aidType,tp.masterName,tp.masterTel,tp.linkName,
+        tp.linkTel,tp.remark,tp.applyDate,tp.beginDate,tp.endDate,pd.productName,td.direction,pd.addressCode,pd.year as
+        reportYear
+        from t_project tp
+        left join t_product pd on pd.id=tp.productId
+        left join t_direction td on td.id=tp.directionId
+        where tp.id=#{projectId}
+    </select>
+    <select id="getByDirectionId" resultType="com.yskc.ms.entity.rs.RsProjectEntity">
+        select * from t_project
+        where directionId=#{directionId}
+    </select>
+    <select id="getStageFiles" resultType="com.yskc.ms.models.techsummary.TechStageFilesModel">
+        select pl.id,psl.id as stageListId,psl.itemName,psl.pattern,psl.required,psl.seq,ps.stageKey,ps.seq as stageSeq,pl.fileName,
+        pl.filePath,psl.itemType
+        from t_project p
+        inner join t_product_stage ps on ps.directionId = p.directionId
+        left join t_product_stage_list psl on psl.stageId = ps.id
+        left join t_project_list  pl on pl.stageListId = psl.id
+        where p.sourceProjectId = #{projectId}
+        order by ps.seq, psl.seq
+    </select>
+</mapper>

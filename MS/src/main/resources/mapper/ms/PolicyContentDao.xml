@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.PolicyContentDao">
+    <delete id="deleteBySourceIds">
+        delete from policyContent
+        where sourceId in
+        <foreach collection="sourceIds" item="sourceId" open="(" separator="," close=")">
+            #{sourceId}
+        </foreach>
+    </delete>
+
+    <select id="getList" resultType="com.yskc.ms.models.policy.PolicyContentModel">
+        select ps.sname,ps.stype,ps.domain,pc.id,pc.contentUrl,pc.title,pc.issueDate,pc.createTime,ps.typeUrl from
+        policyContent pc
+        inner JOIN policySource ps on ps.id = pc.sourceId
+        where 1=1
+        <if test="query.title != null and query.title != ''">
+            and pc.title like "%"#{query.title}"%"
+        </if>
+        <if test="query.sname != null and query.sname != ''">
+            and ps.sname like "%"#{query.sname}"%"
+        </if>
+        <if test="query.addressCode != null and query.addressCode != ''">
+            and ps.addressCode like #{query.addressCode}"%"
+        </if>
+        <if test="query.subscription != null">
+            and ps.id
+            <if test="!query.subscription">
+                not
+            </if>
+            in (select sourceId from policySourceUser where userId=#{userId})
+        </if>
+    </select>
+</mapper>

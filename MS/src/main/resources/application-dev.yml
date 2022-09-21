@@ -1,0 +1,95 @@
+server:
+  port: 9001
+#pagehelper
+pagehelper:
+  helperDialect: mysql
+  reasonable: true
+  supportMethodsArguments: true
+  params: count=countSql
+  returnPageInfo: check
+spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 100MB
+  redis:
+    database: 0
+    host: 192.168.0.11
+    port: 6380
+    #host: 192.168.125.136
+    #port: 6379
+    password: 123456
+  datasource:
+    ms:
+      driver-class-name: com.mysql.jdbc.Driver
+      url: jdbc:mysql://192.168.0.11:3306/msdb?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&useSSL=false
+      username: root
+      password: YCCloud_@0769
+    rs:
+      driver-class-name: com.mysql.jdbc.Driver
+      url: jdbc:mysql://192.168.0.11:3306/rsdb?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&useSSL=false
+      username: root
+      password: YCCloud_@0769
+    es:
+      driver-class-name: com.mysql.jdbc.Driver
+      url: jdbc:mysql://192.168.0.11:3306/esdb?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&useSSL=false
+      username: root
+      password: YCCloud_@0769
+logging:
+  level:
+    com.yskc.ms.dao: debug
+ms:
+  login:
+    expireTime: 1 #登录过期时间
+    adminName: ysadmin
+    jumpUrl: http://localhost:8000/login/msLogin?code={0}
+  uploadConfig:
+    imagePath: ..\MS-VUE\public\images
+    importPath: E:\upload #导入数据文件目录
+    importDocList: ..\RS-VUE\public\import #上传文档模板
+    templatePath: ..\MS-VUE\public\template
+    resourcePath: ..\resource
+    rsBasicPath: ..\RS-VUE\public\images
+    docPath: E:\upload #上传的各种文档的路径,按公司ID分文件夹
+  expertConfig:
+    expertPath: ..\RS-VUE\public\images\expert
+    domainName: http://localhost:8000
+  dingLoginCinfig:
+    appId: dingoaippdherp6i9tuynn
+    appSecret: 5JXW3ApOKqy2ooIyT02pj04t1wNZXFLVi4ODbClq33ejmxw_HccKJAE_4AdN1oJd
+  dingDingConfig:
+    #dingoaippdherp6i9tuynn
+  #    agentId: 302821533
+  #    appKey: dingxrsmrn4ae1cecwgk
+  #    appSecret: dnKvwmzm0nJ36yFbC58FK0K8ymf01Rocu2gL-S5tl552eij4eRv72msnag-2ZQgp
+    agentId: 1659334527
+    appKey: dingaha2iypqhbe7rjqq
+    appSecret: OKkTQJ9O1efRCnJCyqXFCNy1f5tYcwglnELvk_QBJ_2E4IM-RorWneMgv5IjGfAz
+  xxlJobConfig:
+    url: http://192.168.0.6:8080/xxl-job-admin
+    rsOperationLogJobId: 32
+#  patentConfig:
+#    basicUrl: http://cpquery.cnipa.gov.cn
+#    #MTMzMTA3MDg1ODY=
+#    username: MTc2MDEzMDk2OTc=
+#    #MTIzQHFXMTIz
+#    password: IVd4MTIzNDU2Nzg5
+#    usertype: 3
+#    logout_flag: false
+#    userrole: 3
+#    language: zh
+#    vidcode: 1
+#    logintype: 0
+chuanyun:
+  spiltCount: 500
+  url: https://www.h3yun.com/OpenApi/Invoke
+  engineCode: mx8jxtbuzzqv7c31tx3d4u9r3
+  engineSecret: 7yx3+nR7nDtR1hQXu4Ip9EtuKKePx+Nun7mpUlBexV1gsP1w9rIHDg==
+kafka:
+  bootstrapServers: 192.168.0.251:9092
+  producer:
+    #  clientId: 0
+    acks: 1
+    retries: 5
+    batchSize: 16384
+    lingerMs: 5

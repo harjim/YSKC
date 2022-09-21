@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.ContractProjectDao">
+    <insert id="addProjectList">
+        insert into contract_project (contractId,customerId,productId,beginYear,endYear,signCnt,ratio,remark,
+                                      `creatorId`, `createTime`, `lastUpdateTime`, `lastUpdatorId`)
+        values <foreach collection="list" item="item" separator=",">
+        (#{item.contractId},#{item.customerId},#{item.productId},#{item.beginYear},#{item.endYear},
+         #{item.signCnt},#{item.ratio},#{item.remark},
+        #{item.creatorId},#{item.createTime},#{item.lastUpdateTime},#{item.lastUpdatorId})
+        </foreach>
+    </insert>
+    <update id="editProjectList">
+        <foreach collection="list" separator=";" item="item">
+            update contract_project set
+            productId = #{item.productId},beginYear = #{item.beginYear},endYear = #{item.endYear},
+            signCnt = #{item.signCnt},ratio = #{item.ratio},remark = #{item.remark}
+            ,lastUpdateTime=#{item.lastUpdateTime},lastUpdatorId=#{item.lastUpdatorId}
+            where id = #{item.id}
+        </foreach>
+    </update>
+    <delete id="delByIds">
+        delete from contract_project
+        where contractId = #{contractId}
+        <if test="ids!=null and ids.size>0">
+            and (id not in (<foreach collection="ids" separator="," item="item">
+            #{item}
+        </foreach>))
+        </if>
+    </delete>
+    <delete id="delByContractIds">
+        delete from contract_project
+        where contractId in (<foreach collection="ids" separator="," item="item">
+        #{item}
+    </foreach>)
+    </delete>
+
+    <select id="getProjectList" resultType="com.yskc.ms.models.contract.ContractProjectModel">
+        select cp.id,cp.contractId,cp.ratio,cp.remark,cp.signCnt,cp.beginYear,cp.endYear,
+               cp.productId,p.productName
+        from contract_project cp
+        left join product p on cp.productId = p.id
+        where cp.contractId in (<foreach collection="contractIds" item="item" separator=",">
+            #{item}
+        </foreach>)
+    </select>
+    <select id="getProduct" resultType="java.lang.Integer">
+        select MAX(signCnt)
+        from contract_project
+        where customerId = #{query.customerId} and productId = #{query.productId}
+    </select>
+    <select id="getModel" resultType="java.lang.String">
+        select p.productName
+        from contract_project cp
+        left join product p on cp.productId = p.id
+        where
+        <foreach collection="list" item="item" separator="or">
+        (cp.customerId = #{customerId} and cp.productId = #{item.productId}
+            and cp.signCnt = #{item.signCnt}
+            <if test="item.id!=null and item.id!=0">
+                and cp.id!=#{item.id}
+            </if>)
+        </foreach>
+        limit 1
+    </select>
+    <select id="checkProduct" resultType="java.lang.String">
+        select DISTINCT p.productName
+        from contract_project cp
+        left join product p on cp.productId = p.id
+        where
+        <foreach collection="list" item="item" separator="or">
+            (cp.customerId = #{customerId} and cp.productId = #{item.productId}
+            and cp.beginYear = #{item.beginYear} and cp.endYear = #{item.endYear}
+            <if test="item.id!=null and item.id!=0">
+                and cp.id!=#{item.id}
+            </if>)
+        </foreach>
+    </select>
+</mapper>

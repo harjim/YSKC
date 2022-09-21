@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xxl.job.executor.dao.ms.PolicySourceDao">
+    <select id="getNewDataSource" resultType="com.xxl.job.executor.models.policy.PolicySourceModel">
+        select distinct ps.id,ps.sname,ps.stype,ps.typeUrl from policySource ps
+        INNER JOIN policyContent pc on pc.sourceId = ps.id
+        where pc.createTime >= #{dayBegin}
+        order by ps.id
+    </select>
+</mapper>

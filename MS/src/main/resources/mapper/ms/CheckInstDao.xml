@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.CheckInstDao">
+    <insert id="addCheckInst" useGeneratedKeys="true" keyProperty="entity.id">
+        insert into checkInst (instName,accountName,accountBank,accountNo,filePath,
+                               payRemark,postage,linkMan,linkTel, remark,
+                               `creatorId`,`createTime`, `lastUpdateTime`, `lastUpdatorId`)
+        value(#{entity.instName},#{entity.accountName},#{entity.accountBank},#{entity.accountNo},#{entity.filePath},#{entity.payRemark},
+            #{entity.postage},#{entity.linkMan},#{entity.linkTel},#{entity.remark},
+            #{entity.creatorId}, #{entity.createTime},#{entity.lastUpdateTime}, #{entity.lastUpdatorId})
+    </insert>
+
+    <select id="getList" resultType="com.yskc.ms.models.checkInst.CheckInstModel">
+        select ch.id,ch.instName,ch.accountName,ch.accountBank,ch.accountNo,ch.filePath,ch.remark,
+               ch.payRemark,ch.postage,ch.linkMan,ch.linkTel,ch.createTime,u.realName creatorName
+        from checkInst ch
+        left join ys_user u on ch.creatorId = u.id
+        where 1=1
+        <if test="query.instName!=null and query.instName != '' ">
+            and ch.instName like concat("%",#{query.instName},"%")
+        </if>
+        <if test="query.linkMan!=null and query.linkMan != '' ">
+            and ch.linkMan like concat("%",#{query.linkMan},"%")
+        </if>
+        <if test="query.creatorName!=null and query.creatorName != '' ">
+            and u.realName like concat("%",#{query.creatorName},"%")
+        </if>
+    </select>
+    <select id="getInstName" resultType="com.yskc.ms.models.checkInst.CheckInstModel">
+        select id
+        from checkInst
+        where instName = #{model.instName}
+        <if test="model.id!=null and model.id!=0">
+            and id != #{model.id}
+        </if>
+    </select>
+    <select id="getMiniList" resultType="com.yskc.ms.models.checkInst.CheckMiniModel">
+        select id ,instName checkInstName
+        from checkInst
+        where instName like concat('%',#{checkInstName},'%')
+        limit 10
+    </select>
+</mapper>

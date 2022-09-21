@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xxl.job.executor.dao.rs.RdDeptDao">
+    <select id="getByCompany" resultType="com.xxl.job.executor.entity.rs.RdDeptEntity">
+        SELECT companyId,`year`,MIN(createTime) createTime ,MAX(lastUpdateTime) lastUpdateTime
+        FROM rdDept
+        where lastUpdateTime >= #{beginDate}
+          and companyId in (<foreach collection="companyModels" item="item" separator=",">#{item.companyId}</foreach>)
+        GROUP BY companyId,`year`
+
+    </select>
+</mapper>

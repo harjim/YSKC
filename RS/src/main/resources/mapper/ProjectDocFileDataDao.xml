@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.project.ProjectDocFileDataDao">
+    <delete id="deleteByDocId">
+        delete from p_docFile_data where pdocFileId=#{docFileId}
+    </delete>
+
+    <select id="getData" resultType="com.yskc.rs.models.docFile.DocFileDataModel">
+        SELECT p.data,p.id,d.docFileTemplateId,pp.pname,pp.beginYear,pp.formula,pp.tecIndustry,d.finished,d.month,
+        pp.rdIndex,t.docTemplateName as templateName,p.wordLength,d.docFileName,d.projectId,d.docFileId,d.stage
+        FROM p_docFile d
+        LEFT JOIN p_docFile_data p ON d.id = p.pdocFileId
+        LEFT JOIN p_project pp ON d.projectId=pp.id
+        LEFT JOIN docFileTemplate t ON t.id = d.docFileTemplateId
+        LEFT JOIN docFile f ON f.id = d.docFileId
+	    LEFT JOIN docFileTemplate t2 ON t2.docFileId = f.id AND t2.defaultTemplate = TRUE
+        WHERE d.id = #{pDocFileId}
+    </select>
+    <select id="getFileDatas" resultType="com.yskc.rs.models.docFile.DocFileDataModel">
+        SELECT p.data,p.id
+        ,d.docFileTemplateId,pp.pname,pp.beginYear,pp.rdIndex,
+        t.docTemplateName as templateName,d.id as pDocFileId,d.docFileId,
+         d.docFileName
+        FROM p_docFile d
+        LEFT JOIN p_docFile_data p ON d.id = p.pdocFileId
+        LEFT JOIN p_project pp ON d.projectId=pp.id
+        LEFT JOIN docFileTemplate t ON t.id = d.docFileTemplateId
+        LEFT JOIN docFile f ON f.id = d.docFileId
+        LEFT JOIN docFileTemplate t2 ON t2.docFileId = f.id AND t2.defaultTemplate = TRUE
+        WHERE d.id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        order by d.stage,d.seq
+    </select>
+    <select id="getByDocId" resultType="com.yskc.rs.entity.project.ProjectDocFileDataEntity">
+        select *
+        from p_docFile_data
+        where pdocFileId=#{pDocFileId}
+    </select>
+    <select id="getDesignReportData" resultType="com.yskc.rs.entity.project.ProjectDocFileEntity">
+        select pd.*
+        from p_docFile pd
+        where pd.projectId=#{projectId} and docFileId=17 and !deleted
+        order by `month`
+    </select>
+    <select id="getDocFiles" resultType="com.yskc.rs.entity.project.ProjectDocFileDataEntity">
+        select id,pdocFileId,`data`
+        from p_docFile_data
+        where pdocFileId in
+        (<foreach collection="docFileIds" item="docFileId" separator=",">#{docFileId}</foreach>)
+    </select>
+    <select id="getAnalysisDocFile" resultType="com.yskc.rs.models.docFile.DocFileDataModel">
+        select pd.docFileId,pdd.data,pd.month from p_docFile_data pdd
+        inner join  p_docFile pd on pd.id=pdd.pDocFileId
+        where pd.projectId=#{projectId}
+        and pd.docFileId in (<foreach collection="docFileIds" separator="," item="dId">#{dId}</foreach>)
+    </select>
+    <select id="getTrialList" resultType="com.yskc.rs.entity.project.ProjectYieldConfigEntity">
+        select planYield,trialDate,rdYield from p_yield_config pyc
+        inner join p_docFile pd on pd.projectId=pyc.projectId and pd.month = pyc.month
+        where pd.projectId=#{projectId} and pd.docFileId=17 order by trialDate
+    </select>
+    <select id="countAttachments" resultType="java.lang.Integer">
+        select count(id) from p_docFile_attachment where companyId=#{companyId} and projectId=#{projectId}
+    </select>
+    <select id="countAnalysisResult" resultType="java.lang.Integer">
+        select count(sd.id)
+        from sys_document sd
+        inner join sys_docList sdc on sd.listId=sdc.id and sdc.listType=1001 and sdc.docName !='查新报告'
+        where sd.companyId=#{companyId} and sd.projectId=#{projectId}
+    </select>
+    <select id="countAnalysisPatent" resultType="java.lang.Integer">
+        select count(id) from patent where companyId=#{companyId} and projectId=#{projectId}
+    </select>
+    <select id="countAnalysisNewReport" resultType="java.lang.Integer">
+        select count(sd.id)
+        from sys_document sd
+        inner join sys_docList sdc on sd.listId=sdc.id and sdc.listType=1001 and sdc.docName ='查新报告'
+        where sd.companyId=#{companyId} and sd.projectId=#{projectId}
+    </select>
+    <select id="getDataByFileIds" resultType="com.yskc.rs.models.docFile.DocFileDataModel">
+        select pDocFileId,`data` from p_docFile_data where pdocFileId in
+            <foreach collection="fileIds" open="(" item="fileId" separator="," close=")">
+                #{fileId}
+            </foreach>
+    </select>
+</mapper>

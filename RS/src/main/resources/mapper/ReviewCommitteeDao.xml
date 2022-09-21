@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.yskc.rs.dao.project.ReviewCommitteeDao">
+    <insert id="insertList">
+        insert into p_reviewCommittee (
+        creatorId,
+        lastUpdatorId,
+        createTime,
+        lastUpdateTime,
+        msCreatorId,
+        msLastUpdatorId,
+        companyId,
+        `year`,
+        enumber,
+        seq)
+        VALUES
+        <foreach collection="entityList" item="item" separator=",">
+            (#{item.creatorId},
+            #{item.lastUpdatorId},
+            #{item.createTime},
+            #{item.lastUpdateTime},
+            #{item.msCreatorId},
+            #{item.msLastUpdatorId},
+            #{item.companyId},
+            #{item.year},
+            #{item.enumber},
+            #{item.seq})
+        </foreach>
+    </insert>
+    <update id="editSeq">
+        <foreach collection="list" separator=";" item="l">
+            update p_reviewCommittee set seq = #{l.seq},lastUpdateTime = #{l.lastUpdateTime},
+                lastUpdatorId = #{l.lastUpdatorId},msLastUpdatorId = #{l.msLastUpdatorId}
+            where id = #{l.id}
+        </foreach>
+    </update>
+
+    <update id="setDeptPosition">
+        update p_reviewCommittee
+        set deptName=#{deptName},
+         position=#{position},
+        lastUpdatorId = #{userId},
+        msLastUpdatorId = #{msUserId},
+        lastUpdateTime = #{now}
+        where id in
+        <foreach collection="ids" separator="," open="(" close=")" item="id">
+            #{id}
+        </foreach>
+    </update>
+
+    <select id="getByEnumbers" resultType="java.lang.String">
+        select enumber from p_reviewCommittee
+        where `year`=#{year} and companyId=#{companyId} and enumber in
+        <foreach collection="enumbers" item="enumber" open="(" separator="," close=")">
+            #{enumber}
+        </foreach>
+    </select>
+    <select id="getReviewList" resultType="com.yskc.rs.models.reviewCommittee.ReviewModel">
+        select pr.id,pr.year,pr.companyId,pr.enumber,e.ename,pr.position,e.remark,pr.deptName,e.leaveDate,e.idNumber,
+        e.title,e.specialities,e.eduLevel,pr.seq from p_reviewCommittee pr
+        left join employee e on e.enumber=pr.enumber and e.companyId=pr.companyId
+        where pr.year=#{model.year} and pr.companyId=#{companyId}
+        <if test="model.ename!=null and model.ename!=''">
+            and e.ename like "%"#{model.ename}"%"
+        </if>
+        <if test="model.enumber!=null and model.enumber!=''">
+            and e.enumber like "%"#{model.enumber}"%"
+        </if>
+        <if test="model.position!=null and model.position!=''">
+            and pr.position like "%"#{model.position}"%"
+        </if>
+        <if test="model.title!=null and model.title!=''">
+            and e.title like "%"#{model.title}"%"
+        </if>
+        <if test="model.specialities!=null and model.specialities!=''">
+            and e.specialities like "%"#{model.specialities}"%"
+        </if>
+        <if test="model.eduLevel!=null and model.eduLevel>=0">
+            and e.eduLevel=#{model.eduLevel}
+        </if>
+    </select>
+
+    <select id="getExistList" resultType="java.lang.String">
+        select enumber from  p_reviewCommittee
+        where year=#{year} and companyId=#{companyId}
+    </select>
+
+    <select id="getSelectList" resultType="com.yskc.rs.models.employee.EmployeeSelectModel">
+        select pr.enumber,e.ename from p_reviewCommittee pr
+        inner join employee e on pr.enumber=e.enumber and pr.companyId=e.companyId
+        where pr.year=#{year} and pr.companyId=#{companyId}
+        <if test="ename!=null and ename!=''">
+            and (e.ename like "%"#{ename}"%" or e.enumber like "%"#{ename}"%")
+        </if>
+        order by pr.seq,pr.enumber
+        limit 5
+    </select>
+    <select id="getList" resultType="com.yskc.rs.models.project.ProjectEmployeeInfo">
+        SELECT e.ename,e.autographUrl,e.enumber,pr.position,re.etype,re.rdDeptId,pr.deptName,e.specialities,r.deptName as rdDeptName
+        FROM p_reviewCommittee pr
+        INNER JOIN employee e ON pr.enumber=e.enumber AND pr.companyId=e.companyId
+        LEFT JOIN rdEmployee re ON re.enumber=pr.enumber AND re.companyId=pr.companyId AND re.year=pr.year
+        LEFT JOIN rdDept r ON re.rdDeptId = r.id
+        WHERE  pr.companyId=#{companyId} and pr.year=#{year}
+        <if test="query.etype != null and query.etype>0">
+            and re.etype=#{query.etype}
+        </if>
+        <if test="query.deptName !=null and query.deptName != ''">
+            and e.deptName like "%"#{query.deptName}"%"
+        </if>
+        <if test="query.ename != null and query.ename.length()>0">
+            and e.ename like "%"#{query.ename}"%"
+        </if>
+        <if test="query.enumber != null and query.enumber.length()>0">
+            and e.enumber like "%"#{query.enumber}"%"
+        </if>
+    </select>
+    <select id="getReviews" resultType="com.yskc.rs.models.project.ProjectEmployeeInfo">
+        select pr.enumber,e.ename,e.position,e.deptName,e.autographUrl
+         from p_reviewCommittee pr
+        left join employee e on e.enumber=pr.enumber and e.companyId=pr.companyId
+        where pr.year=#{beginYear} and pr.companyId=#{companyId}
+        and pr.enumber in (<foreach collection="enumbers" item="enumber" separator=",">#{enumber}</foreach>)
+        order by pr.seq,pr.enumber
+    </select>
+    <select id="getMaxSeq" resultType="java.lang.Integer">
+        select seq from p_reviewCommittee where companyId = #{companyId} and `year` = #{year} order by seq DESC limit 1
+    </select>
+    <select id="getEmployees" resultType="com.yskc.rs.models.project.ProjectEmployeeInfo">
+        select enumber,ename,position,deptName,autographUrl
+        from employee WHERE companyId = #{companyId}
+        and enumber in (<foreach collection="enumbers" item="enumber" separator=",">#{enumber}</foreach>)
+    </select>
+</mapper>

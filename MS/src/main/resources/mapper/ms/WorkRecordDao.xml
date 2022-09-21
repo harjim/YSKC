@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.WorkRecordDao">
+    <select id="getRecordInfo" resultType="com.yskc.ms.models.serviceRecord.WorkRecordModel">
+        select wr.id, wr.customerId,c.companyName,wr.serviceNo,wr.ownerId,wr.totalAmount,yu.realName ownerName,
+               yd.deptName,yd.id deptId,wr.itemCnt,yu2.realName creatorName,ff.instanceId,
+               wr.createTime,wr.lastUpdateTime
+        from work_record wr
+                 left join ys_user yu on wr.ownerId = yu.id
+                 left join user_dept ud on yu.id = ud.userId
+                 left join ys_dept yd on ud.depId = yd.id
+                 left join customer c on wr.customerId = c.id
+                 left join ys_user yu2 on wr.creatorId = yu2.id
+                 left join flowInstance_form ff on ff.formId = wr.id and ff.moduleId = 15
+        where wr.id = #{recordId}
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.selectDept">
+            <property name="table" value="yd"/>
+            <property name="userDept" value="ud"/>
+        </include>
+    </select>
+    <select id="getTotal" resultType="java.math.BigDecimal">
+        select sum(wri.amount)
+        from work_record wr
+        left join work_record_item wri on wr.id = wri.workRecordId
+        left join customer c on wr.customerId = c.id
+        left join ys_user yu2 on wr.creatorId = yu2.id
+        left join flowInstance_form ff on ff.formId = wr.id and ff.moduleId = #{moduleId}
+        left join flowInstance f on ff.instanceId = f.id
+        <where>
+            <if test="query.companyName!=null and query.companyName!=''">
+                and c.companyName like concat("%",#{query.companyName},"%")
+            </if>
+            <if test="query.creatorName!=null and query.creatorName!=''">
+                and yu2.realName like concat("%",#{query.creatorName},"%")
+            </if>
+            <if test="query.auditUsers!=null and query.auditUsers!=''">
+                and f.auditUsers  like concat("%",#{query.auditUsers},"%")
+            </if>
+            <if test="query.serviceNo!=null and query.serviceNo!=''">
+                and wr.serviceNo  like concat("%",#{query.serviceNo},"%")
+            </if>
+            <if test="query.status!=null and query.status!=5">
+                and ff.status = #{query.status}
+            </if>
+            <if test="query.status!=null and query.status == 5">
+                and ff.status is null
+            </if>
+            <include refid="com.yskc.ms.dao.ms.BaseDataDao.byCreator">
+                <property name="tableAlias" value="wr"/>
+                <property name="perm" value="#{perm}"/>
+            </include>
+        </where>
+    </select>
+    <select id="getList" resultType="com.yskc.ms.models.serviceRecord.WorkRecordModel">
+        select wr.id, wr.customerId,c.companyName,wr.serviceNo,wr.ownerId,wr.totalAmount,yu.realName ownerName,
+               yd.deptName,yd.id deptId,wr.itemCnt,yu2.realName creatorName,ff.instanceId,
+        case when ff.status is null then 5 else ff.status end as status,
+               f.auditUsers,wr.createTime,wr.lastUpdateTime
+        from work_record wr
+         left join ys_user yu on wr.ownerId = yu.id
+        left join user_dept ud on yu.id = ud.userId
+         left join ys_dept yd on ud.depId = yd.id
+        left join customer c on wr.customerId = c.id
+        left join ys_user yu2 on wr.creatorId = yu2.id
+         left join flowInstance_form ff on ff.formId = wr.id and ff.moduleId = #{moduleId}
+         left join flowInstance f on ff.instanceId = f.id
+        where 1=1
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.selectDept">
+            <property name="table" value="yd"/>
+            <property name="userDept" value="ud"/>
+        </include>
+        <if test="query.companyName!=null and query.companyName!=''">
+            and c.companyName like concat("%",#{query.companyName},"%")
+        </if>
+        <if test="query.creatorName!=null and query.creatorName!=''">
+            and yu2.realName like concat("%",#{query.creatorName},"%")
+        </if>
+        <if test="query.auditUsers!=null and query.auditUsers!=''">
+            and f.auditUsers  like concat("%",#{query.auditUsers},"%")
+        </if>
+        <if test="query.serviceNo!=null and query.serviceNo!=''">
+            and wr.serviceNo  like concat("%",#{query.serviceNo},"%")
+        </if>
+        <if test="query.status!=null and query.status!=5">
+            and ff.status = #{query.status}
+        </if>
+        <if test="query.status!=null and query.status == 5">
+            and ff.status is null
+        </if>
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.byCreator">
+            <property name="tableAlias" value="wr"/>
+            <property name="perm" value="#{perm}"/>
+        </include>
+    </select>
+    <select id="getMobileList" resultType="com.yskc.ms.models.serviceRecord.WorkRecordModel">
+        select wr.id, wr.customerId,c.companyName,wr.serviceNo,wr.ownerId,wr.totalAmount,yu.realName ownerName,
+               yd.deptName,yd.id deptId,wr.itemCnt,yu2.realName creatorName,ff.instanceId,
+               case when ff.status is null then 5 else ff.status end as status,
+               f.auditUsers,wr.createTime,wr.lastUpdateTime
+        from work_record wr
+                 left join ys_user yu on wr.ownerId = yu.id
+        left join user_dept ud on yu.id = ud.userId
+                 left join ys_dept yd on ud.depId = yd.id
+                 left join customer c on wr.customerId = c.id
+                 left join ys_user yu2 on wr.creatorId = yu2.id
+                 left join flowInstance_form ff on ff.formId = wr.id and ff.moduleId = #{moduleId}
+                 left join flowInstance f on ff.instanceId = f.id
+        where 1=1
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.selectDept">
+            <property name="table" value="yd"/>
+            <property name="userDept" value="ud"/>
+        </include>
+        <if test="query.companyName!=null and query.companyName!=''">
+            and c.companyName like concat("%",#{query.companyName},"%")
+        </if>
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.byCreator">
+            <property name="tableAlias" value="wr"/>
+            <property name="perm" value="#{perm}"/>
+        </include>
+    </select>
+</mapper>

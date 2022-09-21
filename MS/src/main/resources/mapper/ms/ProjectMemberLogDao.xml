@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.ProjectMemberLogDao">
+    <insert id="addLogs" parameterType="java.util.List">
+        insert into project_member_log (projectId,customerId,mType,memberId,operationId,operationTime) values
+        <foreach collection="entities" item="item" separator=",">
+           (#{item.projectId},#{item.customerId},#{item.mType},#{item.memberId},#{item.operationId},#{item.operationTime})
+        </foreach>
+    </insert>
+
+</mapper>

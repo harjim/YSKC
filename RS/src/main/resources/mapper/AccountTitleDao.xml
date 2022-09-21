@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.AccountTitleDao">
+    <update id="updateList">
+        update accountTitle
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="accountName =case" suffix="end,">
+                <foreach collection="updateList" item="item" index="index">
+                    <if test="item.accountName!=null">
+                        when id=#{item.id} then #{item.accountName}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="accountNumber =case" suffix="end,">
+                <foreach collection="updateList" item="item" index="index">
+                    <if test="item.accountNumber!=null">
+                        when id=#{item.id} then #{item.accountNumber}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="parentId =case" suffix="end,">
+                <foreach collection="updateList" item="item" index="index">
+                    <if test="item.parentId!=null">
+                        when id=#{item.id} then #{item.parentId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="accoutType =case" suffix="end,">
+                <foreach collection="updateList" item="item" index="index">
+                    <if test="item.accoutType!=null">
+                        when id=#{item.id} then #{item.accoutType}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdatorId =case" suffix="end,">
+                <foreach collection="updateList" item="item" index="index">
+                    <if test="item.lastUpdatorId!=null">
+                        when id=#{item.id} then #{item.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdateTime =case" suffix="end,">
+                <foreach collection="updateList" item="item" index="index">
+                    <if test="item.lastUpdateTime!=null">
+                        when id=#{item.id} then #{item.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="fullAccountName =case" suffix="end,">
+                <foreach collection="updateList" item="item" index="index">
+                    <if test="item.fullAccountName!=null">
+                        when id=#{item.id} then #{item.fullAccountName}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="level =case" suffix="end,">
+                <foreach collection="updateList" item="item" index="index">
+                    <if test="item.level!=null">
+                        when id=#{item.id} then #{item.level}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where id in
+        <foreach collection="updateList" item="item" index="index"
+                 separator="," open="(" close=")">
+            #{item.id}
+        </foreach>
+    </update>
+
+
+    <select id="queryAccountTitle" resultType="com.yskc.rs.models.accounttitle.AccountTitleModel">
+        SELECT * from accountTitle a where a.companyId=#{companyId}
+        <if test="accountName != null and accountName != ''">
+            and a.accountName like "%"#{accountName}"%"
+        </if>
+        order by a.parentId,a.accountNumber
+    </select>
+    <select id="queryAllAccountTitle" resultType="com.yskc.rs.models.accounttitle.AccountTree">
+         select id as `key`, parentId,accountName as title from accountTitle where companyId=#{companyId}
+         order by parentId,accountNumber
+    </select>
+
+    <select id="getByAccountNumber" resultType="com.yskc.rs.entity.AccountTitleEntity">
+           select  * from accountTitle where  accountNumber=#{accountNumber} and companyId=#{companyId}
+    </select>
+    <select id="getByFullAccountName" resultType="com.yskc.rs.entity.AccountTitleEntity">
+        select * from accountTitle a where a.companyId=#{companyId} and a.fullAccountName in
+        <foreach collection="fullAccountNameList" open="(" separator="," close=")" item="fullAccountName">
+            #{fullAccountName}
+        </foreach>
+    </select>
+    <select id="getLevelData" resultType="com.yskc.rs.models.excel.AccountExcel">
+        select id,parentId,fullAccountName,accoutType,`level`,accountName,accountNumber from accountTitle where companyId = #{companyId}
+        order by `level`, parentId
+    </select>
+    <select id="getChildren" resultType="com.yskc.rs.entity.AccountTitleEntity">
+        select id,parentId,fullAccountName,`level`,accountName,accountNumber,accoutType from accountTitle where id != #{selfId}
+        and companyId = #{companyId} and fullAccountName like #{fullAccountName}"%"
+    </select>
+    <select id="getByParentId" resultType="java.lang.Integer">
+        select count(id) from accountTitle where parentId = #{parentId}
+    </select>
+    <select id="getByAccountName" resultType="com.yskc.rs.entity.AccountTitleEntity">
+
+        select * from accountTitle where companyId = #{companyId} and `parentId` = #{parentId} and accountName = #{accountName}
+
+    </select>
+</mapper>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.tech.ProductStageListDao">
+    <select id="getByStageId" resultType="com.yskc.rs.entity.tech.ProductStageListEntity">
+        select * from t_product_stage_list
+        where stageId=#{productId}
+    </select>
+    <select id="getByDirectionIds" resultType="com.yskc.rs.entity.tech.ProductStageListEntity">
+        select * from t_product_stage_list
+        where directionId in
+        <foreach collection="directionIds" item="directionId" open="(" separator="," close=")">
+            #{directionId}
+        </foreach>
+    </select>
+</mapper>

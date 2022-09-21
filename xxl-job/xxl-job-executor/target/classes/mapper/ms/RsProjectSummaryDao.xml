@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xxl.job.executor.dao.ms.RsProjectSummaryDao">
+    <insert id="insertOrUpdate">
+        insert into rsProject_summary
+        (companyId,rsProjectId,`year`,memberCnt,equipmentCnt,patentCnt,hasReport,reportStatus,hasNewReport,
+        newReportStatus,docTotal,docSubmitCnt,docDoneCnt,backupDataTotalCnt,createTime,updateTime,rdTitle,pname) values
+        <foreach collection="list" item="l" separator=",">
+            (#{l.companyId},#{l.rsProjectId},#{l.year},#{l.memberCnt},#{l.equipmentCnt},#{l.patentCnt},#{l.hasReport},
+            #{l.reportStatus},#{l.hasNewReport},#{l.newReportStatus},#{l.docTotal},#{l.docSubmitCnt},#{l.docDoneCnt},
+            #{l.backupDataTotalCnt},#{l.createTime},#{l.updateTime},#{l.rdTitle},#{l.pname})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        memberCnt=values(memberCnt),
+        equipmentCnt=values(equipmentCnt),
+        patentCnt=values(patentCnt),
+        hasReport=values(hasReport),
+        reportStatus=values(reportStatus),
+        hasNewReport=values(hasNewReport),
+        newReportStatus=values(newReportStatus),
+        docTotal=values(docTotal),
+        docSubmitCnt=values(docSubmitCnt),
+        docDoneCnt=values(docDoneCnt),
+        backupDataTotalCnt=values(backupDataTotalCnt),
+        updateTime=values(updateTime),
+        rdTitle=values(rdTitle),
+        pname=values(pname)
+    </insert>
+</mapper>

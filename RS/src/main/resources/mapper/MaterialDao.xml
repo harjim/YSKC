@@ -1,0 +1,722 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.MaterialDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.yskc.rs.entity.MaterialEntity" id="materialMap">
+        <result property="id" column="id"/>
+        <result property="mcode" column="mcode"/>
+        <result property="mname" column="mname"/>
+        <result property="acqDate" column="acqDate"/>
+        <result property="unitPrice" column="unitPrice"/>
+        <result property="quantity" column="quantity"/>
+        <result property="unit" column="unit"/>
+        <result property="companyId" column="companyId"/>
+        <result property="creatorId" column="creatorId"/>
+        <result property="createTime" column="createTime"/>
+        <result property="remark" column="remark"/>
+        <result property="remainQuantity" column="remainQuantity"/>
+        <result property="auditor" column="auditor"/>
+        <result property="billNo" column="billNo"/>
+        <result property="biller" column="biller"/>
+        <result property="booker" column="booker"/>
+        <result property="deptId" column="deptId"/>
+        <result property="rdDeptId" column="rdDeptId"/>
+        <result property="specification" column="specification"/>
+        <result property="warehouse" column="warehouse"/>
+        <result property="type" column="type"/>
+        <result property="accNumber" column="accNumber"/>
+        <result property="picker" column="picker"/>
+        <result property="totalAmount" column="totalAmount"/>
+        <result property="purpose" column="purpose"/>
+    </resultMap>
+
+    <insert id="addBatch" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `d_material`
+        (
+        `mcode`,
+        `mname`,
+        `acqDate`,
+        `unitPrice`,
+        `quantity`,
+        `unit`,
+        `companyId`,
+        `creatorId`,
+        `createTime`,
+        `remark`,
+        `remainQuantity`,
+        `auditor`,
+        `billNo`,
+        `biller`,
+        `booker`,
+        `deptId`,
+        `rdDeptId`,
+        `specification`,
+        `warehouse`,
+        `type`,
+        `accNumber`,
+        `picker`,
+        `totalAmount`,
+        `purpose`,
+        `accountTitleId`,
+        `lastUpdateTime`,
+        `lastUpdatorId`,
+        `msCreatorId`,
+        `msLastUpdatorId`,
+        deptName
+        )
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.mcode},
+            #{item.mname},
+            #{item.acqDate},
+            #{item.unitPrice},
+            #{item.quantity},
+            #{item.unit},
+            #{item.companyId},
+            #{item.creatorId},
+            #{item.createTime},
+            #{item.remark},
+            #{item.remainQuantity},
+            #{item.auditor},
+            #{item.billNo},
+            #{item.biller},
+            #{item.booker},
+            #{item.deptId},
+            #{item.rdDeptId},
+            #{item.specification},
+            #{item.warehouse},
+            #{item.type},
+            #{item.accNumber},
+            #{item.picker},
+            #{item.totalAmount},
+            #{item.purpose},
+            #{item.accountTitleId},
+            #{item.lastUpdateTime},
+            #{item.lastUpdatorId},
+            #{item.msCreatorId},
+            #{item.msLastUpdatorId},
+            #{item.deptName}
+            )
+        </foreach>
+    </insert>
+
+    <select id="queryMaterial"
+            resultType="com.yskc.rs.models.material.AppMaterialModel">
+        select
+        m.id,
+        m.mcode,
+        m.mname,
+        m.accNumber,
+        m.acqDate,
+        m.unitPrice,
+        m.quantity,
+        m.remainQuantity,
+        m.unit,
+        m.companyId,
+        m.creatorId,
+        m.createTime,
+        m.remark,
+        m.specification,
+        m.deptName,
+        m.billNo,
+        m.warehouse,
+        m.biller,
+        m.auditor,
+        m.booker,
+        m.picker,
+        m.totalAmount,
+        m.purpose,
+        m.accountTitleId,
+        a.fullAccountName
+        from d_material m
+        left join accountTitle a on a.id = m.accountTitleId
+        where m.companyId = #{companyId}
+        <if test="query.type != -1">
+            and m.type = #{query.type}
+        </if>
+        <if test="query.mcode != null and query.mcode != ''">
+            and m.mcode like "%"#{query.mcode}"%"
+        </if>
+        <if test="query.mname != null and query.mname != ''">
+            and m.mname like "%"#{query.mname}"%"
+        </if>
+        <if test="query.selectDate != null">
+            and m.acqDate &gt;= #{query.startDate} and m.acqDate &lt; #{query.endDate}
+        </if>
+        <if test="query.endMonth != null">
+            and m.acqDate <![CDATA[ <= ]]> #{query.endMonth}
+        </if>
+        <if test="query.startMonth != null">
+            and m.acqDate <![CDATA[ >= ]]> #{query.startMonth}
+        </if>
+        <if test="query.billNo != null and query.billNo != ''">
+            and m.billNo like "%"#{query.billNo}"%"
+        </if>
+        <if test="query.deptName !=null and query.deptName != ''">
+            and m.deptName like "%"#{query.deptName}"%"
+        </if>
+        <if test="query.warehouse != null and query.warehouse != ''">
+            and m.warehouse like "%"#{query.warehouse}"%"
+        </if>
+        <if test="query.biller != null and query.biller != ''">
+            and m.biller like "%"#{query.biller}"%"
+        </if>
+        <if test="query.auditor != null and query.auditor != ''">
+            and m.auditor like "%"#{query.auditor}"%"
+        </if>
+        <if test="query.booker != null and query.booker != ''">
+            and m.booker like "%"#{query.booker}"%"
+        </if>
+        <if test="query.specification!=null and query.specification!=''">
+            and m.specification like "%"#{query.specification}"%"
+        </if>
+    </select>
+
+    <select id="getMaterialbyMcode"
+            resultType="com.yskc.rs.entity.MaterialEntity">
+        select *
+        from d_material
+        where companyId = #{companyId}
+          and mcode = #{mcode}
+    </select>
+
+    <select id="queryMaterialById"
+            resultType="com.yskc.rs.entity.MaterialEntity">
+        select * from d_material where id = #{materialId}
+        <if test="mcode != null and mcode != ''">
+            and mcode like "%"#{mcode}"%"
+        </if>
+        <if test="mname != null and mname != ''">
+            and mname like "%"#{mname}"%"
+        </if>
+        order by mcode
+    </select>
+
+    <select id="queryMaterialByDate"
+            resultType="com.yskc.rs.models.material.AppMaterialModel">
+        select * from d_material where companyId = #{companyId}
+        and acqDate
+        &gt;= #{beginDate} and acqDate &lt;= #{endDate}
+        <if test="mcode != null and mcode != ''">
+            and mcode like "%"#{mcode}"%"
+        </if>
+        <if test="mname != null and mname != ''">
+            and mname like "%"#{mname}"%"
+        </if>
+        order by mcode
+    </select>
+
+    <select id="queryMaterialRemoveDataId"
+            resultType="com.yskc.rs.models.material.AppMaterialModel">
+        select
+        m.id,
+        m.mcode,
+        m.mname,
+        m.acqDate,
+        m.unitPrice,
+        m.quantity,
+        m.remainQuantity,
+        m.unit,
+        m.companyId,
+        m.creatorId,
+        m.createTime,
+        m.remark,
+        m.specification,
+        m.deptName,
+        m.billNo,
+        m.warehouse,
+        m.biller,
+        m.auditor,
+        m.booker,
+        m.type,
+        m.picker,
+        m.totalAmount,
+        m.purpose
+        from d_material m
+        where m.companyId = #{model.companyId}
+        and m.remainQuantity != 0
+        <if test="model.type != -1">
+            and m.type = #{model.type}
+        </if>
+        <if test="model.mcode != null and model.mcode != ''">
+            and m.mcode like "%"#{model.mcode}"%"
+        </if>
+        <if test="model.rdType != null and model.rdType/100 == 200">
+            and m.type !=2
+        </if>
+        <if test="model.mname != null and model.mname != ''">
+            and m.mname like "%"#{model.mname}"%"
+        </if>
+        <if test="model.selectDate != null">
+            and m.acqDate &gt;= #{model.startDate} and m.acqDate &lt;= #{model.endDate}
+        </if>
+        <if test="model.billNo != null and model.billNo != ''">
+            and m.billNo like "%"#{model.billNo}"%"
+        </if>
+        <if test="model.deptName !=null and model.deptName != ''">
+            and m.deptName like "%"#{model.deptName}"%"
+        </if>
+        <if test="model.warehouse != null and model.warehouse != ''">
+            and m.warehouse like "%"#{model.warehouse}"%"
+        </if>
+        <if test="model.biller != null and model.biller != ''">
+            and m.biller like "%"#{model.biller}"%"
+        </if>
+        <if test="model.auditor != null and model.auditor != ''">
+            and m.auditor like "%"#{model.auditor}"%"
+        </if>
+        <if test="model.booker != null and model.booker != ''">
+            and m.booker like "%"#{model.booker}"%"
+        </if>
+        <if test="model.specification !=null and model.specification !=''">
+            and m.specification like "%"#{model.specification}"%"
+        </if>
+        order by m.mcode
+    </select>
+
+    <select id="getMaterialData"
+            resultType="com.yskc.rs.models.excel.MaterialExcel">
+        select
+        m.id,
+        m.mname,
+        m.mcode,
+        m.acqDate,
+        m.unitPrice,
+        m.quantity,
+        m.unit,
+        m.billNo,
+        m.purpose,
+        m.accNumber,
+        m.specification,
+        m.deptName,
+        m.warehouse,
+        m.picker,
+        m.biller,
+        m.auditor,
+        m.booker,
+        m.remark,
+        m.totalAmount,
+        a.fullAccountName
+        from d_material m
+        left join accountTitle a on a.id = m.accountTitleId
+        where m.companyId = #{model.companyId}
+        <if test="model.type != -1">
+            and m.type = #{model.type}
+        </if>
+        <if test="model.mcode != null and model.mcode != ''">
+            and m.mcode like "%"#{model.mcode}"%"
+        </if>
+        <if test="model.mname != null and model.mname != ''">
+            and m.mname like "%"#{model.mname}"%"
+        </if>
+        <if test="model.selectDate != null">
+            and m.acqDate &gt;= #{model.startDate} and m.acqDate &lt; #{model.endDate}
+        </if>
+        <if test="model.endMonth != null">
+            and m.acqDate <![CDATA[ <= ]]> #{model.endMonth}
+        </if>
+        <if test="model.startMonth != null">
+            and m.acqDate <![CDATA[ >= ]]> #{model.startMonth}
+        </if>
+        <if test="model.billNo != null and model.billNo != ''">
+            and m.billNo like "%"#{model.billNo}"%"
+        </if>
+        <if test="model.deptName !=null and model.deptName != ''">
+            and m.deptName like "%"#{model.deptName}"%"
+        </if>
+        <if test="model.warehouse != null and model.warehouse != ''">
+            and m.warehouse like "%"#{model.warehouse}"%"
+        </if>
+        <if test="model.biller != null and model.biller != ''">
+            and m.biller like "%"#{model.biller}"%"
+        </if>
+        <if test="model.auditor != null and model.auditor != ''">
+            and m.auditor like "%"#{model.auditor}"%"
+        </if>
+        <if test="model.booker != null and model.booker != ''">
+            and m.booker like "%"#{model.booker}"%"
+        </if>
+        <if test="model.specification!=null and model.specification!=''">
+            and m.specification like "%"#{model.specification}"%"
+        </if>
+        order by m.mcode
+    </select>
+
+    <select id="queryMaterialByBillNoList"
+            resultType="com.yskc.rs.models.material.AppMaterialModel">
+        select
+        m.id,
+        m.mcode,
+        m.mname,
+        m.acqDate,
+        m.unitPrice,
+        m.quantity,
+        m.remainQuantity,
+        m.unit,
+        m.companyId,
+        m.creatorId,
+        m.createTime,
+        m.remark,
+        m.specification,
+        m.deptId,
+        d.deptName,
+        m.rdDeptId,
+        r.deptName as rdDeptName,
+        m.billNo,
+        m.warehouse,
+        m.biller,
+        m.auditor,
+        m.booker,
+        m.type,
+        m.picker,
+        m.totalAmount,
+        m.purpose
+        from d_material m
+        left join dept d on m.deptId = d.id
+        left join rdDept r on m.rdDeptId = r.id
+        where m.companyId = #{companyId} and m.remainQuantity != 0
+        <if test="rdType != null and rdType/100 == 200">
+            and m.type!=2
+        </if>
+        and m.billNo in
+        <foreach item="item" index="index" collection="billNoList" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+    <select id="queryMaterialPage" resultType="com.yskc.rs.models.material.AppMaterialModel">
+        select
+        m.id,
+        m.mcode,
+        m.mname,
+        m.acqDate,
+        m.unitPrice,
+        m.quantity,
+        m.remainQuantity,
+        m.unit,
+        m.companyId,
+        m.creatorId,
+        m.createTime,
+        m.remark,
+        m.specification,
+        m.deptName,
+        m.billNo,
+        m.warehouse,
+        m.biller,
+        m.auditor,
+        m.booker,
+        m.type,
+        m.picker,
+        m.totalAmount,
+        m.purpose
+        from d_material m
+        where m.companyId = #{companyId} and m.remainQuantity != 0
+        <if test="query.type != -1">
+            and m.type = #{query.type}
+        </if>
+        <if test="query.rdType != null and query.rdType/100 == 200">
+            and m.type != 2
+        </if>
+        <if test="query.mcode != null and query.mcode != ''">
+            and m.mcode like "%"#{query.mcode}"%"
+        </if>
+        <if test="query.mname != null and query.mname != ''">
+            and m.mname like "%"#{query.mname}"%"
+        </if>
+        <if test="query.selectDate != null">
+            and m.acqDate &gt;= #{startDate} and m.acqDate &lt;= #{endDate}
+        </if>
+        <if test="query.billNo != null and query.billNo != ''">
+            and m.billNo like "%"#{query.billNo}"%"
+        </if>
+        <if test="query.deptName !=null and query.deptName != ''">
+            and m.deptName like "%"#{query.deptName}"%"
+        </if>
+        <if test="query.warehouse != null and query.warehouse != ''">
+            and m.warehouse like "%"#{query.warehouse}"%"
+        </if>
+        <if test="query.biller != null and query.biller != ''">
+            and m.biller like "%"#{query.biller}"%"
+        </if>
+        <if test="query.auditor != null and query.auditor != ''">
+            and m.auditor like "%"#{query.auditor}"%"
+        </if>
+        <if test="query.booker != null and query.booker != ''">
+            and m.booker like "%"#{query.booker}"%"
+        </if>
+        <if test="query.specification !=null and query.specification !=''">
+            and m.specification like "%"#{query.specification}"%"
+        </if>
+        <if test="query.remark !=null and query.remark !=''">
+            and m.remark like "%"#{query.remark}"%"
+        </if>
+    </select>
+    <select id="getByMcodes" resultType="com.yskc.rs.entity.MaterialEntity">
+        select * from d_material m where m.companyId=#{companyId} and m.type = #{type} and m.mcode in
+        <foreach collection="mcodeList" open="(" separator="," close=")" item="mcode">
+            #{mcode}
+        </foreach>
+    </select>
+    <select id="queryMaterialList" resultType="com.yskc.rs.entity.MaterialEntity">
+        select * from d_material where id in
+        <foreach collection="materialIdList" open="(" close=")" item="id" separator=",">
+            #{id}
+        </foreach>
+    </select>
+    <select id="getMaterialPlanData" resultType="com.yskc.rs.models.material.MaterialPlanModel">
+        select sum(pm.used) as quantity,dm.mcode,dm.mname,max(dm.billNo)as billNo,
+               max(dm.remark) as remark,max(dm.picker) as picker,max(dm.biller) as biller,
+               max(dm.acqDate) as acqDate,dm.unit
+        from p_material pm
+        inner join d_material dm on dm.id=pm.materialDataId
+        where pm.projectId=#{projectId} and pm.rdType in
+        <foreach collection="costTypes" item="rdType" open="(" separator="," close=")">
+            #{rdType}
+        </foreach>
+        <if test="type!=null">
+            and dm.type = #{type}
+        </if>
+        <if test="beginDate!=null">
+            and dm.acqDate &gt;= #{beginDate}
+        </if>
+        <if test="endDate!=null">
+            and dm.acqDate &lt;= #{endDate}
+        </if>
+        group by dm.mcode,dm.mname,dm.unit
+    </select>
+    <select id="getOldQuantity" resultType="com.yskc.rs.entity.MaterialEntity">
+        select remainQuantity, quantity
+        from d_material
+        where id = #{id}
+    </select>
+    <select id="getMaterials" resultType="com.yskc.rs.models.material.MaterialPlanModel">
+        select pm.used as quantity,dm.mcode,dm.mname,dm.billNo,dm.remark,dm.picker,dm.biller,dm.id,dm.acqDate
+        from p_material pm
+        inner join d_material dm on dm.id=pm.materialDataId
+        where pm.projectId=#{projectId}
+        <if test="rdType!=null">
+            and pm.rdType div 100 = #{rdType}
+        </if>
+        and dm.type=#{type}
+        <if test="beginDate!=null">
+            and dm.acqDate &gt;= #{beginDate}
+        </if>
+        <if test="endDate!=null">
+            and dm.acqDate &lt;= #{endDate}
+        </if>
+    </select>
+    <select id="getMaterialPlan" resultType="com.yskc.rs.models.material.MaterialPlanModel">
+        select sum(pm.used) as quantity,dm.mcode,dm.mname,max(dm.billNo)as billNo,
+        max(dm.remark) as remark,max(dm.acqDate) as acqDate,dm.unit
+        from p_material pm
+        inner join d_material dm on dm.id=pm.materialDataId
+        where pm.projectId=#{projectId} and pm.rdType in
+        <foreach collection="costTypes" item="rdType" open="(" separator="," close=")">
+            #{rdType}
+        </foreach>
+        <if test="type!=null">
+            and dm.type = #{type}
+        </if>
+        <if test="beginDate!=null">
+            and dm.acqDate &gt;= #{beginDate}
+        </if>
+        <if test="endDate!=null">
+            and dm.acqDate &lt;= #{endDate}
+        </if>
+        group by dm.mcode,dm.mname,dm.unit
+        order by acqDate
+    </select>
+    <update id="updateRemainQuantityById">
+        update d_material
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="remainQuantity =case" suffix="end,">
+                <foreach collection="materialRemainQuantiries" item="i" index="index">
+                    <if test="i.remainQuantity!=null">
+                        when id=#{i.id} then #{i.remainQuantity}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="materialRemainQuantiries" separator="or" item="i" index="index">
+            id=#{i.id}
+        </foreach>
+    </update>
+    <update id="updateBatch">
+        update d_material
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="mname =case" suffix="end,">
+                <foreach collection="materialEntitys" item="i" index="index">
+                    <if test="i.mname!=null">
+                        when id=#{i.id} then #{i.mname}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="acqDate =case" suffix="end,">
+                <foreach collection="materialEntitys" item="i" index="index">
+                    <if test="i.acqDate!=null">
+                        when id=#{i.id} then #{i.acqDate}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="unitPrice =case" suffix="end,">
+                <foreach collection="materialEntitys" item="i" index="index">
+                    <if test="i.unitPrice!=null">
+                        when id=#{i.id} then #{i.unitPrice}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="quantity =case" suffix="end,">
+                <foreach collection="materialEntitys" item="i" index="index">
+                    <if test="i.quantity!=null">
+                        when id=#{i.id} then #{i.quantity}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="unit =case" suffix="end,">
+                <foreach collection="materialEntitys" item="i" index="index">
+                    <if test="i.unit!=null">
+                        when id=#{i.id} then #{i.unit}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="remark =case" suffix="end,">
+                <foreach collection="materialEntitys" item="i" index="index">
+                    <if test="i.remark!=null">
+                        when id=#{i.id} then #{i.remark}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="remainQuantity =case" suffix="end,">
+                <foreach collection="materialEntitys" item="i" index="index">
+                    <if test="i.remainQuantity!=null">
+                        when id=#{i.id} then #{i.remainQuantity}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="auditor =case" suffix="end,">
+                <foreach collection="materialEntitys" item="i" index="index">
+                    <if test="i.auditor!=null">
+                        when id=#{i.id} then #{i.auditor}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="billNo =case" suffix="end,">
+                <foreach collection="materialEntitys" item="i" index="index">
+                    <if test="i.billNo!=null">
+                        when id=#{i.id} then #{i.billNo}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="biller =case" suffix="end,">
+                <foreach collection="materialEntitys" item="i" index="index">
+                    <if test="i.biller!=null">
+                        when id=#{i.id} then #{i.biller}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="booker =case" suffix="end,">
+                <foreach collection="materialEntitys" item="i" index="index">
+                    <if test="i.booker!=null">
+                        when id=#{i.id} then #{i.booker}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="deptId =case" suffix="end,">
+                <foreach collection="materialEntitys" item="i" index="index">
+                    <if test="i.deptId!=null">
+                        when id=#{i.id} then #{i.deptId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="rdDeptId =case" suffix="end,">
+                <foreach collection="materialEntitys" item="i" index="index">
+                    <if test="i.rdDeptId!=null">
+                        when id=#{i.id} then #{i.rdDeptId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="specification =case" suffix="end,">
+                <foreach collection="materialEntitys" item="i" index="index">
+                    <if test="i.specification!=null">
+                        when id=#{i.id} then #{i.specification}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="warehouse =case" suffix="end,">
+                <foreach collection="materialEntitys" item="i" index="index">
+                    <if test="i.warehouse!=null">
+                        when id=#{i.id} then #{i.warehouse}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="accNumber =case" suffix="end,">
+                <foreach collection="materialEntitys" item="i" index="index">
+                    <if test="i.accNumber!=null">
+                        when id=#{i.id} then #{i.accNumber}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="picker =case" suffix="end,">
+                <foreach collection="materialEntitys" item="i" index="index">
+                    <if test="i.picker!=null">
+                        when id=#{i.id} then #{i.picker}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="totalAmount =case" suffix="end,">
+                <foreach collection="materialEntitys" item="i" index="index">
+                    <if test="i.totalAmount!=null">
+                        when id=#{i.id} then #{i.totalAmount}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="purpose =case" suffix="end,">
+                <foreach collection="materialEntitys" item="i" index="index">
+                    <if test="i.purpose!=null">
+                        when id=#{i.id} then #{i.purpose}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="accountTitleId =case" suffix="end,">
+                <foreach collection="materialEntitys" item="i" index="index">
+                    <if test="i.accountTitleId!=null">
+                        when id=#{i.id} then #{i.accountTitleId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="msLastUpdatorId =case" suffix="end,">
+                <foreach collection="materialEntitys" item="i" index="index">
+                    <if test="i.msLastUpdatorId!=null">
+                        when id=#{i.id} then #{i.msLastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdatorId =case" suffix="end,">
+                <foreach collection="materialEntitys" item="i" index="index">
+                    <if test="i.lastUpdatorId!=null">
+                        when id=#{i.id} then #{i.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdateTime =case" suffix="end,">
+                <foreach collection="materialEntitys" item="i" index="index">
+                    <if test="i.lastUpdateTime!=null">
+                        when id=#{i.id} then #{i.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="materialEntitys" separator="or" item="i" index="index">
+            id=#{i.id}
+        </foreach>
+    </update>
+    <update id="setPicker">
+        update d_material set picker=#{picker.picker},biller = #{picker.biller},lastUpdateTime=#{now},
+         lastUpdatorId=#{userId},msLastUpdatorId=#{msUserId}
+        where id in (<foreach collection="picker.ids" separator="," item="id">#{id}</foreach>)
+    </update>
+</mapper>

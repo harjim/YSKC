@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xxl.job.executor.dao.ms.FlowInstanceLogDao">
+    <select id="getLastData" resultType="com.xxl.job.executor.models.dailyreport.DailyReportDetailModel">
+        select fl.submiter userId,
+               count(if( fl.lastNode and fl.status=1,1,null)) done,
+               count(if(fl.status=2,1,null)) reject,
+               count(if(fl.nodeId = 1,1,null)) commit,
+               DATE_FORMAT(fl.createTime,'%Y-%m-%d') workDate,fi.moduleId,fi.companyId from flowInstance_log fl
+        inner join flowInstance fi on fi.id=fl.instanceId
+        where fl.submiter is not null and fl.createTime >=#{begin} and fl.createTime &lt;=#{end}
+        and ((fl.lastNode and fl.status = 1) or (fl.status = 2) or (fl.nodeId = 1))
+        group by userId,workDate,moduleId,companyId
+    </select>
+</mapper>

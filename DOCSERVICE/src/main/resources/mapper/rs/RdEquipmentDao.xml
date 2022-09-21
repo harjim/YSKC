@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.docservice.dao.rs.RdEquipmentDao">
+    <insert id="addBatch">
+        insert into rdEquipment(creatorId,lastUpdatorId,createTime,lastUpdateTime,
+        msCreatorId,msLastUpdatorId,`year`,companyId,ecode,rdDeptId,etype)
+        values
+        <foreach collection="rdEquipments" item="re" separator=",">
+            (#{re.creatorId},#{re.lastUpdatorId},#{re.createTime},#{re.lastUpdateTime},
+            #{re.msCreatorId},#{re.msLastUpdatorId},#{re.year},#{re.companyId},#{re.ecode},#{re.rdDeptId},#{re.etype})
+        </foreach>
+    </insert>
+    <update id="updateList">
+        <foreach collection="updateModels" item="item" separator=";">
+            update rdEquipment set etype=#{item.etype},rdDeptId=#{item.rdDeptId},lastUpdatorId=#{userId},
+            lastUpdateTime=#{date},msLastUpdatorId=#{msUserId} where id=#{item.id}
+        </foreach>
+    </update>
+
+    <select id="getByEcodes" resultType="com.yskc.docservice.models.rs.rdequipment.RdEquipmentModel">
+        select rde.id, rde.ecode,rde.etype
+        from rdEquipment rde
+        where rde.companyId = #{companyId} and rde.`year` = #{year}
+        and rde.ecode in
+        <foreach collection="ecodes" open="(" separator="," close=")" item="ecode">
+            #{ecode}
+        </foreach>
+    </select>
+    <select id="getEtype" resultType="java.lang.Integer">
+        select distinct (etype) from rdEquipment
+        where companyId = #{companyId} and `year` = #{year} and ecode in (<foreach collection="ecode" separator="," item="e">
+        #{e}
+    </foreach>)
+    </select>
+
+    <insert id="saveRdEquipmentLists" parameterType="java.util.List">
+        insert into rdEquipment
+        (creatorId,lastUpdatorId,createTime,lastUpdateTime,year,companyId,msCreatorId,msLastUpdatorId,ecode,rdDeptId,etype)
+        values
+        <foreach collection="RdEquipmentEntitys" item="equipment" index="index" separator="," close=";">
+            (#{equipment.creatorId},#{equipment.lastUpdatorId},#{equipment.createTime},#{equipment.lastUpdateTime},
+             #{equipment.year}, #{equipment.companyId},#{equipment.msCreatorId},#{equipment.msLastUpdatorId},
+             #{equipment.ecode},#{equipment.rdDeptId},#{equipment.etype})
+        </foreach>
+
+    </insert>
+
+
+</mapper>

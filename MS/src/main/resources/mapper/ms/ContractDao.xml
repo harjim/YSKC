@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.ContractDao">
+    <update id="updateQrcode">
+        update contract set qrcode=#{qrcode},lastUpdatorId=#{userId},lastUpdateTime=#{now}
+        where id=#{id}
+    </update>
+
+    <select id="getList" resultType="com.yskc.ms.models.contract.ContractModel">
+        select co.id,co.contractNo,co.customerId,c.companyName,co.deptId,yd.deptName,co.techId,co.finaId,
+               cm.userId ownerId,cm2.userId businessId,co.signDate,co.effectDate,co.closeDate,co.createTime,
+               co.filepath,co.qrcode,co.remark,co.sealType,fn.nodeName,ff.instanceId,f.auditUsers,co.projectCnt,co.partnerCnt,
+               case when ff.status is null then 5 else ff.status end as status,
+               case when fn.nodeNumber is null then 0 else fn.nodeNumber end as nodeNumber
+        from contract co
+        left join contract_member cm on co.id = cm.contractId and cm.mtype = 3
+        left join contract_member cm2 on co.id = cm2.contractId and cm2.mtype = 4
+        left join customer c on co.customerId = c.id
+        left join ys_dept yd on co.deptId = yd.id
+        left join flowInstance_form ff on ff.formId = co.id and ff.moduleId = #{moduleId}
+        left join flowInstance f on ff.instanceId = f.id
+        left join flowInstance_curNode fm on fm.instanceId = f.id
+        left join flowNode fn on fn.flowId = fm.flowId and fm.curNodeId = fn.id
+        where 1=1
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.byMember">
+            <property name="tableAlias" value="co"/>
+            <property name="colId" value="contractId"/>
+            <property name="userTable" value="contract_member"/>
+            <property name="memberId" value="userId"/>
+        </include>
+        <if test="query.companyName!=null and query.companyName!=''">
+            and c.companyName like concat('%',#{query.companyName},'%')
+        </if>
+        <if test="query.status!=null and query.status!=5">
+            and ff.status = #{query.status}
+        </if>
+        <if test="query.status!=null and query.status == 5">
+            and ff.status is null
+        </if>
+        <if test="query.nodeNumber!=null and query.nodeNumber!=0">
+            and fn.nodeNumber = #{query.nodeNumber}
+        </if>
+        <if test="query.nodeNumber==0">
+            and fn.nodeNumber is null
+        </if>
+        <if test="query.deptId!=null and query.deptId!=0">
+            and yd.fullPath like CONCAT('%/', #{query.deptId,jdbcType=VARCHAR}, '/%')
+        </if>
+        <if test="query.ownerId!=null and query.ownerId!=0">
+            and cm.userId = #{query.ownerId}
+        </if>
+    </select>
+    <select id="getContractNo" resultType="java.lang.String">
+        select max(contractNo)
+        from contract
+        where createTime &lt; #{tomorrow} and createTime >= #{today}
+    </select>
+    <select id="getInfo" resultType="com.yskc.ms.models.contract.ContractModel">
+        select co.id,co.contractNo,co.customerId,c.companyName,co.deptId,yd.deptName,co.techId,co.finaId,
+               cm.userId ownerId,cm2.userId businessId,co.signDate,co.effectDate,co.closeDate,co.createTime,
+               co.filepath,co.qrcode,co.remark,co.sealType,fn.nodeName,ff.instanceId,f.auditUsers,co.projectCnt,co.partnerCnt,
+               case when ff.status is null then 5 else ff.status end as status,
+               case when fn.nodeNumber is null then 0 else fn.nodeNumber end as nodeNumber,
+               co.expressNo,co.expressAddress
+        from contract co
+                 left join contract_member cm on co.id = cm.contractId and cm.mtype = 3
+                 left join contract_member cm2 on co.id = cm2.contractId and cm2.mtype = 4
+                 left join customer c on co.customerId = c.id
+                 left join ys_dept yd on co.deptId = yd.id
+                 left join flowInstance_form ff on ff.formId = co.id and ff.moduleId = #{moduleId}
+                 left join flowInstance f on ff.instanceId = f.id
+                 left join flowInstance_curNode fm on fm.instanceId = f.id
+                 left join flowNode fn on fn.flowId = fm.flowId and fm.curNodeId = fn.id
+        where co.id = #{id}
+    </select>
+    <select id="getPassInfo" resultType="com.yskc.ms.models.contract.ContractModel">
+        select contractNo,customerId,filepath
+        from contract where id = #{id}
+    </select>
+</mapper>

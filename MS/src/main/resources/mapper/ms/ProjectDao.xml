@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.ProjectDao">
+    <update id="updateProjectOwerId">
+        update project set owerId = #{project.owerId},deptId = #{project.deptId},lastUpdateTime =
+        #{project.lastUpdateTime},
+        lastUpdatorId = #{project.lastUpdatorId}
+        <if test="project.businessId != null and project.businessId > 0">
+            ,businessId = #{project.businessId}
+        </if>
+        where id in
+        <foreach collection="projectIds" open="(" separator="," close=")" item="id">
+            #{id}
+        </foreach>
+    </update>
+    <select id="getList" resultType="com.yskc.ms.models.project.ProjectInfoModel">
+        select
+        p.id,p.customerId,c.companyName,c.addressCode,p.year,p.productId,prd.productName,prd.productType,p.owerId,p.deptId,p.remark,
+        p.createTime,d.deptName,d.fullname
+        from project p inner join customer c on p.customerId=c.id
+        inner join product prd on p.productId=prd.id
+        left join ys_dept d on p.deptId = d.id
+        <where>
+            <include refid="com.yskc.ms.dao.ms.BaseDataDao.project">
+                <property name="tableAlias" value="p"/>
+                <property name="dataPerm" value="#{dataPerm}"/>
+                <property name="userTable" value="project_member"/>
+                <property name="colId" value="projectId"/>
+            </include>
+            <if test="query.companyName != null and query.companyName != ''">
+                and c.companyName like "%"#{query.companyName}"%"
+            </if>
+            <if test="query.productName != null and query.productName != ''">
+                and prd.productName like "%"#{query.productName}"%"
+            </if>
+            <if test="query.year != null and query.year != ''">
+                and p.year=#{query.year}
+            </if>
+            <if test="query.fullPath != null and query.fullPath != ''">
+                and d.fullPath like #{query.fullPath}"%"
+            </if>
+            <if test="query.tIds != null and query.tIds.length>0">
+                and p.id in (select projectId from project_member where mType=1 and memberId in
+                <foreach collection="query.tIds" open="(" separator="," close=")" item="tId">
+                    #{tId}
+                </foreach>
+                )
+            </if>
+            <if test="query.fIds != null and query.fIds.length>0">
+                and p.id in (select projectId from project_member where mType=2 and memberId in
+                <foreach collection="query.fIds" open="(" separator="," close=")" item="fId">
+                    #{fId}
+                </foreach>
+                )
+            </if>
+            <if test="query.ownId != null and query.ownId>0">
+                and p.id in (select projectId from project_member where mType=3 and memberId = #{query.ownId})
+            </if>
+            <if test="query.mId != null and query.mId>0">
+                and p.id in (select projectId from project_member where mType=4 and memberId = #{query.mId})
+            </if>
+        </where>
+    </select>
+    <select id="getProject" resultType="com.yskc.ms.models.project.ProjectInfoModel">
+        select p.id,p.customerId,c.companyName,c.addressCode,p.year,p.productId,prd.productName,p.owerId,p.deptId,p.remark,
+        p.createTime,p.lastUpdateTime,
+        p.businessId,
+        d.deptName,d.fullname,prd.productType
+        from project p
+        inner join customer c on p.customerId=c.id
+        inner join product prd on p.productId=prd.id
+        left join ys_dept d on p.deptId = d.id
+        where p.id = #{projectId}
+        order by p.year desc,p.createTime desc
+    </select>
+    <select id="getProjectByCustomerIds" resultType="com.yskc.ms.models.project.ProjectInfoModel">
+        select pro.customerId,pro.id,pro.year,prd.productName from project pro inner join product prd on
+        pro.productId=prd.id
+        where
+        pro.customerId in
+        <foreach open="(" close=")" collection="customerIds" separator="," item="customerId">
+            #{customerId}
+        </foreach>
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.project">
+            <property name="tableAlias" value="pro"/>
+            <property name="dataPerm" value="#{dataPerm}"/>
+            <property name="userTable" value="project_member"/>
+            <property name="colId" value="projectId"/>
+        </include>
+        <if test="query.year != null and query.year>0">
+            and pro.year=#{query.year}
+        </if>
+        <if test="query.tIds != null and query.tIds.length>0">
+            and pro.id in (select projectId from project_member where mType=1 and memberId in
+            <foreach collection="query.tIds" open="(" separator="," close=")" item="tId">
+                #{tId}
+            </foreach>
+            )
+        </if>
+        <if test="query.fIds != null and query.fIds.length>0">
+            and pro.id in (select projectId from project_member where mType=2 and memberId in
+            <foreach collection="query.fIds" open="(" separator="," close=")" item="fId">
+                #{fId}
+            </foreach>
+            )
+        </if>
+        order by pro.customerId,pro.year desc
+    </select>
+    <select id="getOwnCompanyId" resultType="java.lang.Integer">
+        select distinct c.companyId
+        from project pro
+        INNER JOIN customer c on c.id = pro.customerId
+        where c.companyId > 0
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.project">
+            <property name="tableAlias" value="pro"/>
+            <property name="dataPerm" value="#{dataPerm}"/>
+            <property name="userTable" value="project_member"/>
+            <property name="colId" value="projectId"/>
+        </include>
+    </select>
+    <select id="getAllCustomer" resultType="com.yskc.ms.models.dept.DeptCustomerModel">
+        select customerId,deptId,`year` from project group by customerId, deptId, `year`
+    </select>
+    <select id="countCustomer" resultType="java.lang.Integer">
+        select count(distinct customerId) from project
+    </select>
+    <select id="getCustomerIdsByIds" resultType="com.yskc.ms.entity.ms.ProjectMember">
+        select id,customerId from project where id in
+        <foreach collection="ids" open="(" separator="," close=")" item="id">
+            #{id}
+        </foreach>
+    </select>
+    <select id="getTechList" resultType="com.yskc.ms.models.tech.ProjectTechProgressModel">
+        select pj.id,c.companyAddress,c.companyName,pd.productName,
+        pj.productId,pj.deptId,pj.owerId,
+        yd.fullname as
+        deptName,yu.realName,ptl.process,ptl.feedback,ptl.status,ptl.budget,ptl.labelKey,ptl.stageKey,ptl.lastUpdateTime,
+        pts.deadline,ptl.completedDate,pj.createTime as projectCreateTime,pj.year
+        from project pj
+        inner join product pd on pj.productId=pd.id and pd.productType=0
+        inner join customer c on pj.customerId=c.id
+        inner join ys_dept yd on pj.deptId=yd.id
+        inner join ys_user yu on pj.owerId=yu.id
+        left join project_tech_log ptl on pj.lastLogId=ptl.id
+        LEFT JOIN product_stage ps ON pj.productId=ps.productId AND ptl.stageKey=ps.stageKey
+        LEFT JOIN project_tech_stage pts ON pj.id=pts.projectId AND pts.stageId=ps.id
+        where 1=1
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.project">
+            <property name="dataPerm" value="${dataPerm}"/>
+            <property name="tableAlias" value="pj"/>
+            <property name="userTable" value="project_member"/>
+            <property name="colId" value="projectId"/>
+        </include>
+        <if test="query.ptName!=null and query.ptName!=''">
+            and pd.productName like "%"#{query.ptName}"%"
+        </if>
+        <if test="query.companyName!=null and query.companyName!=''">
+            and c.companyName like "%"#{query.companyName}"%"
+        </if>
+        <if test="query.fullPath != null and query.fullPath != ''">
+            and yd.fullPath like #{query.fullPath}"%"
+        </if>
+        <if test="query.tIds != null and query.tIds.length>0">
+            and pj.id in (select projectId from project_member where mType=1 and memberId in
+            <foreach collection="query.tIds" open="(" separator="," close=")" item="tId">
+                #{tId}
+            </foreach>
+            )
+        </if>
+        <if test="query.year != null and query.year != ''">
+            and pj.year=#{query.year}
+        </if>
+        <if test="query.stageKey!=null and query.stageKey!=''">
+            and ptl.stageKey=#{query.stageKey}
+        </if>
+        <if test="query.status!=null and query.status!=''">
+            and ptl.status=#{query.status}
+        </if>
+    </select>
+    <select id="getByLogId" resultType="com.yskc.ms.entity.ms.Project">
+        select * from project
+        where id=#{projectId} and lastLogId=#{lastLogId}
+    </select>
+
+    <select id="getListByProduct" resultType="com.yskc.ms.entity.ms.Project">
+        select * from project
+        where productId=#{productId}
+    </select>
+    <select id="getTechProjects" resultType="com.yskc.ms.models.rs.RsTechProjectModel">
+        select pj.id,c.companyName,c.companyId,pd.productName,pj.productId,
+        pj.deptId,pd.shouldRegister as beian,yd.fullname as deptName,pj.year as pyear
+        from project pj
+        inner join product pd on pj.productId=pd.id and pd.productType=0
+        inner join customer c on pj.customerId=c.id
+        inner join ys_dept yd on pj.deptId=yd.id
+        inner join ys_user yu on pj.owerId=yu.id
+        where 1=1
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.project">
+            <property name="tableAlias" value="pj"/>
+            <property name="dataPerm" value="#{dataPerm}"/>
+            <property name="userTable" value="project_member"/>
+            <property name="colId" value="projectId"/>
+        </include>
+        <if test="query.ptName!=null and query.ptName!=''">
+            and pd.productName like "%"#{query.ptName}"%"
+        </if>
+        <if test="query.companyName!=null and query.companyName!=''">
+            and c.companyName like "%"#{query.companyName}"%"
+        </if>
+        <if test="query.fullPath != null and query.fullPath != ''">
+            and yd.fullPath like #{query.fullPath}"%"
+        </if>
+        <if test="query.year != null and query.year != ''">
+            and pj.year=#{query.year}
+        </if>
+    </select>
+    <select id="getBeianExport" resultType="com.yskc.ms.models.tech.BeianExportModel">
+        select pd.productName,c.companyId,c.companyName,pd.year,p.id as projectId,pd.id,
+               c.id as customerId,yd.deptName,c.companyLevel,c.addressCode
+        from project p
+        left join ys_dept yd on yd.id = p.deptId
+        inner join product pd on p.productId=pd.id
+        inner join customer c on p.customerId=c.id
+        where pd.shouldRegister
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.project">
+            <property name="tableAlias" value="p"/>
+            <property name="dataPerm" value="#{dataPerm}"/>
+            <property name="userTable" value="project_member"/>
+            <property name="colId" value="projectId"/>
+        </include>
+        <if test="query.companyName!=null and query.companyName!=''">
+            and c.companyName like "%"#{query.companyName}"%"
+        </if>
+        <if test="query.productName!=null and query.productName!=''">
+            and pd.productName like "%"#{query.productName}"%"
+        </if>
+        <if test="query.year!=null and query.year>0">
+            and pd.year =#{query.year}
+        </if>
+    </select>
+    <select id="getBeianProjects" resultType="com.yskc.ms.models.tech.BeianInfoModel">
+        select pd.productName,c.companyId,c.companyName,pd.year,p.id as projectId,pd.id,c.id as customerId
+        from project p
+        inner join product pd on p.productId=pd.id
+        inner join customer c on p.customerId=c.id
+        where pd.shouldRegister
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.project">
+            <property name="tableAlias" value="p"/>
+            <property name="dataPerm" value="#{dataPerm}"/>
+            <property name="userTable" value="project_member"/>
+            <property name="colId" value="projectId"/>
+        </include>
+        <if test="query.companyName!=null and query.companyName!=''">
+            and c.companyName like "%"#{query.companyName}"%"
+        </if>
+        <if test="query.productName!=null and query.productName!=''">
+            and pd.productName like "%"#{query.productName}"%"
+        </if>
+        <if test="query.year!=null and query.year>0">
+            and pd.year =#{query.year}
+        </if>
+    </select>
+    <select id="getInnovationProjectIds" resultType="java.lang.Integer">
+        select p.id from project p
+        inner join product pt on pt.id=p.productId
+        where p.customerId=#{customerId} and p.year=#{year} and pt.productType in (1,2)
+    </select>
+</mapper>

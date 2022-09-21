@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.es.UserExpertLogDao">
+    <insert id="addAuditLog">
+        insert into user_expert_log (userExpertId,status,suggestion,createTime,msCreatorId) VALUES
+        <foreach collection="model.userExpertIds" separator="," item="userExpertId">
+            (#{userExpertId},#{model.status},#{model.suggestion},#{model.createTime},#{model.msCreatorId})
+        </foreach>
+    </insert>
+    <select id="getUserAuditLog" resultType="com.yskc.ms.entity.es.UserExpertLogEntity">
+        select * from user_expert_log where userExpertId = #{id}
+        ORDER BY createTime ASC
+    </select>
+</mapper>

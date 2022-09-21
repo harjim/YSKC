@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.tech.ProjectListDao">
+    <select id="getListByStage" resultType="com.yskc.rs.entity.tech.ProjectListEntity">
+        select * from t_project_list
+        where stageListId in
+        <foreach collection="stageListIds" item="stageListId" open="(" separator="," close=")">
+            #{stageListId}
+        </foreach>
+        <if test="projectId!=null and projectId>0">
+           and  projectId=#{projectId}
+        </if>
+    </select>
+</mapper>

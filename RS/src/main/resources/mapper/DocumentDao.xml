@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.DocumentDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.yskc.rs.entity.DocumentEntity"
+               id="documentMap">
+        <result property="id" column="id"/>
+        <result property="projectId" column="projectId"/>
+        <result property="docNumber" column="docNumber"/>
+        <result property="docName" column="docName"/>
+        <result property="content" column="Content"/>
+        <result property="stageId" column="stageId"/>
+        <result property="processId" column="processId"/>
+        <result property="templateId" column="templateId"/>
+        <result property="companyId" column="companyId"/>
+        <result property="creatorId" column="creatorId"/>
+        <result property="createTime" column="createTime"/>
+        <result property="lastUpdatorId" column="lastUpdatorId"/>
+        <result property="lastUpdateTime" column="lastUpdateTime"/>
+    </resultMap>
+
+    <select id="getTemplateList" resultType="com.yskc.rs.models.document.TemplateModel">
+		SELECT t.id as templateId,t.docName,t.templateName,t.templatePath,pt.seq,pt.multiple,pt.enabled,pt.processId
+		FROM docProcessTemplate pt inner join docTemplate t on pt.templateId=t.id where pt.processId=1
+		ORDER BY pt.seq
+	</select>
+	<select id="docList" resultType="com.yskc.rs.models.document.ProjectDocModel">
+		SELECT d.id,d.projectId,d.docNumber,d.docName,d.stageId,d.templateId,s.stageName,d.lastUpdateTime,t.docName as templateDocName,t.templateName
+		FROM p_document d
+		INNER JOIN docTemplate t on d.templateId = t.id
+		LEFT JOIN p_stage s	ON d.stageId = s.id
+		WHERE d.projectId=#{projectId}  and d.companyId=#{companyId} ORDER BY s.beginDate, d.docNumber
+	</select>
+	<select id="getStageList" resultType="com.yskc.rs.entity.StageEntity">
+		select * FROM p_stage where projectId=#{projectId} and companyId=#{companyId}
+	</select>
+	<insert id="addDocList">
+		INSERT INTO p_document (projectId,docNumber,docName,Content,stageId,processId,templateId,companyId,creatorId,createTime,lastUpdatorId,lastUpdateTime)
+		VALUES
+		<foreach collection="docModelList" separator="," item="d">
+			(#{d.projectId},#{d.docNumber},#{d.docName},'{}',#{d.stageId},#{d.processId},#{d.templateId},#{companyId},#{userId},now(),#{userId},now())
+		</foreach>
+	</insert>
+	<delete id="delDoc">
+		DELETE FROM p_document WHERE companyId=#{companyId}
+		and id in
+		<foreach collection="ids" open="(" separator="," close=")" item="id">
+			#{id}
+		</foreach>
+	</delete>
+    <select id="getDocData"
+            resultType="com.yskc.rs.models.document.DocumentModel">
+		select 
+		d.id,
+		d.projectId,
+		d.docNumber,
+		d.docName,
+		d.content,
+		d.stageId,
+		d.processId,
+		d.templateId,
+		d.creatorId,
+		d.createTime,
+		d.lastUpdatorId,
+		d.lastUpdateTime,
+		p.pname,
+		p.beginDate,
+		p.endDate,
+		p.rdDeptId,
+		r.deptName,
+		p.estimateExpense,
+		p.masterENumber,
+		e.ename
+		from p_document d
+		left join p_project p on p.id = d.projectId
+		left join rdDept r on r.id = p.rdDeptId
+		left join employee e on e.enumber = p.masterENumber
+		where d.stageId = #{id} 
+		and d.projectId = #{projectId} 
+		and e.companyId = #{companyId}
+	</select>
+
+
+</mapper>

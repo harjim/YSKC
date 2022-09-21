@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.RdDeptDao">
+    <insert id="addBatch" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO rdDept
+        (companyId,deptName,parentId,`level`,`identity`,`remark`,creatorId,createTime,
+        lastUpdatorId,lastUpdateTime,msCreatorId,msLastUpdatorId,`year`,fullName,textDirection,nodeType,`seq`,align)
+        VALUES
+        <foreach collection="list" separator="," item="i">
+            (#{i.companyId},#{i.deptName},#{i.parentId},#{i.level},#{i.identity},#{i.remark},#{i.creatorId},
+            #{i.createTime},#{i.lastUpdatorId},#{i.lastUpdateTime},#{i.msCreatorId},#{i.msLastUpdatorId},#{i.year},
+             #{i.fullName},#{i.textDirection},#{i.nodeType},#{i.seq},#{i.align})
+        </foreach>
+    </insert>
+    <update id="updateIdentity">
+        update rdDept
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="identity =case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    <if test="item.identity!=null">
+                        when id=#{item.id} then #{item.identity}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where id in
+        <foreach collection="list" open="(" separator="," close=")" item="item">
+            #{item.id}
+        </foreach>
+    </update>
+    <update id="updateIdentities">
+        update rdDept
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="identity =case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    <if test="item.identity!=null">
+                        when id=#{item.id} then #{item.identity}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="parentId =case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    <if test="item.parentId!=null">
+                        when id=#{item.id} then #{item.parentId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="fullName =case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    <if test="item.fullName!=null">
+                        when id=#{item.id} then #{item.fullName}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where id in
+        <foreach collection="list" open="(" separator="," close=")" item="item">
+            #{item.id}
+        </foreach>
+    </update>
+    <update id="updateList">
+        <foreach collection="updateList" item="item" separator=";">
+            update rdDept set fullName=#{item.fullName},lastUpdatorId=#{item.lastUpdatorId},
+            lastUpdateTime=#{item.lastUpdateTime},msLastUpdatorId=#{item.msLastUpdatorId}
+            where id=#{item.id}
+        </foreach>
+    </update>
+    <update id="updateSeq">
+        update rdDept
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="seq =case" suffix="end,">
+                        when id=#{sortId} then #{seq}
+                        when id=#{nextId} then #{nextSeq}
+            </trim>
+        </trim>,lastUpdatorId=#{userId},msLastUpdatorId=#{msUserId},lastUpdateTime=#{now} where id in (#{sortId},#{nextId})
+    </update>
+
+    <select id="queryRdDeptTree" resultType="com.yskc.rs.models.rddept.RdDeptTree">
+           SELECT
+            id AS `value`,
+            parentId,
+            deptName AS title,
+            `level`,
+            `identity` as `key`,
+            nodeType,
+            textDirection,
+            align
+        FROM
+            rdDept
+        WHERE
+            companyId = #{companyId} and year = #{year}
+        ORDER BY
+            `level`,seq,id
+</select>
+    <select id="checkedByDeptNameAndLevelAndPid" resultType="java.lang.Integer">
+        select count(id) from rdDept where companyId = #{companyId} and deptName = #{deptName}
+        and `level` = #{level} and parentId = #{pid} and `year` = #{year}
+    </select>
+    <select id="checkedUsed" resultType="java.lang.Integer">
+    SELECT SUM(rdDeptId) FROM
+    ( SELECT COUNT(e.rdDeptId) AS rdDeptId FROM rdEmployee e WHERE e.rdDeptId = #{id}
+    UNION
+    SELECT COUNT(eq.rdDeptId) AS rdDeptId FROM rdEquipment eq WHERE eq.rdDeptId = #{id})
+    AS rdDeptId
+    </select>
+
+    <select id="getRdDeptByDeptName" resultType="com.yskc.rs.entity.RdDeptEntity">
+        select * from rdDept where deptName = #{deptName} and companyId = #{companyId}
+    </select>
+
+    <select id="getRdDeptOneData" resultType="com.yskc.rs.entity.RdDeptEntity">
+        select  *  from rdDept where parentId=-1 and companyId = #{companyId} limit 1
+    </select>
+    <select id="selectByNames" resultType="com.yskc.rs.entity.RdDeptEntity">
+        select * from rdDept
+        where companyId=#{companyId}
+        <if test="year != null and year != 0">
+            and year = #{year}
+        </if>
+        and deptName in
+        <foreach item="item" index="index" collection="rdDeptNames" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+    <select id="selectMaxYear" resultType="java.lang.Integer">
+        select MAX(year) from rdDept where companyId = #{companyId}
+    </select>
+    <select id="getPrevYear" resultType="java.lang.Integer">
+        select DISTINCT `year` from rdDept where companyId = #{companyId} and `year` &lt; #{year} order by `year` desc
+    </select>
+    <select id="getRdDeptByYear" resultType="com.yskc.rs.entity.RdDeptEntity">
+        select * from rdDept where companyId = #{companyId} and `year` = #{year} order by `level`
+    </select>
+    <select id="queryChildrenByTerm" resultType="com.yskc.rs.entity.RdDeptEntity">
+        select * from rdDept where companyId = #{companyId} and `identity` like #{identity}"%" order by `level`
+    </select>
+    <select id="getCompanyOrg" resultType="com.yskc.rs.models.CommonOrgModel">
+        select id, deptName as name, identity as fullpath from rdDept where companyId = #{companyId} and `year` = #{year}
+    </select>
+    <select id="countNode" resultType="java.lang.Integer">
+        select count(id) from rdDept where parentId = #{parentId}
+    </select>
+    <select id="getChildNode" resultType="com.yskc.rs.entity.RdDeptEntity">
+        select * from rdDept where parentId in
+        <foreach collection="parentIds" item="parentId" open="(" separator="," close=")">
+            #{parentId}
+        </foreach>
+
+    </select>
+    <select id="getFullName" resultType="java.lang.String">
+        select fullName from rdDept where id = #{id}
+    </select>
+    <select id="getParentNode" resultType="com.yskc.rs.entity.RdDeptEntity">
+        select id,deptName,companyId,`year`
+        from rdDept
+        where parentId=-1 and `level`=0 and companyId=#{companyId} and `year`=#{year}
+    </select>
+    <select id="getMaxSeq" resultType="java.lang.Integer">
+        select max(seq) from rdDept where companyId=#{companyId} and `year`=#{year} and `level`=#{level}
+    </select>
+    <select id="getNextSort" resultType="com.yskc.rs.entity.RdDeptEntity">
+        select id,seq from rdDept where companyId=#{companyId} and `year`=#{year} and `level`=#{level} and nodeType != 1
+        <if test="left">
+            and seq &lt;#{seq} order by `seq` desc
+        </if>
+        <if test="!left">
+            and seq >#{seq} order by `seq`
+        </if>
+       limit 1
+    </select>
+    <select id="getDeptName" resultType="java.lang.String">
+        select deptName from rdDept where id = #{id}
+    </select>
+</mapper>

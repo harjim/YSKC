@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.rs.DocTemplateDao">
+
+    <select id="queryDocTemplate" resultType="com.yskc.ms.entity.rs.DocTemplateEntity">
+        SELECT  * from docTemplate
+        <where>
+            <if test="docName != null and docName.length()>0">
+               docName like "%"#{docName}"%"
+            </if>
+        </where>
+    </select>
+
+</mapper>

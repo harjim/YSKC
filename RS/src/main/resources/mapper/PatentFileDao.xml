@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.project.PatentFileDao">
+    <select id="getPatentFiles" resultType="com.yskc.rs.models.PatentPlan.PatentFileModel">
+        select id,fileType,filePath,fileName,patentPlanId,patentNo
+        from p_patent_file
+        where 1=1
+        <if test="patentId!=null and patentId>0">
+            and patentPlanId=#{patentId}
+        </if>
+        <if test="patentNo!=null and patentNo!=''">
+            and patentNo=#{patentNo}
+        </if>
+    </select>
+</mapper>

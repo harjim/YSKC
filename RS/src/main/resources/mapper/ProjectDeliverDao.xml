@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.project.ProjectDeliverDao">
+    <insert id="addNode" keyProperty="deliverId" useGeneratedKeys="true" keyColumn="id">
+        insert into p_deliver
+        (creatorId,lastUpdatorId,createTime,lastUpdateTime,msCreatorId,msLastUpdatorId,
+         companyId,projectId,`type`,deliverType,status,node,`month`,`year`)
+         VALUES(#{model.creatorId},#{model.lastUpdatorId},#{model.createTime},#{model.lastUpdateTime},
+                #{model.msCreatorId},#{model.msLastUpdatorId},#{model.companyId},#{model.projectId},#{model.type},
+                #{model.deliverType},#{model.status},#{model.node},#{model.month},#{model.year})
+    </insert>
+    <update id="updateNode">
+        update p_deliver
+         set lastUpdatorId=#{lastUpdatorId},lastUpdateTime=#{lastUpdateTime},msLastUpdatorId=#{msLastUpdatorId},
+             status= #{model.status},node=#{model.node}
+            where projectId = #{model.projectId} and deliverType = #{model.deliverType} and `month` = #{model.month}
+    </update>
+    <update id="updateBatch">
+        <foreach collection="list" item="l" separator=";">
+            update p_deliver
+            set lastUpdatorId=#{l.lastUpdatorId},lastUpdateTime=#{l.lastUpdateTime},msLastUpdatorId=#{l.msLastUpdatorId},
+            status= #{l.status},node=#{l.node}
+            where id = #{l.id}
+        </foreach>
+    </update>
+    <select id="getNodeList" resultType="com.yskc.rs.entity.hightech.ProjectDeliverEntity">
+        select `type`,`year`,deliverType,node,projectId,`month`,status
+        from p_deliver
+        where
+        ((<if test="beginDate!=null and endDate!=null">
+            `month` >=#{beginDate} and `month` &lt;= #{endDate}
+        </if>)or (deliverType in (0,3)))
+        <if test="projectIds!=null">
+            and projectId in
+            (<foreach collection="projectIds" item="pid" separator=",">
+            #{pid}
+        </foreach>)
+        </if>
+    </select>
+    <select id="getNodeByModel" resultType="com.yskc.rs.entity.hightech.ProjectDeliverEntity">
+        select id, `type`,`year`,deliverType,node,projectId,`month`,status,companyId
+        from p_deliver
+        <where>
+            <if test="model.projectId!=null and model.projectId!=0">
+                and projectId = #{model.projectId}
+            </if>
+            <if test="model.month!=null">
+                and `month` = #{model.month}
+            </if>
+            <if test="model.deliverType!=null and model.deliverType!=0">
+                and deliverType = #{model.deliverType}
+            </if>
+        </where>
+        limit 1
+    </select>
+    <select id="getLogList" resultType="com.yskc.rs.models.project.DeliverLogModel">
+        select c.companyName, pdl.node, pdl.companyId, pdl.status, pdl.auditUser, pdl.suggestion, pdl.logTime
+        from p_deliver_log pdl
+        inner join company c on pdl.companyId = c.id
+        <where>
+            <if test="companyId!=null and companyId>=0">
+                and pdl.companyId = #{companyId}
+            </if>
+            <if test="deliverId!=null and deliverId>=0">
+                and pdl.deliverId = #{deliverId}
+            </if>
+        </where>
+    </select>
+    <select id="getTotalList" resultType="com.yskc.rs.models.hightechprogress.HighTechAmountModel">
+        select pd.deliverType,pd.node,pd.`month`,pd.status,COUNT(pd.id) amount
+        from p_deliver pd
+        inner join p_project pp on pp.id = pd.projectId
+        INNER JOIN 	p_audit_opt opt on pp.id = opt.projectId and opt.`year` = Year(#{beginDate})
+        where
+            <if test="companyIds!=null">
+                pp.companyId in
+                (<foreach collection="companyIds" item="companyId" separator=",">
+                #{companyId}
+                </foreach>)
+            </if>
+            and pp.beginYear &lt;= Year(#{beginDate}) and pp.endYear >= Year(#{beginDate})
+            and (pd.deliverType in (0,3)
+            <if test="beginDate!=null and endDate!=null">
+                or (pd.`month` >=#{beginDate} and pd.`month` &lt;= #{endDate})
+            </if>)
+        GROUP BY pd.deliverType, pd.node, pd.`month`,pd.`status`
+    </select>
+    <select id="selectByIds" resultType="com.yskc.rs.entity.hightech.ProjectDeliverEntity">
+        select id,node,companyId,status from p_deliver where id in (
+            <foreach collection="ids" item="id" separator=",">
+                #{id}
+            </foreach>
+            )
+    </select>
+</mapper>

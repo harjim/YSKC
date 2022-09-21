@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.EquipmentDao">
+    <insert id="insertOrUpdate">
+        INSERT INTO equipment
+        (companyId,ename,ecode,emodal,unitPrice,unit,quantity,usefullife,purchaseDate,remark,
+        creatorId,createTime,deptId,depreciationDate,depreciationRate,usagePower,etype,lastUpdateTime,lastUpdatorId,
+        kinds,msCreatorId,msLastUpdatorId,workshopId,deptName,workshop,productLine,processSection,`data`)
+        VALUES
+        <foreach collection="equipments" separator="," item="e">
+            (#{e.companyId},#{e.ename},#{e.ecode},#{e.emodal},#{e.unitPrice},#{e.unit},#{e.quantity},#{e.usefullife},#{e.purchaseDate},#{e.remark},
+            #{e.creatorId},#{e.createTime},#{e.deptId},#{e.depreciationDate},#{e.depreciationRate},#{e.usagePower},#{e.etype},
+            #{e.lastUpdateTime},#{e.lastUpdatorId}, #{e.kinds},#{e.msCreatorId},#{e.msLastUpdatorId},#{e.workshopId},
+            #{e.deptName},#{e.workshop},#{e.productLine},#{e.processSection},#{e.data})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        emodal=values(emodal),
+        quantity=values(quantity),
+        usefullife=values(usefullife),
+        purchaseDate = values(purchaseDate),
+        depreciationDate=values(depreciationDate),
+        depreciationRate = values(depreciationRate),
+        etype = values(etype),
+        usagePower = values(usagePower),
+        ename = values(ename),
+        unitPrice = values(unitPrice),
+        kinds = values(kinds),
+        etype = values(etype),
+        remark = values(remark),
+        unit = values(unit),
+        deptName = values(deptName),
+        workshop = values(workshop),
+        productLine = values(productLine),
+        processSection = values(processSection),
+        `data` = values(`data`),
+        lastUpdatorId = values(lastUpdatorId),
+        lastUpdateTime = values(lastUpdateTime),
+        msLastUpdatorId =values(msLastUpdatorId)
+    </insert>
+
+    <select id="queryAll" resultType="com.yskc.rs.models.equipment.EquipmentModel">
+        SELECT
+        e.id,
+        e.ecode,
+        e.ename,
+        e.emodal,
+        e.unitPrice,
+        e.unit,
+        e.quantity,
+        e.usefullife,
+        e.remark,
+        e.deptId,
+        e.deptName,
+        d.fullname,
+        e.purchaseDate,
+        e.depreciationDate,
+        e.depreciationRate,
+        e.usagePower,
+        e.etype,
+        e.kinds,
+        e.workshop,
+        e.productLine,
+        e.processSection,
+        e.data,e.invalidated
+        FROM
+        equipment AS e
+        left join dept d on e.deptId = d.id
+        where e.companyId = #{companyId}
+        <if test="query.ecode != null and query.ecode != ''">
+            and e.ecode like "%"#{query.ecode}"%"
+        </if>
+        <if test="query.ename != null and query.ename != ''">
+            and e.ename like "%"#{query.ename}"%"
+        </if>
+        <if test="query.emodal != null and query.emodal!= ''">
+            and e.emodal like "%"#{query.emodal}"%"
+        </if>
+        <if test="query.kinds !=null and query.kinds!=''">
+            and e.kinds like "%"#{query.kinds}"%"
+        </if>
+        <if test="query.depreciationDate != null">
+            AND e.depreciationDate &gt;= #{query.beginDepreciationDate}
+            AND e.depreciationDate &lt;= #{query.endDepreciationDate}
+        </if>
+        <if test="query.purchaseDate != null">
+            AND e.purchaseDate &gt;= #{query.beginPurchaseDate}
+            AND e.purchaseDate &lt;= #{query.endPurchaseDate}
+        </if>
+        <if test="query.deptName !=null and query.deptName != ''">
+            and (e.deptName like "%"#{query.deptName}"%"
+            or e.workshop like "%"#{query.deptName}"%")
+        </if>
+        <if test="query.workshop !=null and query.workshop != ''">
+            and (e.productLine like "%"#{query.workshop}"%"
+            or e.processSection like "%"#{query.workshop}"%")
+        </if>
+        <if test="query.etype!= null and query.etype >= 0">
+            and e.etype = #{query.etype}
+        </if>
+        <if test="query.remark!=null and query.remark!=''">
+            and e.remark like "%"#{query.remark}"%"
+        </if>
+    </select>
+
+    <select id="getEquipmentByEcode" resultType="com.yskc.rs.entity.EquipmentEntity">
+        select id,ecode,ename from equipment where companyId = #{companyId} and ecode = #{ecode}
+    </select>
+
+    <select id="getEquipmentByEcodes" resultType="com.yskc.rs.entity.EquipmentEntity">
+        select ecode,ename,etype from equipment where companyId = #{companyId} and ecode in
+        <foreach collection="ecodes" item="ecode" open="(" close=")" separator=",">
+            #{ecode}
+        </foreach>
+    </select>
+    <select id="queryForExport" resultType="com.yskc.rs.models.excel.EquipmentExcel">
+        select
+        e.ecode,e.ename,e.emodal,e.unitPrice,e.unit,e.quantity,e.usefullife,e.remark,e.deptName,e.purchaseDate,d.fullname,
+        e.depreciationDate,e.depreciationRate,e.usagePower,e.workshop, e.productLine, e.processSection,e.etype, e.kinds,e.data,e.invalidated
+        from equipment as e
+        left join dept d on e.deptId = d.id
+        where e.companyId = #{companyId}
+        <if test="query.ecode != null and query.ecode != ''">
+            and e.ecode like "%"#{query.ecode}"%"
+        </if>
+        <if test="query.ename != null and query.ename != ''">
+            and e.ename like "%"#{query.ename}"%"
+        </if>
+        <if test="query.emodal !=null and query.emodal!=''">
+            and e.emodal like "%"#{query.emodal}"%"
+        </if>
+        <if test="query.kinds !=null and query.kinds!=''">
+            and e.kinds like "%"#{query.kinds}"%"
+        </if>
+        <if test="query.depreciationDate!=null">
+            AND e.depreciationDate &gt;= #{query.beginDepreciationDate}
+            AND e.depreciationDate &lt;= #{query.endDepreciationDate}
+        </if>
+        <if test="query.purchaseDate!=null">
+            AND e.purchaseDate &gt;= #{query.beginPurchaseDate}
+            AND e.purchaseDate &lt;= #{query.endPurchaseDate}
+        </if>
+        <if test="query.deptName !=null and query.deptName != ''">
+            and (e.deptName like "%"#{query.deptName}"%"
+            or e.workshop like "%"#{query.deptName}"%")
+        </if>
+        <if test="query.workshop !=null and query.workshop != ''">
+            and (e.productLine like "%"#{query.workshop}"%"
+            or e.processSection like "%"#{query.workshop}"%")
+        </if>
+        <if test="query.etype!=null and query.etype >= 0">
+            and e.etype = #{query.etype}
+        </if>
+        order by e.ecode DESC
+    </select>
+    <select id="getEquipment" resultType="com.yskc.rs.models.equipment.EquipmentMinModel">
+        select ecode,ename from equipment where companyId = #{companyId} and (ename like "%"#{query}"%" or ecode like "%"#{query}"%")
+        limit 0,5
+    </select>
+
+    <select id="getUsed" resultType="java.lang.Integer">
+        select DISTINCT e.id from ${tableName} as u LEFT JOIN equipment as e on u.companyId = e.companyId
+        and u.ecode = e.ecode
+        where e.companyId = #{companyId} and e.id in
+        <foreach collection="ids" open="(" close=")" item="id" separator=",">
+            #{id}
+        </foreach>
+    </select>
+
+    <update id="updateEquipmentEtype">
+        update equipment set
+        etype=#{etype},
+        lastUpdatorId = #{userId},
+        lastUpdateTime = #{now},
+        msLastUpdatorId =#{msUserId}
+        where id in
+        <foreach collection="ids" separator="," open="(" close=")" item="id">
+            #{id}
+        </foreach>
+    </update>
+    <update id="updateEtypeByEcode">
+        update equipment set etype = #{etype} where ecode = #{ecode} and companyId = #{companyId}
+    </update>
+
+    <update id="updateEtypeByRd">
+        update equipment
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="etype =case" suffix="end,">
+                <foreach collection="equipmentEntities" item="item" index="index">
+                    <if test="item.etype!=null">
+                        when ecode=#{item.ecode} then #{item.etype}
+                    </if>
+                </foreach>
+            </trim>
+
+        </trim>
+        where
+        <foreach collection="equipmentEntities" item="item" separator="or">
+            ecode = #{item.ecode} and companyId=#{item.companyId}
+        </foreach>
+    </update>
+    <update id="updateList">
+        <foreach collection="updateEquipments" item="item" separator=";">
+            update equipment set etype=#{item.etype},lastUpdatorId=#{item.lastUpdatorId},lastUpdateTime=#{item.lastUpdateTime},
+            msLastUpdatorId=#{item.msLastUpdatorId}
+            where id=#{item.id}
+        </foreach>
+    </update>
+    <update id="updateEquipmentByEntity">
+        update equipment set `data`=#{e.data},depreciationDate=#{e.depreciationDate},depreciationRate=#{e.depreciationRate},
+            deptId=#{e.deptId},deptName=#{e.deptName},ecode=#{e.ecode},emodal=#{e.emodal},ename=#{e.ename}, etype=#{e.etype},
+            kinds=#{e.kinds},purchaseDate=#{e.purchaseDate},quantity=#{e.quantity},remark=#{e.remark},unit=#{e.unit},unitPrice=#{e.unitPrice},
+            usagePower=#{e.usagePower},usefullife=#{e.usefullife},msLastUpdatorId=#{e.msLastUpdatorId},lastUpdatorId=#{e.lastUpdatorId},
+            lastUpdateTime=#{e.lastUpdateTime},invalidated=#{e.invalidated}
+        where id = #{e.id}
+    </update>
+</mapper>

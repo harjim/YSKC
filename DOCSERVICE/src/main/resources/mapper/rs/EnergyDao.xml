@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.docservice.dao.rs.EnergyDao">
+    <insert id="addList">
+        INSERT INTO
+        d_energy(remainAmount,`type`,occDate,unitPrice,quantity,companyId,creatorId,createTime,rdDeptId,ename,unit,
+        amount,deptId,accountTitleId,lastUpdateTime,lastUpdatorId,msCreatorId,msLastUpdatorId,accNumber,deptName,totalAmount,remark)
+        VALUES
+        <foreach collection="energys" separator="," item="e">
+            (#{e.remainAmount},#{e.type},#{e.occDate},#{e.unitPrice},#{e.quantity},#{e.companyId},#{e.creatorId},
+            #{e.createTime},#{e.rdDeptId},#{e.ename},#{e.unit},#{e.amount},#{e.deptId},#{e.accountTitleId},
+            #{e.lastUpdateTime},#{e.lastUpdatorId},#{e.msCreatorId},#{e.msLastUpdatorId},#{e.accNumber},#{e.deptName},#{e.totalAmount},#{e.remark})
+        </foreach>
+    </insert>
+    <update id="updateList">
+        update d_energy
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="remainAmount =case" suffix="end,">
+                <foreach collection="energyList" item="i" index="index">
+                    <if test="i.remainAmount!=null">
+                        when id=#{i.id} then #{i.remainAmount}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdateTime =case" suffix="end,">
+                <foreach collection="energyList" item="i" index="index">
+                    <if test="i.lastUpdateTime!=null">
+                        when id=#{i.id} then #{i.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdatorId =case" suffix="end,">
+                <foreach collection="energyList" item="i" index="index">
+                    <if test="i.lastUpdatorId!=null">
+                        when id=#{i.id} then #{i.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="msLastUpdatorId =case" suffix="end,">
+                <foreach collection="energyList" item="i" index="index">
+                    <if test="i.msLastUpdatorId!=null">
+                        when id=#{i.id} then #{i.msLastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="energyList" item="e" separator="or">
+            id = #{e.id}
+        </foreach>
+    </update>
+</mapper>

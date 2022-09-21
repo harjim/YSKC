@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.rs.RsProductStageListDao">
+    <insert id="insertList">
+        insert into t_product_stage_list (stageId,directionId,itemName,itemType,pattern,remark,
+        required,creatorId,lastUpdatorId,createTime,lastUpdateTime,seq)
+        values
+        <foreach collection="stageList" item="item" separator=",">
+            (#{item.stageId},#{item.directionId},#{item.itemName},#{item.itemType},#{item.pattern},#{item.remark},#{item.required},
+            #{item.creatorId},#{item.lastUpdatorId},#{item.createTime},#{item.lastUpdateTime},#{item.seq})
+        </foreach>
+    </insert>
+    <update id="updateList">
+        <foreach collection="updateList" item="item" separator=";">
+            update t_product_stage_list set stageId=#{item.stageId},directionId=#{item.directionId},itemName=#{item.itemName},
+            itemType=#{item.itemType},pattern=#{item.pattern},remark=#{item.remark},required=#{item.required},
+            lastUpdatorId=#{userId},lastUpdateTime=#{date},seq=#{item.seq}
+            where id=#{item.id}
+        </foreach>
+    </update>
+
+    <delete id="delByDirection">
+        delete from t_product_stage_list where directionId in
+        <foreach collection="directionIds" item="directionId" open="(" close=")" separator=",">
+            #{directionId}
+        </foreach>
+    </delete>
+    <delete id="delByStageIds">
+        delete from t_product_stage_list where stageId in
+        <foreach collection="stageIds" item="stageId" open="(" separator="," close=")">
+            #{stageId}
+        </foreach>
+    </delete>
+    <select id="getByDirectionIds" resultType="com.yskc.ms.entity.rs.RsProductStageListEntity">
+        select * from t_product_stage_list
+        where directionId in
+        <foreach collection="directionIds" item="directionId" open="(" separator="," close=")">
+            #{directionId}
+        </foreach>
+    </select>
+    <select id="getByStageId" resultType="com.yskc.ms.models.rs.RsProductStageListModel">
+        select id,stageId,itemName,itemType,pattern,remark,required,directionId,seq
+        from t_product_stage_list
+        where stageId in
+        <foreach collection="stageIds" item="stageId" open="(" separator="," close=")">
+            #{stageId}
+        </foreach>
+    </select>
+    <select id="getByType" resultType="com.yskc.ms.models.rs.RsProductStageListModel">
+        select id,stageId,itemName,itemType,pattern,remark,required,directionId,seq
+        from t_product_stage_list
+        where stageId=#{stageId} and itemType=#{itemType}
+    </select>
+</mapper>

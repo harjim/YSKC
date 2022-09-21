@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.VoucherDao">
+
+    <select id="getList" resultType="com.yskc.rs.models.voucher.VoucherModel">
+        select id,voucherNo,voucherDate,amount,summary
+        from d_voucher
+        where companyId=#{companyId}
+        <if test="query.voucherNo!=null and query.voucherNo!=''">
+            and voucherNo like "%"#{query.voucherNo}"%"
+        </if>
+        <if test="query.beginDate!=null and query.endDate!=null">
+            and voucherDate &gt;=#{query.beginDate} and voucherDate &lt;=#{query.endDate}
+        </if>
+        <if test="query.summary!=null and query.summary!=''">
+            and summary like "%"#{query.summary}"%"
+        </if>
+        <if test="query.rdType!=null and query.rdType>0">
+            and voucherNo in (select DISTINCT voucherNo from p_voucher where rdType=#{query.rdType} and companyId=#{companyId})
+        </if>
+    </select>
+
+    <select id="checkVoucherNo" resultType="com.yskc.rs.entity.VoucherEntity">
+        select * from d_voucher
+        where companyId=#{companyId} and voucherNo=#{voucherNo}
+    </select>
+
+    <select id="getListByVoucherNos" resultType="com.yskc.rs.entity.VoucherEntity">
+        select * from d_voucher
+        where companyId=#{companyId} and voucherNo in
+        <foreach collection="voucherNos" item="voucherNo" open="(" close=")" separator=",">
+            #{voucherNo}
+        </foreach>
+    </select>
+
+    <insert id="insertList">
+        insert into d_voucher (creatorId,lastUpdatorId,createTime,lastUpdateTime,msCreatorId,msLastUpdatorId,
+        companyId,voucherDate,voucherNo,summary,amount) values
+        <foreach collection="voucherEntities" item="item" separator=",">
+            (#{item.creatorId},#{item.lastUpdatorId},#{item.createTime},#{item.lastUpdateTime},#{item.msCreatorId},#{item.msLastUpdatorId},
+            #{item.companyId},#{item.voucherDate},#{item.voucherNo},#{item.summary},#{item.amount})
+        </foreach>
+    </insert>
+
+    <update id="updateList">
+        <foreach collection="voucherEntities" item="item" separator=";">
+            update d_voucher
+            set
+            voucherDate=#{item.voucherDate},summary=#{item.summary},amount=#{item.amount},lastUpdateTime=#{item.lastUpdateTime},
+            lastUpdatorId=#{item.lastUpdatorId}
+            where id=#{item.id} and companyId=#{item.companyId}
+        </foreach>
+    </update>
+</mapper>

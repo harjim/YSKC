@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.ProjectTechLogDao">
+    <select id="getLogList" resultType="com.yskc.ms.models.tech.ProjectTechLogModel">
+        select ptl.id,ptl.lastUpdateTime,ptl.process,ptl.feedback,ptl.stageKey,ptl.status,ptl.techId,
+        ptl.labelKey,ptl.remark,ptl.createTime,yu.realName as techName,ptl.projectId,ptl.lastUpdateTime,
+        ptl.budget,ptl.completedDate,pts.deadline
+        from project_tech_log ptl
+        inner join ys_user yu on ptl.techId=yu.id
+        inner join project p on ptl.projectId=p.id
+        left join product_stage ps on p.productId=ps.productId and ptl.stageKey=ps.stageKey
+        left join project_tech_stage pts on pts.stageId=ps.id AND pts.projectId=p.id
+        where ptl.projectId in
+        <foreach collection="projectIds" item="projectId" open="(" close=")" separator=",">
+        #{projectId}
+        </foreach>
+        order by ptl.createTime desc
+    </select>
+    <select id="queryByCteateTime" resultType="com.yskc.ms.entity.ms.ProjectTechLogEntity">
+        select * from project_tech_log
+        where projectId=#{projectId} and id!=#{logId}
+        order by createTime desc
+        limit 1
+    </select>
+    <select id="getByStageKey" resultType="com.yskc.ms.entity.ms.ProjectTechLogEntity">
+        select * from project_tech_log ptl
+        inner join project p on ptl.projectId=p.id and p.productId=#{productId}
+        where ptl.stageKey in
+        <foreach collection="stageKeys" item="stageKey" open="(" close=")" separator=",">
+            #{stageKey}
+        </foreach>
+    </select>
+</mapper>

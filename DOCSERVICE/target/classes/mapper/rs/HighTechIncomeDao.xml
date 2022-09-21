@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.docservice.dao.rs.HighTechIncomeDao">
+    <insert id="addBatch">
+        insert into highTech_income(companyId,highTechId,productName,bookDate,voucherNo,quantity,unitPrice,
+         income,`client`,creatorId,lastUpdatorId,createTime,lastUpdateTime,msCreatorId,msLastUpdatorId)
+         values
+        <foreach collection="list" separator="," item="l">
+            (#{l.companyId},#{l.highTechId},#{l.productName},#{l.bookDate},#{l.voucherNo},#{l.quantity},#{l.unitPrice},
+            #{l.income},#{l.client},#{l.creatorId},#{l.lastUpdatorId},#{l.createTime},#{l.lastUpdateTime},
+             #{l.msCreatorId},#{l.msLastUpdatorId})
+        </foreach>
+    </insert>
+</mapper>

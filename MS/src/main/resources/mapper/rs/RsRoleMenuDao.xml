@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.rs.RsRoleMenuDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.yskc.ms.entity.rs.RsRoleMenu" id="menuMap">
+        <result property="id" column="id"/>
+        <result property="companyId" column="companyId"/>
+        <result property="roleId" column="roleId"/>
+        <result property="menuId" column="menuId"/>
+        <result property="creatorId" column="creatorId"/>
+        <result property="createTime" column="createTime"/>
+    </resultMap>
+    <insert id="addBatch">
+        insert into app_role_menu
+        (`companyId`,`roleId`,`menuId`,`creatorId`, `createTime`)
+        values
+        <foreach collection="rsRoleMenus" separator="," item="rsm">
+            (#{rsm.companyId},#{rsm.roleId},#{rsm.menuId},#{rsm.creatorId},#{rsm.createTime})
+        </foreach>
+    </insert>
+    <delete id="delByRoleId">
+        delete from app_role_menu where roleId = #{roleId}
+    </delete>
+    <select id="getRoleMenuIds" resultType="java.lang.Integer">
+        select menuId from app_role_menu where roleId = #{roleId}
+    </select>
+    <select id="getPermData" resultType="com.yskc.common.model.RsMenuPermModel">
+        select m.id as menuId,m.parentId, m.perms,m.url
+        from app_menu m
+        left join app_role_menu rm on rm.menuId = m.id
+        where rm.roleId = #{roleId}
+    </select>
+</mapper>

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.project.EquipmentUsedDao">
+    <insert id="insertBatch">
+        INSERT INTO p_equipment_used
+        (companyId,ecode,`month`,usedEquData,workHours,remainHours,createTime,
+        creatorId,lastUpdateTime,lastUpdatorId,msCreatorId,msLastUpdatorId)
+        VALUES
+        <foreach collection="list" separator="," item="l">
+            (#{l.companyId},#{l.ecode},#{l.month},#{l.usedEquData},#{l.workHours},#{l.remainHours},#{l.createTime},
+            #{l.creatorId},#{l.lastUpdateTime},#{l.lastUpdatorId},#{l.msCreatorId},#{l.msLastUpdatorId})
+        </foreach>
+    </insert>
+    <update id="updateBatch">
+        update p_equipment_used
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix=" usedEquData =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.usedEquData != null">
+                        when id = #{l.id} then #{l.usedEquData}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" workHours =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.workHours != null">
+                        when id = #{l.id} then #{l.workHours}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" remainHours =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.remainHours != null">
+                        when id = #{l.id} then #{l.remainHours}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" lastUpdateTime =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.lastUpdateTime != null">
+                        when id = #{l.id} then #{l.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" lastUpdatorId =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.lastUpdatorId != null">
+                        when id = #{l.id} then #{l.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" msLastUpdatorId =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.msLastUpdatorId != null">
+                        when id = #{l.id} then #{l.msLastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        WHERE
+        <foreach collection="list" item="l" separator="or">
+            id = #{l.id}
+        </foreach>
+    </update>
+    <select id="getEquipmentUsed" resultType="com.yskc.rs.entity.project.EquipmentUsedEntity">
+        select * from p_equipment_used where companyId = #{companyId} and `month` = #{month} and ecode = #{ecode}
+    </select>
+    <select id="getByEcodes" resultType="com.yskc.rs.entity.project.EquipmentUsedEntity">
+        select id,ecode,usedEquData,remainHours,workHours from p_equipment_used where companyId =
+        #{companyId} and
+        `month` =
+        #{month}
+        and ecode in
+        <foreach collection="ecodes" open="(" separator="," close=")" item="ecode">
+            #{ecode}
+        </foreach>
+    </select>
+    <select id="getUseless" resultType="com.yskc.rs.entity.project.EquipmentUsedEntity">
+        select id,usedEquData,remainHours,`month` from p_equipment_used where companyId=#{companyId}
+        and(<foreach collection="list" item="l" separator="or">(`month`=#{l.month} and ecode=#{l.ecode})</foreach>)
+    </select>
+</mapper>

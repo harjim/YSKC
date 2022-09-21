@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xxl.job.executor.dao.ms.PatentPlanDao">
+    <select id="getPatentStatNumber" resultType="java.lang.Integer">
+        select COUNT(id) from patent_plan where patentNo is null
+    </select>
+
+    <select id="getPatentPlan" resultType="com.xxl.job.executor.entity.ms.ProjectProgressDetail">
+        select pp.year,pp.lastUpdatorId as userId,max(pp.lastUpdateTime) as operationTime,c.companyId,#{stage} as stage
+        from patent_plan as pp
+                 inner join customer as c
+                            on pp.customerId = c.id
+        where pp.lastUpdateTime >= #{lastTime}
+        group by pp.year,userId,companyId
+    </select>
+</mapper>

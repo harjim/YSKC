@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yskc.ms.dao.ms.FinaAuditDao">
+  <resultMap id="finaAuditMap" type="com.yskc.ms.models.projectAudit.FinaAuditModelGroup">
+    <id column="id" property="id"/>
+    <result column="companyName" property="companyName"/>
+    <result column="customerId" property="customerId"/>
+    <result column="year" property="year"/>
+    <result column="deptName" property="deptName"/>
+    <result column="owerName" property="owerName"/>
+    <result column="rdFunds" property="rdFunds"/>
+    <collection property="fam" ofType="com.yskc.ms.models.projectAudit.FinaAuditMonthModel">
+      <id column="cm" property="month"/>
+      <result column="amount" property="amount"/>
+    </collection>
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, creatorId, lastUpdatorId, createTime, lastUpdateTime, customerId, `year`, deptId, 
+    types
+  </sql>
+
+  <select id="getList" resultMap="finaAuditMap">
+    SELECT t2.*
+    from (select companyId,`year` from c_rd_funds group by companyId,`year`) t1
+    inner join (SELECT c.companyName,c.companyId,ip.year,yd.fullname as deptName, yu.realName as owerName ,crf.amount ,crf.`month` as cm , ps.rdFunds,
+    ip.id as id, c.id as customerId from innovation_project ip
+    INNER JOIN customer c ON c.id = ip.customerId
+    LEFT JOIN project_summary_data ps on ps.customerId = ip.customerId and ps.year=ip.year
+    LEFT JOIN ys_dept yd on yd.id=ip.deptId
+    LEFT JOIN ys_user yu on yu.id = c.owerId
+    LEFT JOIN c_rd_funds crf on crf.companyId=c.companyId and crf.year=ip.year) t2
+        on t1.companyId = t2.companyId and t1.`year`=t2.`year`
+    WHERE `c`.companyId != 0 and crf.type = 0
+    <include refid="com.yskc.ms.dao.ms.BaseDataDao.project">
+      <property name="tableAlias" value="ip"/>
+      <property name="dataPerm" value="#{dataPerm}"/>
+      <property name="userTable" value="innovation_member"/>
+      <property name="colId" value="innovationId"/>
+    </include>
+    <if test="query.companyName != null and query.companyName != ''">
+      and t2.companyName like "%"#{query.companyName}"%"
+    </if>
+    <if test="query.deptId != null and query.deptId != ''">
+      and t2.fullPath like CONCAT('%/', #{query.deptId,jdbcType=VARCHAR}, '/%')
+    </if>
+    <if test="query.year != null">
+      and t2.year =#{query.year}
+    </if>
+    <if test="query.tIds != null and query.tIds.length>0">
+      and t2.id in (select innovationId from innovation_member where mType=1 and memberId in
+      <foreach collection="query.tIds" open="(" separator="," close=")" item="tId">
+        #{tId}
+      </foreach>)
+    </if>
+    <if test="query.fIds != null and query.fIds.length>0">
+      and t2.id in (select innovationId from innovation_member where mType=2 and memberId in
+      <foreach collection="query.fIds" open="(" separator="," close=")" item="fId">
+        #{fId}
+      </foreach>)
+    </if>
+  </select>
+  <select id="getListNom" resultType="com.yskc.ms.models.projectAudit.FinaAuditModelGroup">
+    SELECT any_value(c.companyName) companyName,c.companyId,ip.year,any_value(yd.fullname) as deptName,
+        any_value(yu.realName) as owerName, any_value(ps.rdFunds) rdFunds,
+    any_value(ip.id) as id, any_value(c.id) as customerId
+            from innovation_project ip
+           INNER JOIN customer c ON c.id = ip.customerId
+           LEFT JOIN project_summary_data ps on ps.customerId = ip.customerId and ps.year=ip.year
+           LEFT JOIN ys_dept yd on yd.id=ip.deptId
+           LEFT JOIN ys_user yu on yu.id = c.owerId
+           LEFT JOIN c_rd_funds crf on crf.companyId=c.companyId and crf.year=ip.year
+    WHERE `c`.companyId != 0 and crf.type = 0
+    <include refid="com.yskc.ms.dao.ms.BaseDataDao.project">
+      <property name="tableAlias" value="ip"/>
+      <property name="dataPerm" value="#{dataPerm}"/>
+      <property name="userTable" value="innovation_member"/>
+      <property name="colId" value="innovationId"/>
+    </include>
+    <if test="query.companyName != null and query.companyName != ''">
+      and ip.companyName like "%"#{query.companyName}"%"
+    </if>
+    <if test="query.deptId != null and query.deptId != ''">
+      and ip.fullPath like CONCAT('%/', #{query.deptId,jdbcType=VARCHAR}, '/%')
+    </if>
+    <if test="query.year != null">
+      and ip.year =#{query.year}
+    </if>
+    <if test="query.tIds != null and query.tIds.length>0">
+      and ip.id in (select innovationId from innovation_member where mType=1 and memberId in
+      <foreach collection="query.tIds" open="(" separator="," close=")" item="tId">
+        #{tId}
+      </foreach>)
+    </if>
+    <if test="query.fIds != null and query.fIds.length>0">
+      and ip.id in (select innovationId from innovation_member where mType=2 and memberId in
+      <foreach collection="query.fIds" open="(" separator="," close=")" item="fId">
+        #{fId}
+      </foreach>)
+    </if>
+    group by c.companyId , ip.year
+  </select>
+  <select id="getMonthBycIdYear" resultType="com.yskc.ms.models.projectAudit.FinaAuditMonthModel">
+    select crf.`year`,crf.companyId,amount,`month`,ip.id as ipId
+    from c_rd_funds crf
+    inner join customer c ON crf.companyId = c.companyId
+    left join innovation_project ip on c.id = ip.customerId and crf.year = ip.year
+    where type = 0
+    <if test="fammList != null and fammList.size()>0">
+    and crf.companyId in
+      <foreach collection="fammList" open="(" separator="," close=")" item="famm">
+      #{famm.companyId}  </foreach>
+    and crf.year in
+     <foreach collection="fammList" open="(" separator="," close=")" item="famm">
+        #{famm.year}  </foreach>
+    </if>
+  </select>
+
+
+</mapper>

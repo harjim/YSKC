@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.FieldConfigDao">
+    <update id="updateConfig">
+        update fieldConfig
+        set lastUpdateTime = #{e.lastUpdateTime},msLastUpdatorId = #{e.msLastUpdatorId},
+            lastUpdatorId = #{e.lastUpdatorId} ,`number` = #{e.number},config = #{e.config}
+        where id = #{e.id}
+    </update>
+    <select id="getDefault" resultType="com.yskc.rs.models.fieldconfig.FieldConfigModel">
+        select config,`number`,`type` from fieldConfig where companyId = 0
+    </select>
+    <select id="getTypeConfig" resultType="com.yskc.rs.models.fieldconfig.FieldConfigModel">
+        select id, config, `number`,`type` from fieldConfig where companyId = #{companyId} and `type` = #{type}
+    </select>
+    <select id="getSalaryConfig" resultType="com.yskc.rs.models.fieldconfig.FieldConfigModel">
+        select id, config, `number`,`type` from fieldConfig where companyId = #{companyId} and `type` in (0,1)
+    </select>
+</mapper>

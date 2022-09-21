@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yskc.rs.dao.project.ProjectEquipmentDao">
+    <insert id="insertBatch">
+        INSERT INTO p_equipment
+        (equipmentDataId,equData,companyId,creatorId,createTime,lastUpdatorId,lastUpdateTime,
+        projectId,ecode,`month`,msCreatorId,msLastUpdatorId,workHours)
+        VALUES
+        <foreach collection="list" separator="," item="l">
+            (#{l.equipmentDataId},#{l.equData},#{l.companyId},#{l.creatorId},#{l.createTime},#{l.lastUpdatorId},
+            #{l.lastUpdateTime},#{l.projectId},#{l.ecode},#{l.month},#{l.msCreatorId},#{l.msLastUpdatorId},#{l.workHours})
+        </foreach>
+    </insert>
+    <update id="updateBatch">
+        update p_equipment
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix=" equData =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.equData != null">
+                        when id = #{l.id} then #{l.equData}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" workHours =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.workHours != null">
+                        when id = #{l.id} then #{l.workHours}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" lastUpdateTime =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.lastUpdateTime != null">
+                        when id = #{l.id} then #{l.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" lastUpdatorId =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.lastUpdatorId != null">
+                        when id = #{l.id} then #{l.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" msLastUpdatorId =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.msLastUpdatorId != null">
+                        when id = #{l.id} then #{l.msLastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        ,equEdit = true
+        WHERE
+        <foreach collection="list" item="l" separator="or">
+            id = #{l.id}
+        </foreach>
+    </update>
+    <delete id="deleteData">
+        delete from p_equipment where companyId=#{companyId} and `month`=#{month};
+        delete from p_equipment_used where companyId=#{companyId} and `month`=#{month};
+    </delete>
+    <select id="getEquipmentWorkSheetList" resultType="com.yskc.rs.models.projectequipment.WorkSheetEquipmentModel">
+        select e.ename, pre.rdDepreciation, pre.rdHour, pe.equData, p.rdIndex, d.deptName, ie.effect
+        from p_equipment as pe
+                 left join p_rdEquipment as pre on pre.ecode = pe.ecode and pre.projectId = pe.projectId
+                 left join p_project as p on pe.projectId = p.id
+                 left join equipment as e on e.ecode = pe.ecode
+                 left join i_equipment as ie
+                           on ie.ecode = e.ecode and ie.companyId = e.companyId and ie.projectId = pe.projectId
+                 left join rdEquipment as re
+                           on re.ecode = e.ecode and re.companyId = e.companyId and re.year = ie.year
+                 left join rdDept as d on d.id = re.rdDeptId
+        where e.companyId = pe.companyId
+          and pe.companyId = #{companyId}
+          and re.year=#{year}
+          and p.id = #{query.projectId}
+          and pe.month = #{query.month}
+    </select>
+    <select id="getList" resultType="com.yskc.rs.models.projectequipment.ProjectEquipmentModel">
+        select pe.id as peId,pre.id,e.ename,pre.ecode,pre.rdHour,de.deptName,pe.equData,pe.workHours
+        from p_rdEquipment pre
+        LEFT JOIN rdEquipment re on re.companyId=pre.companyId and re.ecode=pre.ecode and re.year=#{query.year}
+        LEFT JOIN equipment e on e.ecode = pre.ecode and e.companyId = pre.companyId
+        LEFT JOIN p_equipment pe on pe.ecode = pre.ecode and pe.projectId = pre.projectId and pe.month = pre.month
+        LEFT JOIN d_equipment de on de.ecode = pre.ecode and de.companyId = pre.companyId and de.month = pre.month
+        where pre.projectId = #{query.projectId}
+        and pre.month = #{query.month}
+        and re.etype in
+        <foreach collection="query.types" open="(" separator="," close=")" item="t">
+            #{t}
+        </foreach>
+        <if test="query.ecode != null and query.ecode != ''">
+            and pre.ecode like "%"#{query.ecode}"%"
+        </if>
+        <if test="query.ename != null and query.ename != ''">
+            and e.ename like "%"#{query.ename}"%"
+        </if>
+        <if test="null != query.deptName and query.deptName !=''">
+            and de.deptName like "%"#{query.deptName}"%"
+        </if>
+    </select>
+    <select id="getRdEquipment" resultType="com.yskc.rs.models.projectequipment.ProjectEquipmentModel">
+        select pre.ecode,pre.rdHour from p_rdEquipment pre
+        left join p_equipment pe on pe.ecode = pre.ecode and pe.month = pre.month and pre.projectId = pe.projectId and
+        pe.equEdit
+        where pre.projectId = #{projectId} and pre.month = #{month} and pe.id is null
+        <if test="ids != null and ids.size() > 0">
+            and pre.id in
+            <foreach collection="ids" item="id" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+        </if>
+    </select>
+    <select id="getByEcodes" resultType="com.yskc.rs.models.projectequipment.ProjectEquipmentModel">
+        select id,ecode,equData,workHours from p_equipment where projectId = #{projectId} and `month` = #{month}
+        and ecode in
+        <foreach collection="ecodes" open="(" separator="," close=")" item="ecode">
+            #{ecode}
+        </foreach>
+    </select>
+    <select id="getByIds" resultType="com.yskc.rs.entity.project.ProjectEquipmentEntity">
+        select id,ecode,equData,workHours from p_equipment where id in
+        <foreach collection="ids" open="(" separator="," close=")" item="id">
+            #{id}
+        </foreach>
+
+    </select>
+    <select id="getExportData" resultType="com.yskc.rs.models.projectequipment.ExportProjectEquipmentModel">
+        select e.ename,pe.ecode,pre.rdHour,de.deptName,pe.equData,p.rdTitle
+        from p_equipment pe
+        LEFT JOIN rdEquipment re on re.companyId=pe.companyId and re.ecode=pe.ecode and re.year=#{query.year}
+        INNER JOIN p_project p on p.id=pe.projectId and p.companyId=pe.companyId
+        LEFT JOIN equipment e on e.ecode = pe.ecode and e.companyId = pe.companyId
+        LEFT JOIN p_rdEquipment pre on pre.ecode = pe.ecode and pre.projectId = pe.projectId and pre.month = pe.month
+        LEFT JOIN d_equipment de on de.ecode = pe.ecode and de.companyId = pe.companyId and de.month = pe.month
+        where pre.companyId=#{companyId}
+        <if test="query.all == null or !query.all">
+            and pre.projectId = #{query.projectId}
+        </if>
+        and pre.month = #{query.month}
+        and re.etype in
+        <foreach collection="query.types" open="(" separator="," close=")" item="t">
+            #{t}
+        </foreach>
+        <if test="query.ecode != null and query.ecode != ''">
+            and pe.ecode like "%"#{query.ecode}"%"
+        </if>
+        <if test="query.ename != null and query.ename != ''">
+            and e.ename like "%"#{query.ename}"%"
+        </if>
+        <if test="null != query.deptName and query.deptName !=''">
+            and de.deptName like "%"#{query.deptName}"%"
+        </if>
+        order by rdTitle,pe.ecode
+    </select>
+    <select id="getProjectEquipments" resultType="com.yskc.rs.entity.project.ProjectEquipmentEntity">
+        select equData,`month`,ecode,id from p_equipment
+        where projectId = #{projectId} and
+        (<foreach collection="list" separator="or" item="l">(`month`=#{l.month} and ecode =#{l.ecode})</foreach>)
+    </select>
+</mapper>

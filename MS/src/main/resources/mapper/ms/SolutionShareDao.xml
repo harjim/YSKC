@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.SolutionShareDao">
+    <insert id="inertOrUpdate">
+        insert into solution_share (id,type,solutionId,dataId,creatorId,lastUpdatorId,createTime,lastUpdateTime)
+        VALUES
+        <foreach collection="list" separator="," item="l">
+            (#{l.id},#{l.type},#{l.solutionId},#{l.dataId},#{l.creatorId},#{l.lastUpdatorId},#{l.createTime},#{l.lastUpdateTime})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        lastUpdateTime=values(lastUpdateTime),
+        lastUpdatorId=values(lastUpdatorId)
+
+    </insert>
+    <delete id="deleteShare">
+        delete from solution_share
+        where solutionId in (<foreach collection="solutionIds" separator="," item="sId">#{sId}</foreach> )
+    </delete>
+    <select id="getShareInfo" resultType="com.yskc.ms.models.solution.SolutionShareModel">
+        select ss.id,ss.type,ss.solutionId,ss.dataId,ss.createTime,ifnull(yu.realName,yd.deptName) realName
+        from solution_share ss
+        left join ys_user yu on ss.type=0 and yu.id=ss.dataId
+        left join ys_dept yd on ss.type=1 and yd.id=ss.dataId
+        where solutionId=#{solutionId}
+    </select>
+</mapper>

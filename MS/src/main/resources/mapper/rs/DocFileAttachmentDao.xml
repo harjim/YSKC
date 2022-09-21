@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.rs.DocFileAttachmentDao">
+    <select id="getByDocFile" resultType="com.yskc.ms.entity.rs.models.AttachmentModel">
+        select id,fileName,filePath,uploadTime,docFileId,fileType
+        from p_docFile_attachment
+        where projectId=#{projectId} and docFileId=#{docFileId}
+    </select>
+</mapper>

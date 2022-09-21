@@ -1,0 +1,157 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+        "-//Puppy Crawl//DTD Check Configuration 1.2//EN"
+        "http://www.puppycrawl.com/dtds/configuration_1_2.dtd">
+
+<module name="Checker">
+    <!--<property name="severity" value="warning"/>-->
+
+
+
+    <!-- Checks that property files contain the same keys.         -->
+    <!-- See http://checkstyle.sf.net/config_misc.html#Translation -->
+    <module name="Translation"/>
+
+    <!-- 禁止使用System.out.println -->
+    <module name="RegexpMultiline">
+        <property name="format" value="System\.(out)|(err)\.print(ln)?\("/>
+    </module>
+
+    <!-- 长度方面的检查 -->
+    <!-- 文件长度不超过1500行 默认2000 -->
+    <module name="FileLength">
+        <property name="max" value="1500" />
+    </module>
+
+    <module name="TreeWalker">
+        <!-- javadoc的检查 -->
+        <!-- 检查所有的interface和class -->
+        <!-- See http://checkstyle.sf.net/config_javadoc.html -->
+        <module name="JavadocMethod">
+            <property name="allowMissingParamTags" value="true"/>
+            <property name="allowMissingPropertyJavadoc" value="true"/>
+            <property name="allowMissingJavadoc" value="true"/>
+            <property name="scope" value="public"/>
+            <property name="excludeScope" value="public"/>
+        </module>
+        <module name="JavadocType">
+            <property name="allowMissingParamTags" value="true"/>
+            <property name="scope" value="public"/>
+            <property name="excludeScope" value="package"/>
+        </module>
+        <module name="JavadocVariable">
+            <property name="scope" value="public"/>
+            <property name="excludeScope" value="package"/>
+        </module>
+        <module name="JavadocStyle">
+            <property name="checkFirstSentence" value="false"/>
+            <property name="checkHtml" value="false"/>
+        </module>
+
+
+        <!-- 局部的非final型的变量，包括catch中的参数的检查 -->
+        <module name="LocalVariableName" />
+
+
+        <!-- 类型(Class或Interface)名的检查 -->
+        <module name="TypeName" />
+        <!-- 非static型变量的检查 -->
+        <module name="MemberName" />
+        <!-- 方法名的检查 -->
+        <module name="MethodName" />
+        <!-- 方法的参数名 -->
+        <module name="ParameterName " />
+        <!-- 常量名的检查 -->
+        <module name="ConstantName" />
+
+
+
+        <!-- 每行不超过120个字-->
+        <module name="LineLength">
+            <property name="max" value="1300" />
+        </module>
+        <!-- 方法不超过150行 -->
+        <module name="MethodLength">
+            <property name="tokens" value="METHOD_DEF" />
+            <property name="max" value="500" />
+        </module>
+        <!-- 方法的参数个数不超过5个。 并且不对构造方法进行检查-->
+        <module name="ParameterNumber">
+            <property name="max" value="15" />
+            <property name="tokens" value="METHOD_DEF" />
+        </module>
+
+        <!-- 空格检查 -->
+        <!-- 允许方法名后紧跟左边圆括号"(" -->
+        <module name="MethodParamPad" />
+
+
+
+        <!-- 关键字 -->
+
+        <!-- 多余的关键字 -->
+        <!--<module name="RedundantModifier" />-->
+
+        <!-- 对区域的检查 -->
+        <!-- 不能出现空白区域 -->
+        <module name="EmptyBlock" />
+        <!-- 所有区域都要使用大括号 -->
+        <module name="NeedBraces" />
+        <!-- 多余的括号 -->
+        <module name="AvoidNestedBlocks">
+            <property name="allowInSwitchCase" value="true" />
+        </module>
+
+
+
+
+
+        <!-- String的比较不能用!= 和 == -->
+        <module name="StringLiteralEquality" />
+        <!-- if最多嵌套3层 -->
+        <module name="NestedIfDepth">
+            <property name="max" value="10" />
+        </module>
+        <!-- try最多被嵌套2层 -->
+        <module name="NestedTryDepth">
+            <property name="max" value="5" />
+        </module>
+        <!-- clone方法必须调用了super.clone() -->
+        <module name="SuperClone" />
+
+
+        <!-- 确保一个类有package声明 -->
+        <module name="PackageDeclaration" />
+
+        <!--
+            根据 Sun 编码规范， class 或 interface 中的顺序如下： 1.class 声明。首先是 public,
+            然后是protected , 然后是 package level （不包括access modifier ） 最后是private .
+            (多个class放在一个java文件中的情况） 2.变量声明。 首先是 public, 然后是protected然后是 package
+            level （不包括access modifier ） 最后是private . (多个class放在一个java文件中的情况）
+            3.构造函数 4.方法
+        -->
+        <!-- 同一行不能有多个声明 -->
+        <module name="MultipleVariableDeclarations" />
+
+
+        <!-- 杂项 -->
+
+
+        <!-- 检查数组类型的定义是String[] args，而不是String args[] -->
+        <module name="ArrayTypeStyle" />
+
+
+        <!-- 常量类检测 -->
+        <module name="FinalClass"/>
+
+        <!-- Checks for common coding problems               -->
+        <!-- See http://checkstyle.sf.net/config_coding.html -->
+        <module name="EqualsHashCode"/>
+        <module name="IllegalInstantiation"/>
+        <module name="InnerAssignment"/>
+        <module name="MissingSwitchDefault"/>
+        <module name="SimplifyBooleanReturn"/>
+
+
+    </module>
+</module>

@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.rs.RsPatentCostDao">
+    <update id="insertBatch">
+        INSERT INTO patent_cost (creatorId,lastUpdatorId,createTime,lastUpdateTime,patentNo,costType,limitDate,amount,
+        isPay,payDateTime,isRemind,remindDateTime,receiptNo,status,payer,msCreatorId,msLastUpdatorId)
+        VALUES
+        <foreach collection="costList" separator="," item="item">
+        (#{item.creatorId},#{item.lastUpdatorId},#{item.createTime},#{item.lastUpdateTime},#{item.patentNo},
+        #{item.costType},#{item.limitDate},#{item.amount},#{item.isPay},#{item.payDateTime},
+        #{item.isRemind},#{item.remindDateTime},#{item.receiptNo},#{item.status},#{item.payer},
+        #{item.msCreatorId},#{item.msLastUpdatorId})
+        </foreach>
+    </update>
+
+    <update id="updateRemarks">
+        <foreach collection="costList" index="index" item="item" open="" close="" separator=";">
+            update patent_cost
+            <set>
+                <if test="sign=1">
+                    remark=#{item.remark},
+                </if>
+                <if test="sign=2">
+                    remindDateTime=#{item.remindDateTime},
+                </if>
+                lastUpdateTime=#{item.lastUpdateTime},msLastUpdatorId=#{item.msLastUpdatorId}
+            </set>
+            where id=#{item.id}
+        </foreach>
+    </update>
+    <update id="updateBatch">
+        UPDATE patent_cost
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="isPay =case" suffix="end,">
+                <foreach collection="costList" item="i" index="index">
+                    when id=#{i.id} then #{i.isPay}
+                </foreach>
+            </trim>
+            <trim prefix="receiptNo =case" suffix="end,">
+                <foreach collection="costList" item="i" index="index">
+                    when id=#{i.id} then #{i.receiptNo}
+                </foreach>
+            </trim>
+            <trim prefix="payer =case" suffix="end,">
+                <foreach collection="costList" item="i" index="index">
+                    when id=#{i.id} then #{i.payer}
+                </foreach>
+            </trim>
+            <trim prefix="status =case" suffix="end,">
+                <foreach collection="costList" item="i" index="index">
+                    when id=#{i.id} then #{i.status}
+                </foreach>
+            </trim>
+            <trim prefix="payDateTime =case" suffix="end,">
+                <foreach collection="costList" item="i" index="index">
+                    when id=#{i.id} then #{i.payDateTime}
+                </foreach>
+            </trim>
+            <trim prefix="amount =case" suffix="end,">
+                <foreach collection="costList" item="i" index="index">
+                    when id=#{i.id} then #{i.amount}
+                </foreach>
+            </trim>
+            <trim prefix="msLastUpdatorId =case" suffix="end,">
+                <foreach collection="costList" item="i" index="index">
+                    when id=#{i.id} then #{i.msLastUpdatorId}
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdateTime =case" suffix="end,">
+                <foreach collection="costList" item="i" index="index">
+                    when id=#{i.id} then #{i.lastUpdateTime}
+                </foreach>
+            </trim>
+        </trim>
+        where id in
+        <foreach collection="costList" item="i" open="(" separator="," close=")">
+            #{i.id}
+        </foreach>
+    </update>
+
+    <select id="queryPatentCost" resultType="com.yskc.ms.models.patent.PatentCostModel">
+        SELECT
+        c.id,
+        c.patentNo,
+        p.patentName,
+        c.costType,
+        c.limitDate,
+        c.amount,
+        p.mainTypeNo,
+        c.isPay,
+        c.payDateTime,
+        c.isRemind,
+        c.remindDateTime,
+        c.remark,
+        p.companyId,
+        co.companyName
+        FROM
+        patent_cost c
+        INNER JOIN patent p ON c.patentNo = p.patentNo
+        left join company co ON p.companyId = co.id
+        where 1=1
+        <if test="query.patentNo!=null and query.patentNo!=''">
+            and c.patentNo like "%"#{query.patentNo}"%"
+        </if>
+        <if test="startDates!=null and endDates ==null and query.type==1 ">
+            and c.limitDate &lt;=#{startDates} and ispay is false
+        </if>
+        <if test="startDates!=null and endDates ==null and query.type==5">
+            and c.limitDate &gt;=#{startDates} and ispay is false
+        </if>
+        <if test="startDates!=null and endDates!=null">
+            and c.limitDate &gt;= #{startDates} and c.limitDate &lt;= #{endDates} and ispay is false
+        </if>
+    </select>
+    <select id="export" resultType="com.yskc.ms.models.patent.PatentCostModel">
+        SELECT
+        c.id,
+        c.patentNo,
+        p.patentName,
+        c.costType,
+        c.limitDate,
+        c.amount,
+        p.mainTypeNo,
+        c.isPay,
+        c.payDateTime,
+        c.isRemind,
+        c.remindDateTime,
+        c.remark,
+        p.companyId,
+        co.companyName
+        FROM
+        patent_cost c
+        INNER JOIN patent p ON c.patentNo = p.patentNo
+        left join company co ON p.companyId = co.id
+        where 1=1
+        <if test="query.patentNo!=null and query.patentNo!=''">
+            and c.patentNo like "%"#{query.patentNo}"%"
+        </if>
+        <if test="startDates!=null and endDates ==null and query.type==1 ">
+            and c.limitDate &lt;=#{startDates} and ispay is false
+        </if>
+        <if test="startDates!=null and endDates ==null and query.type==5">
+            and c.limitDate &gt;=#{startDates} and ispay is false
+        </if>
+        <if test="startDates!=null and endDates!=null">
+            and c.limitDate &gt;= #{startDates} and c.limitDate &lt;= #{endDates} and ispay is false
+        </if>
+    </select>
+
+ <select id="getPatentCost" resultType="com.yskc.ms.entity.rs.RsPatentCostEntity">
+		select * from patent_cost where patentNo = #{patentNo}
+	</select>
+
+    <select id="getPayDataBypatentNo" resultType="com.yskc.ms.models.patent.PatentCostModel">
+      SELECT * from patent_cost c  where c.patentNo = #{patentNo}
+    </select>
+</mapper>

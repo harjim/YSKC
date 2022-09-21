@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.PatentAuditDao">
+    <select id="getByPatent" resultType="com.yskc.ms.entity.ms.PatentAuditEntity">
+        select id,status
+        from patent_audit
+        where patentPlanId in (<foreach collection="patentIds" item="patentId" separator=",">#{patentId}</foreach>)
+    </select>
+</mapper>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.PatentSeaDao">
+    <update id="relatedDemands">
+        update patent_sea set demandId=#{demandId},lastUpdatorId=#{userId},lastUpdateTime=#{date}
+        where id in (<foreach collection="ids" item="id" separator=",">#{id}</foreach> )
+    </update>
+    <select id="getList" resultType="com.yskc.ms.models.patent.PatentSeaModel">
+        select id,patentNo,patentName,applyDateTime,inventor,mainType,demandId,filePath
+        from patent_sea
+        where demandId is null
+        <if test="query.patentNo!=null and query.patentNo!=''">
+            and patentNo like "%"#{query.patentNo}"%"
+        </if>
+        <if test="query.patentName!=null and query.patentName!=''">
+            and patentName like "%"#{query.patentName}"%"
+        </if>
+        <if test="query.inventor!=null and query.inventor!=''">
+            and inventor like "%"#{query.inventor}"%"
+        </if>
+        <if test="query.mainType!=null">
+            and mainType=#{query.mainType}
+        </if>
+    </select>
+    <select id="getPatentSea" resultType="com.yskc.ms.models.patent.PatentSeaModel">
+        select
+        ps.id,ps.patentNo,ps.patentName,ps.applyDateTime,ps.inventor,ps.mainType,ps.demandId,c.companyId,ps.filePath
+        from patent_sea ps
+        inner join patent_buying_demand pbd on pbd.id=ps.demandId
+        inner join customer c on c.id=pbd.customerId
+        where ps.id=#{id}
+    </select>
+    <select id="getByDemand" resultType="com.yskc.ms.entity.ms.PatentSeaEntity">
+        select ps.*
+        from patent_sea ps
+        left join patent_buying_list pbl on pbl.patentSeaId=ps.id
+        where ps.demandId=#{demandId} and (pbl.id is null or pbl.status!=2)
+    </select>
+    <select id="limitPatentNo" resultType="com.yskc.ms.entity.ms.PatentSeaEntity">
+        select * from patent_sea
+        where patentNo=#{model.patentNo}
+        <if test="model.id!=null">
+            and id !=#{model.id}
+        </if>
+    </select>
+</mapper>

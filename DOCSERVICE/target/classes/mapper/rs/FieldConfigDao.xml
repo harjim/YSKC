@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.docservice.dao.rs.FieldConfigDao">
+
+    <select id="getDefault" resultType="com.yskc.docservice.models.rs.fieldconfig.FieldConfigModel">
+        select config,`number`,`type` from fieldConfig where companyId = 0
+    </select>
+    <select id="getSalaryConfig" resultType="com.yskc.docservice.models.rs.fieldconfig.FieldConfigModel">
+        select id, config, `number`,`type` from fieldConfig where companyId = #{companyId} and `type` in (0,1)
+    </select>
+</mapper>

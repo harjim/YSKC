@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.es.CooperationDao">
+    <update id="updateCooperation">
+        update e_cooperation
+        <trim prefix="set" suffixOverrides=",">
+            lastUpdateTime = #{entity.lastUpdateTime},
+            msLastUpdatorId = #{entity.msLastUpdatorId},
+            <if test="null != entity.status">status=#{entity.status},</if>
+            <if test="null != entity.information">information=#{entity.information},</if>
+        </trim>
+        where id = #{entity.id}
+    </update>
+
+    <select id="getExpertList" resultType="com.yskc.ms.models.newexpert.cooperation.CooperationModel">
+        select c.id,c.unitName,c.fullname,c.linkInfo,c.remark,c.status,c.email,
+               c.createTime,c.lastUpdateTime,u.realname as intentionUserName
+        from e_cooperation c
+        left join user u on c.intentionId = u.id
+        where c.type = 0
+        <if test="null != model.fullname and model.fullname !=''">
+            and c.fullname like "%"#{model.fullname}"%"
+        </if>
+        <if test="null != model.intentionUserName and model.intentionUserName !=''">
+            and u.realname like "%"#{model.intentionUserName}"%"
+        </if>
+        <if test="null != model.unitName and model.unitName !=''">
+            and c.unitName like "%"#{model.unitName}"%"
+        </if>
+        <if test="null != model.status">
+            and c.status = #{model.status}
+        </if>
+        <if test="null != model.linkInfo and model.linkInfo !=''">
+            and c.linkInfo like "%"#{model.linkInfo}"%"
+        </if>
+    </select>
+    <select id="getData" resultType="com.yskc.ms.models.newexpert.cooperation.CooperationModel">
+        select u.realname as intentionUserName,ui.researchArea,ue.types,u.mobile,c.information,u.gender,ui.industries
+        from e_cooperation c
+        left join user u on c.intentionId = u.id
+        left join user_info ui on ui.userId = c.intentionId
+        left join user_expert ue on ue.userId = c.intentionId
+        where c.id =#{id}
+    </select>
+    <select id="getList" resultType="com.yskc.ms.models.newexpert.cooperation.CooperationInfoModel">
+        select c.id,c.fullname,c.unitName,c.email,c.linkInfo,c.remark,c.status,c.createTime,
+               u.realName as operatorName,c.lastUpdateTime,c.information
+        from esdb.e_cooperation  c
+        left join msdb.ys_user u on u.id = c.msLastUpdatorId
+        where type = #{model.type} and intentionId = #{model.intentionId}
+        <if test="null != model.fullname and model.fullname !=''">
+            and c.fullname like "%"#{model.fullname}"%"
+        </if>
+        <if test="null != model.unitName and model.unitName !=''">
+            and c.unitName like "%"#{model.unitName}"%"
+        </if>
+        <if test="null != model.status">
+            and c.status = #{model.status}
+        </if>
+    </select>
+</mapper>

@@ -1,0 +1,560 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.EmployeeDao">
+    <insert id="addBatch">
+        INSERT INTO `employee`
+        (
+        `companyId`,
+        `enumber`,
+        `ename`,
+        `deptId`,
+        `position`,
+        `idNumber`,
+        `edate`,
+        `eduLevel`,
+        `remark`,
+        `leaveDate`,
+        `specialities`,
+        `birthday`,
+        `creatorId`,
+        `createTime`,
+        `lastUpdateTime`,
+        `lastUpdatorId`,
+        `title`,
+        gender,
+        `msCreatorId`,
+        `msLastUpdatorId`,
+        deptName,
+        `data`
+        )
+        VALUES
+        <foreach collection="employeeEntitys" item="item" separator=",">
+            (
+            #{item.companyId},
+            #{item.enumber},
+            #{item.ename},
+            #{item.deptId},
+            #{item.position},
+            #{item.idNumber},
+            #{item.edate},
+            #{item.eduLevel},
+            #{item.remark},
+            #{item.leaveDate},
+            #{item.specialities},
+            #{item.birthday},
+            #{item.creatorId},
+            #{item.createTime},
+            #{item.lastUpdateTime},
+            #{item.lastUpdatorId},
+            #{item.title},
+            #{item.gender},
+            #{item.msCreatorId},
+            #{item.msLastUpdatorId},
+            #{item.deptName},
+            #{item.data}
+
+            )
+        </foreach>
+    </insert>
+
+    <select id="queryEmployeeList" resultType="com.yskc.rs.models.employee.EmployeeModel">
+        SELECT e.id,e.ename,e.companyId,e.enumber,e.deptName,e.position,e.idNumber,e.edate,e.eduLevel,e.autographUrl,
+        e.remark,e.title,e.leaveDate,e.specialities,e.birthday,e.gender,e.disabledAtt,eo.id eoId,e.roleType,e.data
+        FROM
+        employee e
+        left join employeeOpenid eo on eo.companyId=e.companyId and eo.enumber=e.enumber
+        where e.companyId=#{companyId}
+        <if test="termModel.ename != null and termModel.ename != ''">
+            and e.ename like "%"#{termModel.ename}"%"
+        </if>
+        <if test="termModel.enumber != null and termModel.enumber !=''">
+            and e.enumber like "%"#{termModel.enumber}"%"
+        </if>
+        <if test="termModel.idNumber!=null and termModel.idNumber !=''">
+            and e.idNumber like "%"#{termModel.idNumber}"%"
+        </if>
+        <if test="termModel.eduLevel!=null and termModel.eduLevel >=0">
+            and e.eduLevel = #{termModel.eduLevel}
+        </if>
+        <if test="termModel.position !=null and termModel.position!=''">
+            and e.position like "%"#{termModel.position}"%"
+        </if>
+        <if test="termModel.beginEdate !=null and termModel.endEdate!=null">
+            AND e.edate &gt;= #{termModel.beginEdate}
+            AND e.edate &lt;= #{termModel.endEdate}
+        </if>
+        <if test="termModel.deptName !=null and termModel.deptName != ''">
+            and e.deptName like "%"#{termModel.deptName}"%"
+        </if>
+        <if test="termModel.title !=null and termModel.title!=''">
+            and e.title like "%"#{termModel.title}"%"
+        </if>
+        <if test="termModel.specialities !=null and termModel.specialities !=''">
+            and e.specialities like "%"#{termModel.specialities}"%"
+        </if>
+    </select>
+
+    <select id="selectEmployeeList" resultType="com.yskc.rs.models.employee.EmployeeModel">
+        SELECT
+        e.id,e.ename,e.companyId,e.enumber,e.deptName,e.position,e.idNumber,e.edate,e.eduLevel,e.remark,
+        e.title,e.leaveDate,e.specialities,e.birthday,e.gender
+        FROM employee e
+        LEFT JOIN rdEmployee r
+        on e.enumber = r.enumber and r.`year`=#{termModel.year} and r.companyId=#{companyId}
+        where e.companyId=#{companyId} and r.enumber is null
+            and (e.leaveDate is null or e.leaveDate > #{firstDay})
+        <if test="termModel.ename != null and termModel.ename != ''">
+            and e.ename like "%"#{termModel.ename}"%"
+        </if>
+        <if test="termModel.enumber != null and termModel.enumber !=''">
+            and e.enumber like "%"#{termModel.enumber}"%"
+        </if>
+        <if test="termModel.idNumber!=null and termModel.idNumber !=''">
+            and e.idNumber like "%"#{termModel.idNumber}"%"
+        </if>
+        <if test="termModel.eduLevel!=null and termModel.eduLevel >=0">
+            and e.eduLevel = #{termModel.eduLevel}
+        </if>
+        <if test="termModel.position !=null and termModel.position!=''">
+            and e.position like "%"#{termModel.position}"%"
+        </if>
+        <if test="termModel.deptName !=null and termModel.deptName != ''">
+            and e.deptName like "%"#{termModel.deptName}"%"
+        </if>
+        <if test="termModel.title !=null and termModel.title!=''">
+            and e.title like "%"#{termModel.title}"%"
+        </if>
+        <if test="termModel.specialities !=null and termModel.specialities !=''">
+            and e.specialities like "%"#{termModel.specialities}"%"
+        </if>
+        <if test="termModel.remark !=null and termModel.remark !=''">
+            and e.remark like "%"#{termModel.remark}"%"
+        </if>
+    </select>
+
+    <select id="getEmployees" resultType="com.yskc.rs.models.employee.EmployeeModel">
+        SELECT
+        e.id,
+        e.ename,
+        e.companyId,
+        e.enumber,
+        e.deptName,
+        e.position,
+        e.idNumber,
+        e.edate,
+        e.eduLevel,
+        e.remark,
+        e.title,
+        e.leaveDate,
+        e.specialities,
+        e.birthday,
+        e.gender,
+        rd.deptName as rdDeptName
+        FROM
+        employee e
+        LEFT JOIN p_reviewCommittee r
+        on e.enumber = r.enumber and r.`year`=#{termModel.year} and r.companyId=#{companyId }
+        LEFT JOIN rdEmployee re ON re.enumber = e.enumber and re.`year`=#{termModel.year} and re.companyId=#{companyId}
+        LEFT JOIN rdDept rd ON re.rdDeptId = rd.id
+        where e.companyId=#{companyId} and r.enumber is null
+        <if test="termModel.ename != null and termModel.ename != ''">
+            and e.ename like "%"#{termModel.ename}"%"
+        </if>
+        <if test="termModel.enumber != null and termModel.enumber !=''">
+            and e.enumber like "%"#{termModel.enumber}"%"
+        </if>
+        <if test="termModel.idNumber!=null and termModel.idNumber !=''">
+            and e.idNumber like "%"#{termModel.idNumber}"%"
+        </if>
+        <if test="termModel.eduLevel!=null and termModel.eduLevel >=0">
+            and e.eduLevel = #{termModel.eduLevel}
+        </if>
+        <if test="termModel.position !=null and termModel.position!=''">
+            and e.position like "%"#{termModel.position}"%"
+        </if>
+        <if test="termModel.deptName !=null and termModel.deptName != ''">
+            and e.deptName like "%"#{termModel.deptName}"%"
+        </if>
+        <if test="termModel.title !=null and termModel.title!=''">
+            and e.title like "%"#{termModel.title}"%"
+        </if>
+        <if test="termModel.specialities !=null and termModel.specialities !=''">
+            and e.specialities like "%"#{termModel.specialities}"%"
+        </if>
+        <if test="termModel.rdDeptPath!=null and termModel.rdDeptPath != ''">
+            and rd.identity like #{termModel.rdDeptPath}"%"
+        </if>
+    </select>
+    <select id="selectStEmployees" resultType="com.yskc.rs.models.employee.EmployeeModel">
+        select
+        e.id,
+        e.ename,
+        e.companyId,
+        e.enumber,
+        e.deptName,
+        e.position,
+        e.idNumber,
+        e.edate,
+        e.eduLevel,
+        e.remark,
+        e.title,
+        e.leaveDate,
+        e.specialities,
+        e.birthday,
+        e.gender
+        FROM employee e
+        left join stEmployee st on st.enumber = e.enumber and e.companyId = st.companyId
+            and st.year = #{termModel.year}
+        where e.companyId=#{companyId} and (e.leaveDate is null or e.leaveDate >=#{firstDay}) and st.enumber is null
+        <if test="termModel.ename != null and termModel.ename != ''">
+            and e.ename like concat("%",#{termModel.ename},"%")
+        </if>
+        <if test="termModel.enumber != null and termModel.enumber !=''">
+            and e.enumber like concat("%",#{termModel.enumber},"%")
+        </if>
+        <if test="termModel.idNumber!=null and termModel.idNumber !=''">
+            and e.idNumber like concat("%",#{termModel.idNumber},"%")
+        </if>
+        <if test="termModel.eduLevel!=null and termModel.eduLevel >=0">
+            and e.eduLevel = #{termModel.eduLevel}
+        </if>
+        <if test="termModel.position !=null and termModel.position!=''">
+            and e.position like concat("%",#{termModel.position},"%")
+        </if>
+        <if test="termModel.deptName !=null and termModel.deptName != ''">
+            and e.deptName like concat("%",#{termModel.deptName},"%")
+        </if>
+        <if test="termModel.title !=null and termModel.title!=''">
+            and e.title like concat("%",#{termModel.title},"%")
+        </if>
+        <if test="termModel.specialities !=null and termModel.specialities !=''">
+            and e.specialities like concat("%",#{termModel.specialities},"%")
+        </if>
+        <if test="termModel.remark !=null and termModel.remark !=''">
+            and e.remark like concat("%",#{termModel.remark},"%")
+        </if>
+    </select>
+
+    <select id="getEmployeeByenumber"
+            resultType="com.yskc.rs.models.employee.EmployeeModel">
+		select * from employee e where e.companyId=#{companyId} and
+		e.enumber=#{enumber}
+	</select>
+    <select id="getAllList" resultType="com.yskc.rs.models.employee.EmployeeModel">
+		select * from employee where companyId=#{companyId}
+	</select>
+
+    <select id="getData" resultType="com.yskc.rs.models.excel.EmployeeExcel">
+        SELECT
+        e.id,
+        e.ename,
+        e.companyId,
+        e.enumber,
+        e.deptId,
+        e.deptName,
+        e.position,
+        e.idNumber,
+        e.edate,
+        e.eduLevel as level,
+        e.remark,
+        e.title,
+        e.leaveDate,
+        e.specialities,
+        e.birthday,
+        e.gender as genderType,
+        e.data
+        FROM
+        employee e
+        where e.companyId=#{companyId}
+        <if test="termModel.ename != null and termModel.ename != ''">
+            and e.ename like "%"#{termModel.ename}"%"
+        </if>
+        <if test="termModel.enumber != null and termModel.enumber !=''">
+            and e.enumber like "%"#{termModel.enumber}"%"
+        </if>
+        <if test="termModel.idNumber!=null and termModel.idNumber !=''">
+            and e.idNumber like "%"#{termModel.idNumber}"%"
+        </if>
+        <if test="termModel.eduLevel!=null and termModel.eduLevel >=0">
+            and e.eduLevel = #{termModel.eduLevel}
+        </if>
+        <if test="termModel.position !=null and termModel.position!=''">
+            and e.position like "%"#{termModel.position}"%"
+        </if>
+        <if test="termModel.beginEdate !=null and termModel.endEdate!=null">
+            AND e.edate &gt;= #{termModel.beginEdate}
+            AND e.edate &lt;= #{termModel.endEdate}
+        </if>
+        <if test="termModel.deptName !=null and termModel.deptName != ''">
+            and e.deptName like "%"#{termModel.deptName}"%"
+        </if>
+        <if test="termModel.title !=null and termModel.title!=''">
+            and e.title like "%"#{termModel.title}"%"
+        </if>
+        <if test="termModel.specialities !=null and termModel.specialities !=''">
+            and e.specialities like "%"#{termModel.specialities}"%"
+        </if>
+        order by e.enumber, e.createTime desc
+    </select>
+    <select id="getByNumber" resultType="com.yskc.rs.entity.EmployeeEntity">
+			select * from employee e where e.companyId=#{companyId} and e.enumber=#{enumber} limit 1
+	</select>
+    <select id="getEmployeeListByMonth" resultType="com.yskc.rs.models.employee.EmployeeModel">
+        select e.id,e.ename,e.companyId,e.enumber,e.deptId,d.deptName,e.position
+        from employee as e
+        LEFT JOIN dept d on e.deptId=d.id and e.companyId=d.companyId
+        where e.companyId=#{companyId} and e.enumber not in(
+        select e1.enumber from employee as e1
+        join d_attendance as da on da.enumber=e1.enumber and da.companyId=e1.companyId
+        where da.companyId=#{companyId}
+        <if test="month != null">
+            and da.month =#{month}
+        </if>
+        )
+        <if test="ename != null and   ename != '' ">
+            and e.ename like "%"#{ename}"%"
+        </if>
+        order by e.ename
+    </select>
+    <select id="getListByeEnumbers" resultType="com.yskc.rs.models.employee.EmployeeModel">
+        select e.enumber,e.ename,re.etype as etype from employee e
+        left join rdEmployee as re on re.companyId = e.companyId and re.enumber = e.enumber and re.year = #{year}
+        where e.companyId=#{companyId} and e.enumber in
+        <foreach collection="enumbers" open="(" separator="," close=")" item="enumber">
+            #{enumber}
+        </foreach>
+    </select>
+    <select id="getByNumbers" resultType="com.yskc.rs.entity.EmployeeEntity">
+        select * from employee e where e.companyId=#{companyId} and e.enumber in
+        <foreach collection="enumbers" open="(" separator="," close=")" item="enumber">
+            #{enumber}
+        </foreach>
+    </select>
+    <select id="getSelectEmployeeList" resultType="com.yskc.rs.models.employee.EmployeeSelectTableModel">
+        select e.ename,e.enumber,e.position,e.title,d.deptName
+        from employee as e
+        left join dept as d on d.id = e.deptId
+        where
+        e.companyId = #{companyId}
+        <if test="query.deptId != null and query.deptId >= 0">
+            and e.deptId = #{query.deptId}
+        </if>
+        <if test="query.ename != null and query.ename != ''">
+            and e.ename like "%"#{query.ename}"%"
+        </if>
+        <if test="query.enumber != null and query.enumber != ''">
+            and e.enumber like "%"#{query.enumber}"%"
+        </if>
+        order by e.enumber
+    </select>
+    <update id="updateBatch" parameterType="java.util.List">
+        update employee
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix=" deptId =case" suffix="end,">
+                <foreach collection="employeeEntitys" item="i" index="index">
+                    <if test="i.deptId!=null">
+                        when id=#{i.id} then #{i.deptId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="ename =case" suffix="end,">
+                <foreach collection="employeeEntitys" item="i" index="index">
+                    <if test="i.ename!=null">
+                        when id=#{i.id} then #{i.ename}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="remark =case" suffix="end,">
+                <foreach collection="employeeEntitys" item="i" index="index">
+                    <if test="i.remark!=null">
+                        when id=#{i.id} then #{i.remark}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="title =case" suffix="end,">
+                <foreach collection="employeeEntitys" item="i" index="index">
+                    <if test="i.title!=null">
+                        when id=#{i.id} then #{i.title}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="eduLevel =case" suffix="end,">
+                <foreach collection="employeeEntitys" item="i" index="index">
+                    <if test="i.eduLevel!=null">
+                        when id=#{i.id} then #{i.eduLevel}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="idNumber =case" suffix="end,">
+                <foreach collection="employeeEntitys" item="i" index="index">
+                    <if test="i.idNumber!=null">
+                        when id=#{i.id} then #{i.idNumber}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="position =case" suffix="end,">
+                <foreach collection="employeeEntitys" item="i" index="index">
+                    <if test="i.position!=null">
+                        when id=#{i.id} then #{i.position}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="edate =case" suffix="end,">
+                <foreach collection="employeeEntitys" item="i" index="index">
+                    when id=#{i.id} then #{i.edate}
+<!--                    <if test="i.edate!=null">-->
+<!--                        when id=#{i.id} then #{i.edate}-->
+<!--                    </if>-->
+                </foreach>
+            </trim>
+            <trim prefix="leaveDate =case" suffix="end,">
+                <foreach collection="employeeEntitys" item="i" index="index">
+                    when id=#{i.id} then #{i.leaveDate}
+<!--                    <if test="i.leaveDate!=null">-->
+<!--                        when id=#{i.id} then #{i.leaveDate}-->
+<!--                    </if>-->
+                </foreach>
+            </trim>
+            <trim prefix="specialities =case" suffix="end,">
+                <foreach collection="employeeEntitys" item="i" index="index">
+                    <if test="i.specialities!=null">
+                        when id=#{i.id} then #{i.specialities}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="birthday =case" suffix="end,">
+                <foreach collection="employeeEntitys" item="i" index="index">
+                    when id=#{i.id} then #{i.birthday}
+<!--                    <if test="i.birthday!=null">-->
+<!--                        when id=#{i.id} then #{i.birthday}-->
+<!--                    </if>-->
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdatorId =case" suffix="end,">
+                <foreach collection="employeeEntitys" item="i" index="index">
+                    <if test="i.lastUpdatorId!=null">
+                        when id=#{i.id} then #{i.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdateTime =case" suffix="end,">
+                <foreach collection="employeeEntitys" item="i" index="index">
+                    <if test="i.lastUpdateTime!=null">
+                        when id=#{i.id} then #{i.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="msLastUpdatorId =case" suffix="end,">
+                <foreach collection="employeeEntitys" item="i" index="index">
+                    <if test="i.msLastUpdatorId!=null">
+                        when id=#{i.id} then #{i.msLastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="gender =case" suffix="end,">
+                <foreach collection="employeeEntitys" item="i" index="index">
+                    <if test="i.gender!=null">
+                        when id=#{i.id} then #{i.gender}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="deptName =case" suffix="end,">
+                <foreach collection="employeeEntitys" item="i" index="index">
+                    <if test="i.deptName!=null">
+                        when id=#{i.id} then #{i.deptName}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="data =case" suffix="end,">
+                <foreach collection="employeeEntitys" item="i" index="index">
+                    <if test="i.data!=null">
+                        when id=#{i.id} then #{i.data}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="employeeEntitys" separator="or" item="i" index="index">
+            id=#{i.id}
+        </foreach>
+    </update>
+    <update id="updateDisabledAtt">
+        update employee set disabledAtt=#{disabledAtt},lastUpdatorId=#{userId},msLastUpdatorId=#{msUserId},
+        lastUpdateTime=#{now} where id in (<foreach collection="ids" separator="," item="id">#{id}</foreach>)
+    </update>
+    <update id="updateAutographUrl">
+        update employee set autographUrl=#{autographUrl},lastUpdatorId=#{userId},msLastUpdatorId=#{msUserId},
+         lastUpdateTime=#{now} where id =#{id}
+    </update>
+    <update id="updateRoleType">
+        update employee set roleType=#{roleType},lastUpdatorId=#{userId},msLastUpdatorId=#{msUserId},
+        lastUpdateTime=#{now} where id in (<foreach collection="ids" separator="," item="id">#{id}</foreach>)
+    </update>
+
+    <select id="getEmployeeByTerm" resultType="com.yskc.rs.entity.EmployeeEntity">
+        select e.ename ,
+        MAX(e.enumber) as enumber
+        from employee e where e.companyId=#{companyId} and e.ename in
+        <foreach collection="enames" open="(" separator="," close=")" item="ename">
+            #{ename}
+        </foreach>
+        GROUP BY e.ename
+    </select>
+
+    <select id="selectByEname" resultType="com.yskc.rs.entity.EmployeeEntity">
+        select * from employee where ename = #{ename}
+    </select>
+    <select id="getUsed" resultType="java.lang.Integer">
+        select DISTINCT e.id from ${tableName} as u LEFT JOIN employee as e on
+        <if test="tableName == 'p_project'">
+            u.masterENumber = enumber
+        </if>
+        <if test="tableName != 'p_project'">
+            u.enumber = e.enumber
+        </if>
+
+        and u.companyId = e.companyId
+        where e.companyId = #{companyId} and e.id in
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </select>
+    <select id="getEmployeeSelect" resultType="com.yskc.rs.models.employee.EmployeeSelectModel">
+        select e.ename,e.enumber
+        from employee e
+        where e.companyId = #{companyId}
+        <if test="ename != null and ename != ''">
+            and (e.ename like "%"#{ename}"%" or e.enumber like "%"#{ename}"%")
+        </if>
+    </select>
+    <select id="getEnameByEnumbers" resultType="com.yskc.rs.entity.EmployeeEntity">
+        select enumber,ename from employee where companyId = #{companyId} and enumber in
+        <foreach collection="enumbers" open="(" separator="," close=")" item="enumber">
+            #{enumber}
+        </foreach>
+    </select>
+    <select id="getEmployeeByEnumbers" resultType="com.yskc.rs.models.project.ProjectEmployeeInfo">
+        select e.enumber,e.ename,IFNULL(rd.deptName,e.deptName) deptName,IFNULL(rd.id,e.deptId) rdDeptId
+        from employee e
+        left join rdEmployee rde on e.companyId = rde.companyId and e.enumber = rde.enumber and rde.year = #{year}
+        left join rdDept rd on rd.id = rde.rdDeptId
+        where e.companyId = #{companyId} and e.enumber in
+        <foreach collection="enumbers" open="(" separator="," close=")" item="enumber">
+            #{enumber}
+        </foreach>
+    </select>
+
+    <select id="getEmployeeList" resultType="com.yskc.rs.models.employee.EmployeeModel">
+        select id,ename,enumber from employee
+        where companyId = #{companyId}
+    </select>
+
+    <select id="getEmployee" resultType="hashmap">
+        select enumber,ename from employee where companyId = #{companyId} and enumber in
+        <foreach collection="list" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+        group by enumber
+    </select>
+</mapper>

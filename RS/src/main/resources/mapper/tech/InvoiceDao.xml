@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yskc.rs.dao.tech.InvoiceDao">
+
+    <select id="countInfo" resultType="com.yskc.rs.models.tech.InvestmentInfoModel">
+        select tid.investmentId,sum(tid.quantity) as totalQuantity,sum(tid.excludeTaxAmount) as totalAmount
+        from t_invoice_detail tid
+        where tid.companyId=#{companyId} and tid.investmentId in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        group by tid.investmentId
+    </select>
+    <select id="getInvoices" resultType="com.yskc.rs.models.tech.InvoiceModel">
+        select tid.id,ti.invoiceNo,tid.taxAmount,tid.excludeTaxAmount,ti.invoiceFrom,ti.invoiceDate,ti.invoicePath,
+        ti.voucherNo,ti.voucherPath,tid.ename,tid.emodal,tid.quantity,ti.id as invoiceId,tid.investmentId,ti.seq,ti.voucherDate
+        from t_invoice_detail tid
+        inner join  t_invoice ti on tid.invoiceId=ti.id
+        where  tid.companyId=#{companyId} and tid.investmentId=#{query.investmentId}
+        <if test="query.invoiceNo!=null and query.invoiceNo!=''">
+            and ti.invoiceNo like "%"#{query.invoiceNo}"%"
+        </if>
+        <if test="query.ename!=null and query.ename!=''">
+            and tid.ename like "%"#{query.ename}"%"
+        </if>
+        order by tid.ename,tid.emodal
+    </select>
+    <select id="getInvoiceDetails" resultType="com.yskc.rs.models.tech.InvoiceModel">
+        select tid.id,ti.invoiceNo,tid.taxAmount,ti.invoiceFrom,ti.invoiceDate,ti.invoicePath,ti.seq,ti.voucherDate,
+        ti.voucherNo,ti.voucherPath,tid.ename,tid.emodal,tid.quantity,ti.id as invoiceId,tid.excludeTaxAmount
+        from t_invoice ti
+        inner join t_invoice_detail tid on ti.id=tid.invoiceId
+        where ti.companyId=#{companyId} and (tid.investmentId is null
+        <if test="query.investmentId!=null and query.investmentId!=''">
+            or tid.investmentId=#{query.investmentId}
+        </if>)
+        <if test="query.invoiceNo!=null and query.invoiceNo!=''">
+            and ti.invoiceNo like "%"#{query.invoiceNo}"%"
+        </if>
+        <if test="query.ename!=null and query.ename!=''">
+            and tid.ename like "%"#{query.ename}"%"
+        </if>
+    </select>
+    <select id="verifyInvoice" resultType="com.yskc.rs.entity.tech.Invoice">
+        select id,invoiceNo from t_invoice
+        where companyId=#{companyId} and invoiceNo=#{invoiceNo}
+    </select>
+
+</mapper>

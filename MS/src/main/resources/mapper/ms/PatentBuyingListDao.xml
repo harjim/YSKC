@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.PatentBuyingListDao">
+    <insert id="insertList">
+        insert into
+        patent_buying_list(creatorId,lastUpdatorId,createTime,lastUpdateTime,customerId,demandId,patentSeaId,status)
+        values
+        <foreach collection="buyingList" item="item" separator=",">
+            (#{item.creatorId},#{item.lastUpdatorId},#{item.createTime},#{item.lastUpdateTime},#{item.customerId},
+            #{item.demandId},#{item.patentSeaId},#{item.status})
+        </foreach>
+    </insert>
+    <update id="updateStatus">
+        update patent_buying_list set status=#{status},lastUpdatorId=#{userId},lastUpdateTime=#{date}
+        where id in (<foreach collection="updateIds" item="id" separator=",">#{id}</foreach>)
+    </update>
+    <update id="updateSellFile">
+        update patent_buying_list
+        set sellFile=#{sellFile},
+            lastUpdatorId=#{userId},
+            lastUpdateTime=#{now}
+        where id = #{id}
+    </update>
+    <delete id="deleteBySea">
+        delete from patent_buying_list where demandId=#{demandId} and status!=2 and patentSeaId in(<foreach
+            collection="patentSeaIds" item="id" separator=",">#{id}
+    </foreach> )
+    </delete>
+    <select id="getList" resultType="com.yskc.ms.models.patent.PatentBuyingModel">
+        select pbl.id,pbl.status,pbl.filePath,pbl.customerId,pbl.demandId,pbl.patentSeaId,c.companyName,pbl.sellFile,
+        ps.patentNo,ps.patentName,ps.inventor,ps.mainType,ps.applyDateTime,ps.filePath as patentSeaFile
+        from patent_buying_list pbl
+        inner join patent_sea ps on pbl.patentSeaId=ps.id
+        inner join patent_buying_demand pbd on pbl.demandId=pbd.id
+        inner join customer c on pbl.customerId=c.id
+        where pbl.demandId=#{query.demandId}
+        <if test="query.companyName!=null and query.companyName!=''">
+            and c.companyName like "%"#{query.companyName}"%"
+        </if>
+        <if test="query.patentNo!=null and query.patentNo!=''">
+            and ps.patentNo like "%"#{query.patentNo}"%"
+        </if>
+        <if test="query.patentName!=null and query.patentName!=''">
+            and ps.patentName like "%"#{query.patentName}"%"
+        </if>
+        <if test="query.inventor!=null and query.inventor!=''">
+            and ps.inventor like "%"#{query.inventor}"%"
+        </if>
+        <if test="query.status!=null">
+            and pbl.status=#{query.status}
+        </if>
+        <if test="query.mainType!=null">
+            and ps.mainType=#{query.mainType}
+        </if>
+    </select>
+    <select id="getExportList" resultType="com.yskc.ms.models.patentbuying.PatentCanBuyModel">
+        select pbl.id,ps.patentNo,ps.patentName,ps.inventor,ps.mainType,ps.applyDateTime,ps.filePath as patentSeaFile
+        from patent_buying_list pbl
+        inner join patent_sea ps on pbl.patentSeaId=ps.id
+        where pbl.demandId=#{query.demandId}
+        <if test="query.status!=null">
+            and pbl.status=#{query.status}
+        </if>
+    </select>
+    <select id="getBuyCnt" resultType="com.yskc.ms.models.patent.PatentBuyingDemandModel">
+        select pbl.demandId id,
+        count(if(ps.mainType=#{inventorType},1,null)) inventionCnt,
+        count(if(ps.mainType=#{utilityType},1,null)) utilityCnt,
+        count(if(ps.mainType=#{appearanceDesignType},1,null)) appearanceDesignCnt
+        from patent_buying_list pbl
+        inner join patent_sea ps on pbl.patentSeaId=ps.id
+        where pbl.status=2
+        and pbl.demandId in (<foreach collection="demandIds" separator="," item="dId">#{dId}</foreach>) group by
+        id
+    </select>
+</mapper>

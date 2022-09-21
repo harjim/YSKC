@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.AppRoleDataDao">
+    <insert id="insertBatch">
+        insert into app_role_data
+        (creatorId,lastUpdatorId,createTime,lastUpdateTime,
+        roleId,functionId,dataType)
+        values
+        <foreach collection="dataPerms" separator="," item="perm">
+            (#{perm.creatorId},#{perm.lastUpdatorId},#{perm.createTime},#{perm.lastUpdateTime},
+            #{perm.roleId},#{perm.functionId},#{perm.dataType})
+        </foreach>
+    </insert>
+    <delete id="deleteByRoleIds">
+        delete from app_role_data where roleId in
+        <foreach collection="roleIds" open="(" separator="," close=")" item="roleId">
+            #{roleId}
+        </foreach>
+    </delete>
+
+    <select id="getDataTop" resultType="java.lang.Integer">
+        select dataType from app_role_data where roleId in
+        <foreach collection="roleIds" open="(" separator="," close=")" item="roleId">
+            #{roleId}
+        </foreach>
+        <if test="functionId != null and functionId > 0">
+            and functionId = #{functionId}
+        </if>
+        order by dataType DESC limit 1
+    </select>
+</mapper>

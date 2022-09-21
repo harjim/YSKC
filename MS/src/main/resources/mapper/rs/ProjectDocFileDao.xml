@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.rs.ProjectDocFileDao">
+
+    <select id="queryProjectDocFile" resultType="com.yskc.ms.entity.rs.models.ProjectDocFileModel">
+        select d.id,d.projectId,p.companyId,p.beginYear,p.endYear from p_docFile d
+        left join p_project p on p.id = d.projectId
+        where d.deleted=false and d.projectId in
+        <foreach collection="projectList" item="item" index="index" open="(" close=")" separator=",">
+            #{item.id}
+        </foreach>
+    </select>
+    <select id="queryFileById" resultType="java.lang.Integer">
+        select count(1)
+        from p_docFile pd
+        where
+            pd.docFileTemplateId=#{templateId}
+    </select>
+    <select id="selectByStageList" resultType="com.yskc.ms.models.rs.RsProjectDocFileModel">
+        select
+        p.id,p.projectId,p.stage,p.docFileId,p.docFileName,p.createTime,p.lastUpdateTime,dt.docTemplateName as
+        templateName,d.docName,p.seq,pdd.data,
+        pdd.wordLength,padf.status as auditStatus
+        from p_docFile p
+        left join p_docFile_data pdd on pdd.pdocFileId=p.id
+        left join docFileTemplate dt on p.docFileTemplateId=dt.id
+        inner join docFile d on d.id = p.docFileid
+        left join p_audit_docFile padf on p.id=padf.docFileId
+        -- inner join docFileStage dfs on dfs.stageKey=p.stage and dfs.docFileId=p.docFileId
+        where ((pdd.id is not null and d.needEdit) or !d.needEdit or padf.id is not null) and p.projectId =
+        #{projectId} and
+        p.deleted=false
+        and p.stage in
+        <foreach item="item" index="index" collection="stageList" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        order by p.seq ASC
+    </select>
+
+    <select id="queryFileList" resultType="com.yskc.ms.models.rs.RsStageModel">
+         select p.id,p.docFileName,ps.stageName as stageType
+        from p_docFile p
+        left join p_stage ps on ps.projectId = p.projectId and ps.stageKey = p.stage
+        where
+         <if test="pDocFileIds != null and pDocFileIds.size()>0">
+            p.id in (<foreach collection="pDocFileIds" item="pDocId" separator=",">#{pDocId}</foreach>)
+         </if>
+         <if test="pDocFileIds == null or pDocFileIds.size()==0">
+            p.projectId = #{projectId} and p.deleted=false
+         </if>
+         order by p.stage, p.seq
+    </select>
+    <select id="getReportNum" resultType="com.yskc.ms.models.project.ProjectReportModel">
+        select Count(pdd.id) reportNum,pp.companyId,
+        (case when ps.beginDate is null then pp.beginYear else YEAR (ps.beginDate) end) as `year`
+        from p_docFile pd
+        inner join p_project pp on pd.projectId=pp.id
+        inner join p_docFile_data pdd on pd.id=pdd.pdocFileId
+        inner join p_stage ps on ps.projectId=pd.projectId and ps.stageKey=200
+        where pd.docFileId=27 and pd.deleted=false and (
+        <foreach collection="list" item="item" separator="or">
+            (pp.companyId=#{item.companyId}
+            and
+            (
+            (pp.beginYear=#{item.year}
+            and ps.beginDate is null)
+            or (YEAR(ps.beginDate) = #{item.year} and pp.beginYear &lt;= #{item.year} and pp.endYear &gt;= #{item.year}
+            )
+            )
+            )
+        </foreach>)
+        group by companyId,`year`
+
+    </select>
+    <select id="countAuditInfo" resultType="com.yskc.ms.models.rs.DocAuditModel">
+        select pp.id as projectId,pd.id as pDocFileId,pd.docFileId,pp.beginYear,pp.endYear
+        from p_docFile pd
+        left join p_project pp on pp.id=pd.projectId
+        where pp.companyId=#{companyId} and pp.beginYear &lt;= #{year} and pp.endYear &gt;= #{year} and pd.deleted=false
+    </select>
+    <select id="getDocCnt" resultType="com.yskc.ms.models.rs.RsProjectListModel">
+        select pd.projectId id,count(case when paf.status=1 then 1 else null end) currentFileNum,
+        count(case when paf.status=1 then 1 when paf.status=0 then 1 else null end) fileNumber
+        from p_docFile pd
+        inner join p_audit_docFile paf on paf.docFileId=pd.id
+        where pd.projectId in
+        <foreach collection="projectIds" item="projectId" open="(" close=")" separator=",">
+            #{projectId}
+        </foreach>
+        and !pd.deleted
+        <if test="type!=null and type>0">
+            and pd.docFileId in (3,22,24,27,33,38,50)
+        </if>
+        group by pd.projectId
+    </select>
+    <select id="getDocNum" resultType="com.yskc.ms.models.projectAudit.AuditDocFileModel">
+        select pd.projectId as rsProjectId,count(1) as auditDocNum
+        from p_docFile pd
+        left join p_docFile_data pdd on pdd.pdocFileId=pd.id
+        left join p_audit_docFile padf on pd.id=padf.docFileId
+        inner join docFileStage dfs on dfs.stageKey=pd.stage and dfs.docFileId=pd.docFileId
+        where !pd.deleted and ((pdd.id is not null and dfs.needEdit) or !dfs.needEdit or padf.id is not null) and
+        pd.projectId
+        in
+        <foreach collection="projectIds" item="projectId" open="(" separator="," close=")">
+            #{projectId}
+        </foreach>
+        <if test="type!=null and type>0">
+            and pd.docFileId in (3,22,24,27,33,38,50)
+        </if>
+        group by pd.projectId
+    </select>
+    <select id="getFileInfo" resultType="com.yskc.ms.models.rs.DocFileInfoModel">
+        select d.id, df.docTemplateName as templateName,pd.id as docFileId,pd.docFileName,pdd.id as pdocFileId,
+        pa.status as hasSubmit,d.owner,pd.projectId
+        from p_docFile pd
+        inner join docFile d on pd.docFileId=d.id
+        left join p_docFile_data pdd on pdd.pdocFileId=pd.id
+        left join docFileTemplate df on df.id=pd.docFileTemplateId
+        left join p_audit_docFile pa on pd.id=pa.docFileId
+        where pd.projectId=#{projectId} and !pd.deleted and d.id in
+        (<foreach collection="docFileIds" item="docFileId" separator=",">#{docFileId}</foreach>)
+    </select>
+    <select id="getMaxSeq" resultType="java.lang.Integer">
+        select max(seq) from p_docFile
+        where projectId=#{projectId}
+        <if test="stage!=null and stage!=''">
+            and stage=#{stage}
+        </if>
+    </select>
+    <select id="getBackupDataFile" resultType="com.yskc.ms.models.rs.DataModel">
+        select pdd.data,pd.id as pDocFileId,d.id,pd.projectId,pd.docFileName
+        from p_docFile pd
+        inner join docFile d on pd.docFileId=d.id
+        left join p_docFile_data pdd on pdd.pdocFileId=pd.id
+        where pd.projectId=#{projectId} and d.id in (3,22,27,33,38,50) and !pd.deleted
+    </select>
+    <select id="getBackupDataFileIds" resultType="java.lang.Integer">
+        select id
+        from p_docFile
+        where projectId=#{projectId} and docFileId in (3,22,27,33,38,50) and !deleted
+    </select>
+    <select id="getBackupDataFiles" resultType="java.lang.Integer">
+        select id from p_docFile
+        where docFileId in (3,22,24,27,33,38,50)
+        and projectId in (<foreach collection="projectIds" item="projectId" separator=",">#{projectId}</foreach>)
+        and deleted=false
+    </select>
+    <select id="getDocFile" resultType="com.yskc.ms.entity.rs.ProjectDocFileEntity">
+        select pd.*
+        from p_docFile pd
+        left join  p_stage ps on pd.stage=ps.stageKey and pd.projectId=ps.projectId
+        where pd.projectId=#{projectId} and pd.docFileId=24 and !pd.deleted
+        and (YEAR(ps.beginDate)=#{year} or YEAR(pd.month)=#{year})
+        limit 1
+    </select>
+    <select id="getDocInfo" resultType="com.yskc.ms.models.rs.DocFileInfoModel">
+      select d.id,df.docTemplateName as templateName, pd.id docFileId, pd.docFileName, pdd.data,d.docName,
+        pdd.id as pdocFileId,case when pa.status is null then 5 else pa.status end hasSubmit
+        from  p_docFile pd
+        inner join docFile d on pd.docFileId = d.id
+        left join p_docFile_data pdd on pdd.pdocFileId = pd.id
+        left join docFileTemplate df on df.id = pd.docFileTemplateId
+        left join p_audit_docFile pa on pd.id=pa.docFileId
+        where  pd.id =#{pDocFileId} and !pd.deleted
+    </select>
+    <select id="getDocFiles" resultType="com.yskc.ms.entity.rs.ProjectDocFileEntity">
+        select pd.*
+        from p_docFile pd
+        left join p_stage ps on pd.stage=ps.stageKey and pd.projectId=ps.projectId
+        where pd.projectId in (<foreach collection="projectIds" item="projectId" separator=",">#{projectId}</foreach>)
+        and pd.docFileId=24 and !pd.deleted
+        and (YEAR(ps.beginDate)=#{year} or YEAR(pd.month)=#{year})
+    </select>
+    <select id="getDocData" resultType="com.yskc.ms.models.rs.DataModel">
+        select pdd.data,dft.docTemplateName templateName from p_docFile pd
+        inner join docFileTemplate dft on dft.id = pd.docFileTemplateId
+        left join p_docFile_data pdd on pd.id = pdd.pDocFileId
+        where pd.id=#{id} and pd.docFileId = #{docFileId} limit 1
+    </select>
+    <select id="getReportData" resultType="com.yskc.ms.models.rs.DataModel">
+        select pdd.data,dft.docTemplateName templateName,pdd.id,pd.projectId from p_docFile pd
+                inner join docFileTemplate dft on dft.id = pd.docFileTemplateId
+                inner join p_docFile_data pdd on pd.id = pdd.pDocFileId
+        where pd.docFileId=27
+    </select>
+    <select id="getProjectNames" resultType="java.lang.String">
+        select pname from p_project
+    </select>
+    <select id="getRdReportId" resultType="java.lang.Integer">
+        select id from p_docFile where projectId = #{projectId} and docFileId = 27 and !deleted limit 1
+    </select>
+</mapper>

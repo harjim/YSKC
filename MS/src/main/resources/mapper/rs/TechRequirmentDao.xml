@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.rs.TechRequirementDao">
+
+    <select id="getList" resultType="com.yskc.ms.models.techrequirement.TechRequirementModel">
+        select tr.id,tr.companyId,c.companyName,c.companyAddress,tr.linkName,tr.position,tr.linkTel,tr.linkEmail,
+        tr.description,tr.filePath,tr.techName,tr.domain,tr.investment,tr.requirement,tr.cooperateType,tr.year,
+        tr.otherCooperateType,tr.otherDomain,tr.lastUpdateTime,tr.createTime,tr.msCreatorId,tr.msLastUpdatorId,
+        tr.status,cooperateSchool
+        from tech_requirement tr
+        INNER JOIN company c on c.id = tr.companyId
+        where 1= 1
+        <if test="query.companyName != null and query.companyName != ''">
+            and c.companyName like "%"#{query.companyName}"%"
+        </if>
+        <if test="query.techName != null and query.techName != ''">
+            and tr.techName like "%"#{query.techName}"%"
+        </if>
+        <if test="query.linkName != null and query.linkName != ''">
+            and tr.linkName like "%"#{query.linkName}"%"
+        </if>
+        <if test="userIds != null">
+            and tr.msCreatorId in
+            <foreach collection="userIds" open="(" separator="," close=")" item="userId">
+                #{userId}
+            </foreach>
+        </if>
+    </select>
+    <select id="getFilePath" resultType="java.lang.String">
+        select filePath from tech_requirement where id = #{id}
+    </select>
+    <select id="checkExistId" resultType="java.lang.Integer">
+        select id from tech_requirement where id = #{id}
+    </select>
+    <select id="getById" resultType="com.yskc.ms.models.techrequirement.TechRequirementModel">
+        select tr.id,tr.companyId,c.companyName,c.companyAddress,tr.linkName,tr.position,tr.linkTel,tr.linkEmail,
+        tr.description,tr.filePath,tr.techName,tr.domain,tr.investment,tr.requirement,tr.cooperateType,tr.year,
+        tr.otherCooperateType,tr.otherDomain,tr.lastUpdateTime,tr.createTime,tr.msCreatorId,tr.msLastUpdatorId,
+        tr.status
+        from tech_requirement tr
+        INNER JOIN company c on c.id = tr.companyId
+        where tr.id=#{id}
+    </select>
+
+    <update id="updateStatus">
+        update tech_requirement set status = #{status},lastUpdatorId = #{userId},msLastUpdatorId = #{msUserId},
+        lastUpdateTime = #{now}
+        where id in
+        <foreach collection="ids" open="(" separator="," close=")" item="id">
+            #{id}
+        </foreach>
+    </update>
+</mapper>

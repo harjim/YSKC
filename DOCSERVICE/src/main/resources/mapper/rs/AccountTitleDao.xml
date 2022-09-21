@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.docservice.dao.rs.AccountTitleDao">
+    <select id="getByFullAccountName" resultType="com.yskc.docservice.entity.rs.AccountTitleEntity">
+        select id,fullAccountName from accountTitle a where a.companyId=#{companyId} and a.fullAccountName in
+        <foreach collection="fullAccountNameList" open="(" separator="," close=")" item="fullAccountName">
+            #{fullAccountName}
+        </foreach>
+    </select>
+    <select id="getLevelData" resultType="com.yskc.docservice.models.rs.excel.AccountExcel">
+        select id,parentId,fullAccountName,accoutType,`level`,accountName,accountNumber from accountTitle where companyId = #{companyId}
+        order by `level`, parentId
+    </select>
+</mapper>

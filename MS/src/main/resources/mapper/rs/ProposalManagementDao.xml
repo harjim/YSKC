@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.rs.ProposalManagementDao">
+    <select id="getList" resultType="com.yskc.ms.models.ProposalManagementModel">
+        select pm.id,pm.`year`,pm.title,pm.filePath,pm.remark,pm.`type`,pap.status
+        from proposal_management pm
+        left join p_audit_proposal pap on pap.proposalId = pm.id
+        where pm.companyId=#{query.companyId} and pm.`year`=#{query.year}
+        <if test="query.title!=null and query.title!=''">
+            and pm.title like "%"#{query.title}"%"
+        </if>
+        <if test="query.remark!=null and query.remark!=''">
+            and pm.remark like "%"#{query.remark}"%"
+        </if>
+        <if test="query.type!=null and query.type>=0">
+            and pm.`type`=#{query.type}
+        </if>
+    </select>
+    <select id="getProposal" resultType="com.yskc.ms.models.ProposalManagementModel">
+        select pm.id,pm.`year`,pm.title,pm.filePath,pm.remark,pm.`type`,if(pap.status is null , 5,pap.status) status
+        from proposal_management pm
+        left join p_audit_proposal pap on pap.proposalId = pm.id
+        where pm.id = #{id}
+    </select>
+    <select id="getAuditInfo" resultType="com.yskc.ms.entity.rs.AuditProposalEntity">
+        select pap.*
+        from  p_audit_proposal pap
+                  inner join proposal_management pm on pm.id=pap.proposalId
+        where pm.year=#{year} and pm.companyId=#{companyId} and pap.moduleId=11
+    </select>
+    <select id="getProposals" resultType="com.yskc.ms.entity.rs.ProposalManagement">
+        select id,companyId,`year` from proposal_management
+        where id in (<foreach collection="ids" separator="," item="id">#{id}</foreach>)
+    </select>
+    <select id="getResults" resultType="com.yskc.ms.entity.rs.SysDocumentEntity">
+        select id,companyId,year from sys_document
+        where id in (<foreach collection="ids" separator="," item="id">#{id}</foreach>)
+    </select>
+</mapper>

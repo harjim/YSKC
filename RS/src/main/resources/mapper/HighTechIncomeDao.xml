@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.highTech.HighTechIncomeDao">
+    <insert id="addBatch">
+        insert into highTech_income(companyId,highTechId,productName,bookDate,voucherNo,quantity,unitPrice,
+         income,`client`,creatorId,lastUpdatorId,createTime,lastUpdateTime,msCreatorId,msLastUpdatorId)
+         values
+        <foreach collection="list" separator="," item="l">
+            (#{l.companyId},#{l.highTechId},#{l.productName},#{l.bookDate},#{l.voucherNo},#{l.quantity},#{l.unitPrice},
+            #{l.income},#{l.client},#{l.creatorId},#{l.lastUpdatorId},#{l.createTime},#{l.lastUpdateTime},
+             #{l.msCreatorId},#{l.msLastUpdatorId})
+        </foreach>
+    </insert>
+    <update id="updateHighTechId">
+        update highTech_income set highTechId=#{highTechId},lastUpdatorId=#{userId},msLastUpdatorId=#{msUserId},
+        lastUpdateTime=#{now} where id in (<foreach collection="ids" separator="," item="id">#{id}</foreach>)
+    </update>
+    <select id="getList" resultType="com.yskc.rs.models.hightech.HighTechIncomeModel">
+        select hti.id,hti.highTechId,hti.productName,hti.bookDate,hti.voucherNo,hti.quantity,hti.unitPrice,hti.income,
+        hti.client,ht.hcode,ht.hname from highTech_income hti
+        left join highTech ht on ht.id=hti.highTechId
+        where hti.companyId=#{companyId}   and hti.bookDate &lt;=#{end} and hti.bookDate >=#{begin}
+        <if test="query.voucherNo != null and query.voucherNo != ''">
+            and hti.voucherNo like "%"#{query.voucherNo}"%"
+        </if>
+        <if test="query.productName != null and query.productName != ''">
+            and hti.productName like "%"#{query.productName}"%"
+        </if>
+        <if test="query.client != null and query.client != ''">
+            and hti.client like "%"#{query.client}"%"
+        </if>
+    </select>
+    <select id="getExportIncome" resultType="com.yskc.rs.models.hightech.HighTechIncomeModel">
+        select hti.id,hti.highTechId,hti.productName,hti.bookDate,hti.voucherNo,hti.quantity,hti.unitPrice,hti.income,
+        hti.client,ht.hcode,ht.hname from highTech_income hti
+        left join highTech ht on ht.id=hti.highTechId
+        where hti.companyId=#{companyId}   and hti.bookDate &lt;=#{end} and hti.bookDate >=#{begin}
+        <if test="query.voucherNo != null and query.voucherNo != ''">
+            and hti.voucherNo like "%"#{query.voucherNo}"%"
+        </if>
+        <if test="query.productName != null and query.productName != ''">
+            and hti.productName like "%"#{query.productName}"%"
+        </if>
+        <if test="query.client != null and query.client != ''">
+            and hti.client like "%"#{query.client}"%"
+        </if>
+        order by bookDate desc
+    </select>
+    <select id="getDataByMonth" resultType="java.util.Map">
+        select DATE_FORMAT(bookDate,'%Y-%m-01 00:00:00') bookDate,sum(income) total
+        from highTech_income
+        where bookDate &gt;= #{begin} and bookDate &lt;= #{end} and highTechId=#{highTechId} and companyId=#{companyId}
+        group by DATE_FORMAT(bookDate,'%Y-%m-01 00:00:00')
+    </select>
+    <select id="getCountData" resultType="java.math.BigDecimal">
+        select sum(income)
+        from highTech_income
+        where  companyId=#{companyId} and YEAR(bookDate)=#{year}
+    </select>
+    <select id="getByTechs" resultType="com.yskc.rs.entity.hightech.HighTechIncomeEntity">
+        select id,highTechId,productName,bookDate,voucherNo,quantity,unitPrice,income,client
+        from highTech_income
+        where  companyId=#{companyId} and highTechId in
+        <foreach collection="highTechIds" item="highTechId" open="(" separator="," close=")">
+            #{highTechId}
+        </foreach>
+    </select>
+    <select id="countDataByYear" resultType="com.yskc.rs.models.hightech.IncomeDataModel">
+        select highTechId,sum(income) as total
+        from highTech_income
+        where companyId=#{companyId} and bookDate &gt;= #{begin} and bookDate &lt;= #{end}
+        group by highTechId
+    </select>
+</mapper>

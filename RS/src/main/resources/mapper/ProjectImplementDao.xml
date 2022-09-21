@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.ProjectImplementDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.yskc.rs.entity.tech.ProjectImplementEntity" id="projectImplementMap">
+        <result property="id" column="id"/>
+        <result property="creatorId" column="creatorId"/>
+        <result property="createTime" column="createTime"/>
+        <result property="lastUpdatorId" column="lastUpdatorId"/>
+        <result property="lastUpdateTime" column="lastUpdateTime"/>
+        <result property="projectId" column="projectId"/>
+        <result property="companyId" column="companyId"/>
+        <result property="businessIncome" column="businessIncome"/>
+        <result property="profit" column="profit"/>
+        <result property="taxRevenue" column="taxRevenue"/>
+        <result property="expect" column="expect"/>
+        <result property="lineOfInfo" column="lineOfInfo"/>
+        <result property="manpowerSavings" column="manpowerSavings"/>
+        <result property="drivenFundsInput" column="drivenFundsInput"/>
+        <result property="goodOfRate" column="goodOfRate"/>
+        <result property="consumptionPer" column="consumptionPer"/>
+        <result property="carbonDioxide" column="carbonDioxide"/>
+        <result property="unitWaterUse" column="unitWaterUse"/>
+        <result property="casualti" column="casualti"/>
+        <result property="weedOut" column="weedOut"/>
+        <result property="digitalize" column="digitalize"/>
+        <result property="numericalControl" column="numericalControl"/>
+        <result property="talentTeam" column="talentTeam"/>
+        <result property="remark" column="remark"/>
+    </resultMap>
+
+    <select id="queryImplement" resultType="com.yskc.rs.entity.tech.ProjectImplementEntity">
+         select * from t_projectImplement where companyId = #{companyId} and projectId = #{projectId}
+    </select>
+
+</mapper>

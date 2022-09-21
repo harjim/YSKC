@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.ProductDao">
+
+    <select id="queryProduct" resultType="com.yskc.ms.models.product.ProductModel">
+        select * from product where 1=1
+        <if test="query.year !=null and query.year != 0">
+            and year = #{query.year}
+        </if>
+        <if test="query.productName !=null and query.productName!=''">
+            and productName like "%"#{query.productName}"%"
+        </if>
+    </select>
+    <select id="checkProduct" resultType="com.yskc.ms.models.product.ProductModel">
+        select * from product where id != #{id}  and productName = #{productName}
+        <if test="year !=null">
+            and year = #{year}
+        </if>
+        <if test="year == null">
+            and year is null
+        </if>
+        <if test="address !=null">
+            and address = #{address}
+        </if>
+        <if test="address ==null">
+            and address is null
+        </if>
+    </select>
+    <select id="productForSelect" resultType="com.yskc.ms.models.product.ProductModel">
+        select id,productName,`year`,`address`,productType from product
+        where 1=1
+        <if test="productName!=null and productName!=''">
+            and productName like concat('%',#{productName},'%')
+        </if>
+    </select>
+    <select id="getProductType" resultType="java.lang.Integer">
+        select productType from product where id = #{id}
+    </select>
+    <select id="getProductNames" resultType="com.yskc.ms.entity.ms.Product">
+        select id,productName from product where id in (<foreach collection="ids" separator="," item="id">#{id}</foreach>)
+    </select>
+</mapper>

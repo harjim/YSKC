@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.es.EsAchievementDao">
+    <select id="getList" resultType="com.yskc.ms.models.newexpert.achievement.AchievementModel">
+        select a.id,a.achievementName,a.tel,a.researchArea,a.trl,a.cooperateType,a.createTime,
+        a.status,a.price,a.fundingType,a.`type`,u.realName as expertName
+        from achievement a
+        left join `user` u ON a.userId = u.id
+        <where>
+            <if test="null != model.achievementName and model.achievementName !=''">
+                and a.achievementName like "%"#{model.achievementName}"%"
+            </if>
+            <if test="null != model.status">
+                and a.status = #{model.status}
+            </if>
+            <if test="null != model.type">
+                and a.`type` = #{model.type}
+            </if>
+            <if test="null != model.researchArea and model.researchArea !=''">
+                <bind name="researchAreaBind" value="','+model.researchArea"/>
+                and (a.researchArea like #{model.researchArea} OR a.researchArea like "%"#{model.researchArea}"%")
+            </if>
+            <if test="null !=model.cooperateType">
+                and a.cooperateType = #{model.cooperateType}
+            </if>
+            <if test="null != model.trl">
+                and a.trl =#{model.trl}
+            </if>
+            <if test="null != model.fundingType">
+                and a.fundingType =#{model.fundingType}
+            </if>
+        </where>
+    </select>
+    <select id="getCount" resultType="com.yskc.ms.models.CountModel">
+        select status as `value`, COUNT(status) as `count` from achievement group by status
+    </select>
+    <select id="getLogs" resultType="com.yskc.ms.models.newexpert.achievement.AchievementLogModel">
+        select al.id,a.achievementName,al.status,al.msCreatorId,
+            al.createTime,su.realName as msCreatorName,suggestion
+        from esdb.achievement_log al
+            left join esdb.achievement a on al.achievementId = a.id
+            left join msdb.ys_user su on al.msCreatorId = su.id
+        where achievementId = #{id} ORDER BY al.createTime ASC
+    </select>
+    <update id="editStatus">
+        update achievement set status = #{model.status},lastUpdatorId=#{model.msCreatorId},lastUpdateTime=#{model.createTime} where id =#{model.achievementId}
+    </update>
+    <insert id="insertLog">
+        insert into achievement_log (achievementId,status,msCreatorId,createTime,suggestion)
+        VALUES (#{model.achievementId},#{model.status},#{model.msCreatorId},#{model.createTime},#{model.suggestion})
+    </insert>
+    <select id="getData" resultType="com.yskc.ms.models.newexpert.achievement.AchievementModel">
+        select a.id,a.userId,a.achievementName,a.industry,a.researchArea,a.type,a.trl,a.startDate,a.status,
+               a.endDate,a.fundingType,a.negotiation,a.price,a.cooperateType,a.keywords,a.source,a.job,a.ownerName,
+               a.tel,a.email,a.addressCode,a.address,a.description,a.innovation,af.achievementFile,af.agent,af.agentFile,af.achievementId,
+               af.assess,af.assessType,af.assessFile,af.smallTest,af.smallTestFile,af.pilotTest,af.pilotTestFile,af.ownerName as realOwnerName
+        from achievement a
+                 left join achievement_files af on a.id = af.achievementId
+                 left join user u on u.id = a.userId
+        where a.id = #{id}
+    </select>
+</mapper>

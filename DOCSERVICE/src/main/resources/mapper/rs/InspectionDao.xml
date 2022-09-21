@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.docservice.dao.rs.InspectionDao">
+    <insert id="addBatch">
+        INSERT INTO d_inspection
+        (`type`,accDate,accNumber,expense,summary,companyId,creatorId,createTime,remark,deptId,rdDeptId,
+        enumber,accountTitleId,lastUpdateTime,lastUpdatorId,msCreatorId,msLastUpdatorId,deptName,remainExpense)
+        VALUES
+        <foreach collection="addList" separator="," item="d">
+            (#{d.type},#{d.accDate},#{d.accNumber},#{d.expense},#{d.summary},#{d.companyId},#{d.creatorId},
+            #{d.createTime},#{d.remark},#{d.deptId},#{d.rdDeptId},#{d.enumber},#{d.accountTitleId},
+            #{d.lastUpdateTime},#{d.lastUpdatorId},#{d.msCreatorId},#{d.msLastUpdatorId},#{d.deptName},#{d.remainExpense})
+        </foreach>
+    </insert>
+    <update id="updateList">
+        <foreach collection="inspectionEntities" item="item" separator=";">
+            update d_inspection set remainExpense=#{item.remainExpense},lastUpdateTime=#{item.lastUpdateTime},
+            lastUpdatorId=#{item.lastUpdatorId},msLastUpdatorId=#{item.msLastUpdatorId}
+            where id=#{item.id}
+        </foreach>
+    </update>
+</mapper>

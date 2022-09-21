@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yskc.rs.dao.EmployeeOpenidDao">
+    <select id="getBindList" resultType="com.yskc.rs.models.wechat.EmployeeOpenidModel">
+        select eo.id,eo.openid from employee e
+        inner join employeeOpenid eo on eo.companyId=e.companyId and eo.enumber=e.enumber
+        where e.id in (<foreach collection="employeeIds" separator="," item="eId">#{eId}</foreach>)
+    </select>
+</mapper>

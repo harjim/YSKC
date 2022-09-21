@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.FlowInstanceLogDao">
+    <insert id="addBatch">
+        INSERT INTO flowInstance_log(instanceId,`status`,suggestion,msCreatorId,createTime,nodeId,submiter)
+        values
+        <foreach collection="flowInstanceLogs" separator="," item="l">
+            (#{l.instanceId},#{l.status},#{l.suggestion},#{l.msCreatorId},#{l.createTime},#{l.nodeId},#{l.submiter})
+        </foreach>
+    </insert>
+    <select id="getInstanceLog" resultType="com.yskc.ms.models.projectAudit.FlowInstanceLogModel">
+        select fl.id,fl.instanceId,fl.status,fl.suggestion,fl.createTime,yu.realName auditor,
+        fl.nodeId,f.nodeName,fl.msCreatorId
+        from flowInstance_log fl
+        inner join flowInstance fi on fi.id = fl.instanceId
+        inner join flowNode f on fl.nodeId=f.id
+        left join ys_user yu on yu.id=fl.msCreatorId
+        where fl.instanceId in
+        <foreach collection="instanceIds" item="instanceId" open="(" separator="," close=")">
+            #{instanceId}
+        </foreach>
+        order by fl.createTime
+    </select>
+    <select id="getLastLogs" resultType="com.yskc.ms.models.contract.ContractNodeModel">
+        select case when f.nodeNumber is null then 0 else f.nodeNumber end as nodeNumber,
+               yu.realName userName,fl.suggestion,fl.createTime,fl.status
+        from flowInstance_log fl
+        inner join flowInstance fi on fi.id = fl.instanceId
+        inner join flowNode f on fl.nodeId=f.id
+        left join ys_user yu on yu.id=fl.msCreatorId
+        where fi.id = #{instanceId}
+          <if test="status!=0">
+              and (f.nodeNumber &lt;= #{nodeNumber} or f.nodeNumber is null)
+          </if>
+          <if test="status==0">
+              and (f.nodeNumber &lt; #{nodeNumber} or f.nodeNumber is null)
+          </if>
+        order by fl.createTime desc
+    </select>
+    <select id="getLogList" parameterType="com.yskc.ms.models.params.FlowInstanceLogParams"
+            resultType="com.yskc.ms.models.projectAudit.FlowInstanceLogModel">
+        SELECT a.suggestion,a.createTime,a.status,b.content,c.realName,a.instanceId,a.nodeId,cu.companyName,fm.modeName
+        FROM flowInstance_log a
+        inner join flowInstance b on a.instanceId = b.id
+        inner join ys_user c on a.msCreatorId = c.id
+        inner join customer cu on b.companyId = cu.companyId
+        inner join flowModule fm on fm.id=b.moduleId
+        where 1=1
+        <if test="param.userId !=null">
+            AND a.msCreatorId = #{param.userId}
+        </if>
+        <if test="param.userId ==null">
+            AND a.msCreatorId != -2
+        </if>
+        <if test="param.status != null">
+            AND a.status = #{param.status}
+        </if>
+        <if test="param.content != null and '' != param.content">
+            AND b.content like "%"#{param.content}"%"
+        </if>
+        <if test="param.suggestion != null">
+            AND a.suggestion like "%"#{param.suggestion}"%"
+        </if>
+        <if test="param.startTime!=null">
+            AND a.createTime >= #{param.startTime}
+        </if>
+        <if test="param.endTime!=null">
+            AND a.createTime &lt;= #{param.endTime}
+        </if>
+    </select>
+    <select id="getAuditLog" resultType="com.yskc.ms.models.flowInstance.FeeFlowInstanceLogModel">
+        select fn.nodeName, fl.status, yu.realName as auditor, fl.suggestion, fl.createTime
+        from flowInstance_log fl
+        inner join flowNode fn on fl.nodeId = fn.id
+        left join ys_user yu on fl.msCreatorId = yu.id
+        where
+        <if test="instanceId!=null and instanceId > 0">
+            fl.instanceId = #{instanceId}
+        </if>
+        order by fl.id
+    </select>
+    <select id="getLastLog" resultType="com.yskc.ms.models.projectAudit.FlowInstanceLogModel">
+        select id,suggestion,createTime
+        from flowInstance_log
+        where instanceId=#{instanceId} and msCreatorId!=-2
+        order by createTime desc
+        limit 1
+    </select>
+    <select id="getCheckSubmitter" resultType="com.yskc.ms.models.qualityscore.EngineerModel">
+        select DISTINCT yu.id,yu.realName from flowInstance_log fl
+        INNER JOIN ys_user yu on fl.msCreatorId = yu.id
+        where fl.nodeId = 1 and fl.instanceId in
+        (<foreach collection="list" item="item" separator=",">
+            #{item}
+        </foreach>)
+    </select>
+    <select id="getSubmitter" resultType="com.yskc.ms.models.qualityscore.EngineerModel">
+        select DISTINCT yu.id,yu.realName,fl.createTime from flowInstance_log fl
+        INNER JOIN flowInstance f on fl.instanceId = f.id
+        INNER JOIN ys_user yu on fl.msCreatorId = yu.id
+        where fl.nodeId = 1 and fl.instanceId in
+        <choose>
+            <when test="null != fileIds">
+                 (select DISTINCT instanceId from flowInstance_docFile where docFileId in
+                    <foreach collection="fileIds" separator="," item="fileId" open="(" close=")">
+                        #{fileId}
+                    </foreach>
+                    )
+            </when>
+            <otherwise>
+                (SELECT DISTINCT instanceId from flowInstance_docFile
+                where rsProjectId = #{model.rsProjectId} and moduleId = #{model.type})
+            </otherwise>
+        </choose>
+        order by fl.createTime
+    </select>
+    <select id="getSubmitterByCompany" resultType="com.yskc.ms.models.qualityscore.EngineerModel">
+        select DISTINCT yu.id,yu.realName,fl.createTime from flowInstance_log fl
+           INNER JOIN flowInstance f on fl.instanceId = f.id
+           INNER JOIN ys_user yu on fl.msCreatorId = yu.id
+           INNER JOIN flowInstance_project fip on fip.instanceId = f.id
+        where fip.companyId=#{model.companyId} and fip.year=#{model.year}
+          and fip.moduleId=#{model.type} and fl.nodeId = 1
+        order by fl.createTime
+    </select>
+    <select id="getSubmitterByFileId" resultType="com.yskc.ms.models.qualityscore.EngineerModel">
+        select DISTINCT yu.id,yu.realName,fl.createTime from flowInstance_log fl
+          INNER JOIN flowInstance f on fl.instanceId = f.id
+          INNER JOIN ys_user yu on fl.msCreatorId = yu.id
+          INNER JOIN flowInstance_docFile fd on fd.instanceId = f.id
+          where fl.nodeId = 1 and fd.docFileId =#{fileId}
+        order by fl.createTime
+    </select>
+    <select id="getSubmitTimeByFileIds" resultType="com.yskc.ms.entity.ms.FlowInstanceLog">
+        select fl.createTime,fl.instanceId,fl.id from flowInstance_log fl
+          INNER JOIN flowInstance f on fl.instanceId = f.id
+        where fl.nodeId = 1 and fl.instanceId in
+        (select DISTINCT instanceId from flowInstance_docFile where docFileId in
+        <foreach collection="fileIds" separator="," item="fileId" open="(" close=")">
+            #{fileId}
+        </foreach>)
+        order by fl.id DESC limit 1
+    </select>
+    <select id="getSubmitTimeByProjectId" resultType="com.yskc.ms.entity.ms.FlowInstanceLog">
+        select fl.createTime,fl.instanceId,fl.id from flowInstance_log fl
+                                              INNER JOIN flowInstance f on fl.instanceId = f.id
+        where fl.nodeId = 1 and fl.instanceId in
+         (SELECT DISTINCT instanceId from flowInstance_docFile
+          where rsProjectId = #{model.rsProjectId} and moduleId = #{model.type})
+        order by fl.id DESC limit 1
+    </select>
+    <select id="getSubmitTimeByCompany" resultType="com.yskc.ms.entity.ms.FlowInstanceLog">
+        select fl.createTime,fl.instanceId,fl.id from flowInstance_log fl
+           INNER JOIN flowInstance f on fl.instanceId = f.id
+           INNER JOIN flowInstance_project fip on fip.instanceId = f.id
+        where fip.companyId=#{model.companyId} and fip.year=#{model.year}
+          and fip.moduleId=#{model.type} and fl.nodeId = 1
+        order by fl.id DESC limit 1
+    </select>
+    <select id="getAuditTime" resultType="java.util.Date">
+        select createTime from flowInstance_log where id>#{log.id} and instanceId=#{log.instanceId}
+        limit 2
+    </select>
+
+    <insert id="insertAll">
+        INSERT INTO flowInstance_log(instanceId,suggestion,`status`,createTime,msCreatorId,nodeId)
+            VALUES
+        <foreach collection="instanceLogs" separator="," item="i">
+            (#{i.instanceId},#{i.suggestion},#{i.status},#{i.createTime},#{i.msCreatorId},#{i.nodeId})
+        </foreach>
+    </insert>
+</mapper>

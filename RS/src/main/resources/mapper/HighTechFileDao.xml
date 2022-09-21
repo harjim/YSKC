@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.highTech.HighTechFileDao">
+    <delete id="delByTech">
+        delete from highTech_file
+        where companyId=#{companyId} and highTechId in
+        <foreach collection="highTechIds" item="highTechId" open="(" separator="," close=")">
+            #{highTechId}
+        </foreach>
+    </delete>
+    <select id="getByTech" resultType="com.yskc.rs.models.hightech.HighTechFileModel">
+        select `type`,filePath,fileName,highTechId,id
+        from highTech_file
+        where highTechId=#{highTechId} and companyId=#{companyId}
+        order by `type`
+    </select>
+</mapper>

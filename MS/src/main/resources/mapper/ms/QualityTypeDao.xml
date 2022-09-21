@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.QualityTypeDao">
+    <update id="saveWeight">
+        <foreach collection="list" item="l" separator=";">
+            update quality_type set weight=#{l.weight},lastUpdateTime=#{now},lastUpdatorId=#{userId} where `type`=#{l.type}
+        </foreach>
+    </update>
+
+    <select id="getConfig" resultType="com.yskc.ms.models.qualityscore.QualityScoreInfoModel">
+        select (CASE WHEN qs.weight is not null THEN qs.weight ELSE qt.weight END) as weight,
+               qs.scoreCount,qs.engineerId,qs.isFinal,qs.id as qualityId,qs.month, qs.totalScore,qs.scoresDetail
+        from quality_type qt
+        left join (select qus.scoreCount,qus.engineerId,qus.`type`,qus.isFinal,qus.weight,qus.totalScore,
+                          qus.id,qus.`month`,qsl.scores scoresDetail from quality_score qus
+        inner join quality_score_log qsl on qsl.qualityId = qus.id and qsl.scoreCount = qus.scoreCount
+           where qus.`type` = #{model.type}
+             <if test="null != model.companyId">
+                 and qus.companyId = #{model.companyId}
+             </if>
+             <if test="null != model.rsProjectId and model.type != 9">
+                 and qus.rsProjectId = #{model.rsProjectId}
+             </if>
+             <if test="null != model.year and model.year != 0 and model.type == 9">
+                 and qus.`year` = #{model.year}
+             </if>order by qus.scoreCount desc
+             limit 1) qs on qs.type = qt.type
+        where qt.type = #{model.type}
+    </select>
+    <select id="getWeightByType" resultType="com.yskc.ms.models.qualityscore.QualityScoreInfoModel">
+        select weight,`type` from quality_type where type=#{type} limit 1
+    </select>
+
+    <select id="getAllWeight" resultType="com.yskc.ms.models.qualityscore.ScoreTypeModel">
+        select weight,`type` from quality_type
+    </select>
+</mapper>

@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.project.ProjectDesignDao">
+    <update id="updateList">
+        <foreach collection="entities" item="item" separator=";">
+            update p_design set rdAmount=#{item.rdAmount},lastUpdateTime=#{item.lastUpdateTime},
+            lastUpdatorId=#{item.lastUpdatorId},msLastUpdatorId=#{item.msLastUpdatorId}
+            where id=#{item.id}
+        </foreach>
+    </update>
+    <update id="updateAmounts">
+        update p_design set rdAmount=#{rdAmount},lastUpdateTime=#{date},
+        lastUpdatorId=#{userId},msLastUpdatorId=#{msUserId}
+        where id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <select id="queryProjectDesign" resultType="com.yskc.rs.models.projectdesign.ProjectDesignModel">
+        SELECT
+        pd.id,pd.projectId,d.designDate,d.rdDeptId,d.dname,d.dFee,d.deptName,pd.rdAmount,d.remainDFee,pd.designDataId FROM
+        p_design pd
+        JOIN d_design d ON pd.designDataId = d.id
+        WHERE
+        pd.projectId = #{query.projectId}
+        AND d.designDate &gt;= #{beginDate}
+        AND d.designDate &lt;= #{endDate}
+        AND pd.companyId = #{companyId}
+        <if test="query.name!=null and query.name != ''">
+            and d.dname like "%"#{query.name}"%"
+        </if>
+        <if test="query.deptName !=null and query.deptName != ''">
+            and d.deptName like "%"#{query.deptName}"%"
+        </if>
+    </select>
+
+    <select id="getUsedList" resultType="com.yskc.rs.models.UsedModel">
+        select d.id,p.rdAmount,pj.rdTitle from p_design p
+        inner join d_design d on d.id=p.designDataId
+        inner join p_project pj on p.projectId=pj.id
+        where p.projectId!=#{projectId} and p.designDataId in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        order by pj.rdTitle asc
+    </select>
+
+    <insert id="addProjectDesignBatch">
+        INSERT INTO `p_design`
+        (`projectId`,`designDataId`,`companyId`,`creatorId`,`createTime`,`lastUpdateTime`,`lastUpdatorId`,msCreatorId,msLastUpdatorId,rdAmount)
+        VALUES
+        <foreach collection="projectDesignEntities" item="item" separator=",">
+            (#{item.projectId},#{item.designDataId},#{item.companyId},#{item.creatorId},#{item.createTime},
+            #{item.lastUpdateTime},#{item.lastUpdatorId},#{item.msCreatorId},#{item.msLastUpdatorId},#{item.rdAmount})
+        </foreach>
+    </insert>
+
+    <select id="getDesignSum" resultType="com.yskc.rs.models.projectdesign.ProjectDesignModel">
+        SELECT
+        p.projectId,
+        d.designDate,
+        SUM(d.dFee) as dFee
+        FROM
+        p_design p
+        INNER JOIN d_design d ON p.designDataId = d.id
+        where p.projectId=#{projectId} and d.designDate in
+        <foreach item="item" index="index" collection="dateList" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        group by p.projectId , d.designDate
+    </select>
+
+    <select id="getDesignDate" resultType="com.yskc.rs.models.projectdesign.ProjectDesignModel">
+    SELECT
+        p.projectId,
+        d.designDate,
+        SUM(p.rdAmount) as dFee
+        FROM
+        p_design p
+        INNER JOIN d_design d ON p.designDataId = d.id
+        WHERE
+        p.projectId = #{projectId}
+        AND d.designDate &gt;= #{beginDate}
+        AND d.designDate &lt;= #{endDate}
+        group by p.projectId , d.designDate
+    </select>
+
+
+    <select id="getProjectDesign" resultType="java.math.BigDecimal">
+        SELECT
+        sum(pd.rdAmount)
+        FROM
+        p_design pd
+        JOIN d_design d ON pd.designDataId = d.id
+        WHERE
+        pd.projectId = #{query.projectId}
+        AND d.designDate &gt;= #{beginDate}
+        AND d.designDate &lt;= #{endDate}
+        AND pd.companyId = #{companyId}
+        <if test="query.name!=null and query.name != ''">
+            and d.dname like "%"#{query.name}"%"
+        </if>
+
+        <if test="query.deptName !=null and query.deptName != ''">
+            and d.deptName like "%"#{query.deptName}"%"
+        </if>
+    </select>
+
+    <delete id="deleteDesign">
+        DELETE FROM p_design where
+        id in
+        <foreach item="item" index="index" collection="idList" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <select id="queryuOutData" resultType="com.yskc.rs.models.workSheet.WorkSheetModel">
+          SELECT
+            pd.id,
+            pd.projectId,
+            d.designDate,
+            d.rdDeptId,
+            r.deptName as coObj,
+            d.dname as costElement,
+            d.dname as workEvent,
+            d.dFee as cost,
+            d.deptId,
+            t.deptName,
+            j.rdIndex AS rdNum
+            FROM
+            p_design pd
+            JOIN d_design d ON pd.designDataId = d.id
+            LEFT JOIN p_project j ON pd.projectId = j.id
+            left join rdDept r on d.rdDeptId = r.id
+            left join dept t on d.deptId = t.id
+            WHERE
+            pd.projectId = #{projectId}
+            AND d.designDate = #{date}
+            AND pd.companyId = #{companyId}
+            order by d.designDate
+    </select>
+
+
+    <select id="getDataBymonth" resultType="com.yskc.rs.models.workSheet.WorkSheetMiniModel">
+        SELECT
+        d.designDate as workDate,
+        d.dFee as cost,
+        j.rdIndex
+        FROM
+        p_design pd
+        JOIN d_design d ON pd.designDataId = d.id
+        LEFT JOIN p_project j ON pd.projectId = j.id
+        WHERE
+        pd.projectId = #{workSheetQuery.projectId}
+        AND d.designDate >=#{workSheetQuery.month} and d.designDate &lt;=  #{endDate}
+        AND pd.companyId = #{info.companyId}
+        order by d.designDate
+    </select>
+
+    <select id="exportFromDesign" resultType="com.yskc.rs.models.aggregation.DesignExportModel">
+        select p.rdTitle,dd.dname,dd.designDate as `date`,pd.rdAmount,dd.deptName
+        from p_design pd
+        inner join p_project p on pd.projectId=p.id
+        inner join d_design dd on pd.designDataId=dd.id
+        where p.id in
+        <foreach collection="model.projectIds" item="projectId" open="(" close=")" separator=",">
+            #{projectId}
+        </foreach>
+        and
+        <foreach collection="model.range" item="range" separator="or" open="(" close=")">
+            (dd.designDate &gt;=#{range.begin} and dd.designDate &lt;= #{range.end})
+        </foreach>
+        order by designDate,rdTitle
+    </select>
+</mapper>

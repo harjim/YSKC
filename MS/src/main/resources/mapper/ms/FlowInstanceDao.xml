@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.FlowInstanceDao">
+    <update id="updateBatch">
+        update flowInstance
+        <trim prefix="set" suffixOverrides=",">
+<!--            <trim prefix="nodeStatus =case" suffix="end,">-->
+<!--                <foreach collection="list" item="i">-->
+<!--                    <if test="i.nodeStatus!=null">-->
+<!--                        when id=#{i.id} then #{i.nodeStatus}-->
+<!--                    </if>-->
+<!--                </foreach>-->
+<!--            </trim>-->
+            <trim prefix="lastUpdateTime =case" suffix="end,">
+                <foreach collection="list" item="i">
+                    <if test="i.lastUpdateTime!=null">
+                        when id=#{i.id} then #{i.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdatorId =case" suffix="end,">
+                <foreach collection="list" item="i">
+                    <if test="i.lastUpdatorId!=null">
+                        when id=#{i.id} then #{i.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="list" separator="or" item="i">
+            id=#{i.id}
+        </foreach>
+    </update>
+    <select id="getByFlow" resultType="com.yskc.ms.entity.ms.FlowInstance">
+        select * from flowInstance where status=0 and flowId in
+        <foreach collection="flowIds" item="flowId" open="(" separator="," close=")">
+            #{flowId}
+        </foreach>
+    </select>
+    <select id="getUserPerms" resultType="com.yskc.ms.entity.ms.FlowInstanceUser">
+        select fu.userId, fu.id,fu.nodeId,fu.instanceId,fi.lastSubmiter
+        from flowInstance_user fu
+        inner join flowInstance fi on fi.id = fu.instanceId
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id and fic.nodeStatus = 0
+        where fu.instanceId = #{instanceId}
+          and fu.nodeId = #{curNodeId}
+          and fu.userId = #{userId}
+          and fu.status is null
+        limit 1
+    </select>
+
+    <select id="getList" resultType="com.yskc.ms.models.flowInstance.FlowInstanceModel">
+        SELECT distinct fi.id,fi.companyId,fi.moduleId,fic.curNodeId,fic.nodeStatus,fm.modeName,fm.type,fi.lastUpdateTime,
+        c.companyName,fi.content,yu.realName submiter,fi.auditUsers realName,fi.revokable
+        FROM flowInstance fi
+        <if test="params.mySubmit == null or !params.mySubmit">
+            inner join flowInstance_user fiu on fi.id = fiu.instanceId
+        </if>
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id
+        left join flowModule fm on fi.moduleId = fm.id
+        left join customer c on c.companyId=fi.companyId
+        left join ys_user yu on yu.id=fi.lastSubmiter
+        where 1=1
+        <if test="params.mySubmit != null and params.mySubmit">
+            and lastSubmiter=#{userId}
+        </if>
+        <if test="params.ongoing != null and params.ongoing">
+            and fiu.nodeId=fic.curNodeId and fic.nodeStatus=0 and fiu.status is null
+        </if>
+        <if test="params.mySubmit == null or !params.mySubmit">
+            and fiu.userId=#{userId}
+        </if>
+        <if test="params.lastSubmiter != null">
+            and lastSubmiter=#{params.lastSubmiter}
+        </if>
+        <if test="params.status != null">
+            and fic.nodeStatus=#{params.status}
+        </if>
+        <if test="params.modeName != null and params.modeName != ''">
+            and fm.modeName like "%"#{params.modeName}"%"
+        </if>
+        <if test="params.companyName != null and params.companyName != ''">
+            and c.companyName like "%"#{params.companyName}"%"
+        </if>
+        <if test="params.content != null and params.content != ''">
+            and fi.content like "%"#{params.content}"%"
+        </if>
+        <if test="params.beginDate != null">
+            and fi.lastUpdateTime >=#{params.beginDate}
+        </if>
+        <if test="params.endDate != null">
+            and fi.lastUpdateTime &lt;=#{params.endDate}
+        </if>
+        <if test="params.auditUsers != null and params.auditUsers != ''">
+            and fi.auditUsers like "%"#{params.auditUsers}"%"
+        </if>
+    </select>
+    <select id="getRealName" resultType="com.yskc.ms.models.flowInstance.FlowInstanceModel">
+        SELECT a.instanceId as 'id',
+        group_concat(distinct b.realName) as 'realName'
+        FROM flowInstance_user a
+        inner join  flowInstance fi on fi.id = a.instanceId
+        inner join flowInstance_curNode fic on fic.instanceId=a.instanceId and fic.curNodeId=a.nodeId
+        left join ys_user b on a.userId = b.id
+        where fi.id in (<foreach item="id" separator="," collection="list">#{id}</foreach>)
+        group by a.instanceId
+    </select>
+    <select id="getInstanceUsers" resultType="com.yskc.ms.entity.ms.FlowInstanceUser">
+        select fu.id,fu.instanceId,fu.nodeId,fi.lastSubmiter,fi.moduleId from flowInstance fi
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id
+        inner join flowInstance_user fu on fu.instanceId=fi.id and fu.nodeId=fic.curNodeId
+        <if test="null != getMaster">
+            inner join flowNode fn on fic.curNodeId = fn.id and fn.nodeNumber = 2
+        </if>
+        where fi.status = 0
+          <if test="null != userId">
+              and fu.userId = #{userId}
+          </if>
+        and fi.id in(<foreach collection="ids" separator="," item="id">#{id}</foreach>)
+    </select>
+    <select id="getByNode" resultType="com.yskc.ms.entity.ms.FlowInstance">
+        select fi.id,fi.flowId from flowInstance fi
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id
+        where fic.nodeStatus=0 and fic.curNodeId in (<foreach collection="nodeIds" item="nodeId" separator=",">
+        #{nodeId}</foreach>)
+    </select>
+    <select id="getByCompanyIds" resultType="com.yskc.ms.models.flowInstance.FlowInstanceModel">
+        select fi.id,fi.moduleId,fi.companyId,fm.type from flowInstance fi
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id
+        inner join flowInstance_user fiu on fiu.instanceId=fi.id and fiu.nodeId=fic.curNodeId
+        inner join flowModule fm on fm.id=fi.moduleId
+        where fiu.userId=#{userId} and fic.nodeStatus=0
+        and fi.companyId in (<foreach collection="companyIds" separator="," item="cId">#{cId}</foreach>)
+    </select>
+    <select id="search" resultType="com.yskc.ms.models.flow.FlowListModel">
+        SELECT fi.id,fi.content,fm.modeName as flowName,c.companyName,fi.lastSubmiter as lastSubmiterId,
+               yu.realName as lastSubmiter,fi.auditUsers,fi.`status`,fi.lastUpdateTime,fi.moduleId
+        FROM flowInstance fi
+          left join customer c on c.companyId=fi.companyId
+          left join flowModule fm on fm.id=fi.moduleId
+          left join ys_user yu on yu.id=fi.lastSubmiter
+        <if test="dataPerm.permType == 0">
+            inner join ys_user as y on y.id = #{dataPerm.userId} and fi.lastSubmiter = y.id
+        </if>
+        <where>
+            <if test="dataPerm.permType == 1">
+                fi.id in
+                (select fi.id from flowInstance fi
+                inner join ys_user u on u.id = fi.lastSubmiter
+                inner join user_dept ud on ud.userId = u.id
+                inner join ys_dept d on ud.depId = d.id
+                where
+                <foreach collection="dataPerm.deptPaths" item="path" separator="or" open="(" close=")">
+                    d.fullPath like #{path}"%"
+                </foreach>)
+            </if>
+            <if test="null != query.content and query.content !=''">
+                and fi.content like "%"#{query.content}"%"
+            </if>
+            <if test="null != query.flowName and query.flowName !=''">
+                and fm.modeName like "%"#{query.flowName}"%"
+            </if>
+            <if test="null != query.companyName and query.companyName">
+                and c.companyName like "%"#{query.companyName}"%"
+            </if>
+            <if test="null != query.lastSubmiterId">
+                and yu.Id = #{query.lastSubmiterId}
+            </if>
+            <if test="null != query.auditUsers and query.auditUsers !=''">
+                and fi.auditUsers like "%"#{query.auditUsers}"%"
+            </if>
+            <if test="null != query.status">
+                and fi.status = #{query.status}
+            </if>
+        </where>
+    </select>
+    <select id="getInstanceInfos" resultType="com.yskc.ms.entity.ms.FlowInstance">
+        select fi.id,fic.curNodeId from flowInstance fi
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id
+        where fi.id in (<foreach collection="ids" separator="," item="id">#{id}</foreach>) and `status`=#{status}
+    </select>
+    <select id="getAuditFlow" resultType="com.yskc.ms.models.flowInstance.FeeFlowInstanceLogModel">
+        select fn.nodeName, fic.nodeStatus `status`, fic.auditUsers auditor
+        from flowInstance_curNode fic
+        inner join flowNode fn on fic.curNodeId = fn.id
+        where fic.instanceId = #{instanceId} and fic.nodeStatus = #{status} and fic.closed = false and fic.auditUsers is not null
+    </select>
+    <select id="getLastNode" resultType="com.yskc.ms.entity.ms.FlowInstanceCurNode">
+        select curNodeId,instanceId,nodeStatus from flowInstance_curNode where instanceId=#{instanceId} order by lastUpdateTime desc
+    </select>
+    <select id="getNodeCnt" resultType="com.yskc.ms.models.flow.FlowListModel">
+        select instanceId id,count(curNodeId) nodeCnt from flowInstance_curNode
+        where instanceId in (<foreach collection="list" separator="," item="l">#{l.id}</foreach>) and closed=false
+        group by instanceId
+    </select>
+    <update id="updateTime">
+        UPDATE flowInstance set lastUpdateTime=#{date}
+        where id in
+        <foreach collection="ids" separator="," open="(" close=")" item="id">
+            #{id}
+        </foreach>
+    </update>
+    <update id="updateNodes">
+        update flowInstance_curNode
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="nodeStatus =case" suffix="end,">
+                <foreach collection="list" item="i">
+                    <if test="i.nodeStatus!=null">
+                        when instanceId=#{i.instanceId} and curNodeId=#{i.curNodeId} then #{i.nodeStatus}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        ,lastUpdateTime=#{now},lastUpdatorId=#{userId}
+        where
+        <foreach collection="list" separator="or" item="i">
+            (instanceId=#{i.instanceId} and curNodeId=#{i.curNodeId})
+        </foreach>
+    </update>
+    <update id="updateAllNodes">
+        update flowInstance_curNode fic inner join flowInstance fi on fi.id=fic.instanceId
+        set fic.nodeStatus=#{status},fic.lastUpdateTime=#{now},fic.lastUpdatorId=#{userId},
+        fi.status=#{status},fi.lastUpdateTime=#{now},fi.lastUpdatorId=#{userId}
+        where fi.id in (<foreach collection="instanceIds" separator="," item="iId">#{iId}</foreach>)
+    </update>
+
+</mapper>

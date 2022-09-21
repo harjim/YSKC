@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.UserDao">
+    <resultMap id="userSession" type="com.yskc.ms.models.login.UserSession">
+        <id column="id" property="id"/>
+        <result column="userName" property="userName"/>
+        <result column="realName" property="realName"/>
+        <result column="avatar" property="avatar"/>
+        <result column="status" property="status"/>
+        <result column="token" property="token"/>
+        <result column="createTime" property="createTime"/>
+        <result column="updateTime" property="updateTime"/>
+        <result column="expireTime" property="expireTime"/>
+        <result column="reSetPassword" property="reSetPassword"/>
+        <collection property="roleIds" ofType="java.lang.Integer">
+            <id column="roleId"/>
+        </collection>
+        <collection property="menuPermModelList" ofType="com.yskc.ms.models.role.MenuPermModel">
+            <id column="menuId" property="menuId"/>
+            <result column="url" property="url"/>
+            <result column="perms" property="perms"/>
+        </collection>
+    </resultMap>
+    <insert id="insertBatch" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `ys_user`
+        (
+        `userName`,
+        `password`,
+        `realName`,
+        `gender`,
+        `tel`,
+        `depId`,
+        `postion`,
+        `status`,
+        `avatar`,
+        `remark`,
+        `creatorId`,
+        `createTime`,
+        `reSetPassword`)
+        VALUES
+        <foreach collection="list" separator="," item="item">
+            (
+            #{item.userName},
+            #{item.password},
+            #{item.realName},
+            #{item.gender},
+            #{item.tel},
+            #{item.depId},
+            #{item.postion},
+            #{item.status},
+            #{item.avatar},
+            #{item.remark},
+            #{item.creatorId},
+            #{item.createTime},
+            #{item.reSetPassword}
+            )
+        </foreach>
+    </insert>
+    <select id="getUserInfo" resultType="com.yskc.ms.entity.ms.User">
+        select *
+        from ys_user
+        where userName = #{userName}
+        limit 1;
+    </select>
+    <select id="getUser" resultType="com.yskc.ms.models.UserInfo">
+        select *
+        from ys_user
+        where id = #{userId}
+        limit 1;
+    </select>
+    <select id="getUserInfoByToken" resultMap="userSession">
+        select y.reSetPassword,
+               y.status,
+               y.id,
+               y.userName,
+               y.realName,
+               y.avatar,
+               s.token,
+               s.createTime,
+               s.updateTime,
+               s.expireTime,
+               am.perms,
+               arm.menuId,
+               am.url,
+               aur.roleId
+        from ys_user as y
+                 join sys_session as s on s.userId = y.Id
+                 left join app_user_role as aur on aur.userId = s.userId
+                 left join app_role_menu as arm on arm.roleId = aur.roleId
+                 left join app_menu as am on arm.menuId = am.id and am.status = 1
+        where s.token = #{token};
+    </select>
+    <select id="getAdminPerms" resultType="com.yskc.ms.models.role.MenuPermModel">
+        select id as menuId, perms, url, 2 as dataType
+        from app_menu;
+    </select>
+
+    <update id="updatePassword">
+        update ys_user
+        set password=#{newPassword},
+            reSetPassword= true
+        where id = #{userId}
+          and password = #{oldPassword};
+    </update>
+
+    <update id="resetPassword">
+        update ys_user
+        set password     = #{password},
+            reSetPassword= true
+        where id = #{userId}
+    </update>
+    <update id="updateToken">
+        update ys_user
+        set token = #{token}
+        where id = #{id}
+    </update>
+    <update id="updateStatus">
+        update ys_user set status=1
+        where
+        <foreach collection="userIds" separator="or" item="userId" index="index">
+            id=#{userId}
+        </foreach>
+    </update>
+    <update id="updateUsers">
+        update ys_user
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="tel =case" suffix="end,">
+                <foreach collection="updateUserList" item="i" index="index">
+                    <if test="i.tel!=null">
+                        when id=#{i.id} then #{i.tel}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="depId =case" suffix="end,">
+                <foreach collection="updateUserList" item="i" index="index">
+                    <if test="i.depId!=null">
+                        when id=#{i.id} then #{i.depId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="postion =case" suffix="end,">
+                <foreach collection="updateUserList" item="i" index="index">
+                    <if test="i.postion!=null">
+                        when id=#{i.id} then #{i.postion}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="updateUserList" separator="or" item="i" index="index">
+            id=#{i.id}
+        </foreach>
+    </update>
+    <select id="queryUserData" resultType="com.yskc.ms.entity.ms.User">
+        select * from ys_user y where 1=1
+        <if test="userName!=null and userName!=''">
+            and y.userName like "%"#{userName}"%"
+        </if>
+        <if test="realName!=null and realName !=''">
+            and y.realName like "%"#{realName}"%"
+        </if>
+        <if test="tel!=null and tel !=''">
+            and y.tel like "%"#{tel}"%"
+        </if>
+        <if test="existIds != null">
+            and y.id not in
+            <foreach collection="existIds" open="(" separator="," close=")" item="id">
+                #{id}
+            </foreach>
+        </if>
+    </select>
+    <select id="queryUserAll" resultType="com.yskc.ms.entity.ms.User">
+        select *
+        from ys_user
+    </select>
+    <select id="userForDept" resultType="com.yskc.ms.models.user.MiniUserModel">
+        select u.id,u.userName,u.realName from ys_user u
+        where (u.realName like "%"#{realName}"%" or u.userName like "%"#{realName}"%")
+        <if test="fullPath != null and fullPath!=''">
+            AND u.id IN (SELECT ud.userId FROM user_dept ud LEFT JOIN ys_dept d ON d.id = ud.depId WHERE d.fullPath =
+            #{fullPath})
+        </if>
+        <if test="noLeave!=null and noLeave">
+            and u.status=0
+        </if>
+    </select>
+    <select id="userForSelect" resultType="com.yskc.ms.models.user.MiniUserModel">
+        select u.id,u.userName,u.realName from ys_user u
+        where (u.realName like "%"#{realName}"%" or u.userName like "%"#{realName}"%")
+        <if test="fullPath != null">
+            AND u.id IN (SELECT ud.userId FROM user_dept ud LEFT JOIN ys_dept d ON d.id = ud.depId WHERE d.fullPath LIKE
+            #{fullPath}"%")
+        </if>
+        <if test="noLeave!=null and noLeave">
+            and u.status=0
+        </if>
+        limit 5
+    </select>
+    <select id="getUserList" resultType="com.yskc.ms.models.user.OwnerUserModel">
+        select y.id,y.userName,y.realName,y.tel,group_concat(d.deptName order by
+        d.id)as deptName,y.postion
+        from ys_user as y
+        LEFT JOIN user_dept as ud on ud.userId = y.id
+        LEFT JOIN ys_dept as d on ud.depId = d.id
+        where y.userName != 'ysadmin'
+        <if test="query.userId != null and query.userId > 0">
+            and y.id = #{query.userId}
+        </if>
+        <if test="query.fullPath != null and query.fullPath != ''">
+            and d.fullPath like #{query.fullPath}"%"
+        </if>
+        group by y.id
+    </select>
+    <select id="getByUnionId" resultType="com.yskc.ms.entity.ms.User">
+        select u.*
+        from ys_user as u
+                 left join d_user as du on du.userId = u.id
+        where du.unionid = #{unionid}
+        limit 1
+    </select>
+    <select id="getUsers" resultType="com.yskc.ms.models.user.MiniUserModel">
+        select id,realName from ys_user where id in
+        <foreach collection="userIds" open="(" separator="," close=")" item="id">
+            #{id}
+        </foreach>
+    </select>
+    <select id="getOperationLogUserList" resultType="com.yskc.ms.models.user.OperationLogUserModel">
+        select y.id,y.userName,y.realName,y.tel,group_concat(d.deptName order by d.id)as deptName,y.postion,
+        y.rsLastOperationTime from ys_user as y
+        LEFT JOIN user_dept as ud on ud.userId = y.id
+        LEFT JOIN ys_dept as d on ud.depId = d.id
+        where 1=1
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.byUser">
+            <property name="perm" value="#{perm}"/>
+            <property name="tableAlias" value="y"/>
+        </include>
+          <if test="query.beginDate != null or query.endDate != null">
+            and userId in (select distinct userId from operation_log
+               <where>
+                   <if test="query.beginDate != null">
+                       and operationDate >=#{query.beginDate}
+                   </if>
+                   <if test="query.endDate != null">
+                       and operationDate &lt;=#{query.endDate}
+                   </if>
+               </where>)
+          </if>
+
+        <if test="query.realName != null and query.realName.length > 0">
+            and y.realName like "%"#{query.realName}"%"
+        </if>
+        <if test="query.fullPath != null and query.fullPath.length > 0">
+            and d.fullPath like #{query.fullPath}"%"
+        </if>
+        group by y.id
+    </select>
+    <select id="getDeptByRole" resultType="com.yskc.ms.models.serviceApply.ServiceLeaderModel">
+        select ar.roleName,ud.userId,yu.realName userName
+        from user_dept ud
+        inner join ys_user yu on yu.id = ud.userId
+        inner join app_user_role aur on aur.userId = ud.userId
+        inner join app_role ar on aur.roleId = ar.id
+        where ud.depId in
+        (<foreach collection="paths" item="item" separator=",">
+            #{item}
+        </foreach>)
+        and ar.roleName in (#{finaMan} , #{techMan}, #{finaDir}, #{techDir})
+        and ud.isAdmin = true
+    </select>
+    <select id="getFullPath" resultType="java.lang.String">
+        select max(yd.fullPath)
+        from ys_user yu
+        inner join user_dept ud on yu.id = ud.userId
+        left join ys_dept yd on yd.id = ud.depId
+        where yu.id in (<foreach collection="userIds" item="item" separator=",">
+            #{item}
+        </foreach>)
+    </select>
+    <select id="getMemberList" resultType="com.yskc.ms.models.serviceApply.ServiceMemberModel">
+        select distinct yu.id userId,yu.realName userName
+        from ys_user yu
+        inner join user_dept ud on yu.id = ud.userId
+        left join ys_dept yd on yd.id = ud.depId
+        <where>
+            <if test="userName!=null and userName!=''">
+                and yu.realName like concat("%",#{userName},"%")
+            </if>
+            <if test="fullPath!=null and fullPath!=''">
+                and (yd.fullPath like concat(#{fullPath},"%") or (ud.depId in
+                    (<foreach collection="paths" item="item" separator=",">
+                        #{item}
+                    </foreach>) and ud.isAdmin = true)
+                    )
+            </if>
+        </where>
+    </select>
+
+    <insert id="insertOrUpdate" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `ys_user`
+        (
+        `userName`,
+        `password`,
+        `realName`,
+        `gender`,
+        `tel`,
+        `depId`,
+        `postion`,
+        `status`,
+        `avatar`,
+        `remark`,
+        `creatorId`,
+        `createTime`,
+        `reSetPassword`,
+        `dingUserId`,
+        `unionid`)
+        VALUES
+        <foreach collection="list" separator="," item="item">
+            (
+            #{item.userName},
+            #{item.password},
+            #{item.realName},
+            #{item.gender},
+            #{item.tel},
+            #{item.depId},
+            #{item.postion},
+            #{item.status},
+            #{item.avatar},
+            #{item.remark},
+            #{item.creatorId},
+            #{item.createTime},
+            #{item.reSetPassword},
+            #{item.dingUserId},
+            #{item.unionid}
+            )
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        realName=values(realName),
+        gender=values(gender),
+        tel=values(tel),
+        depId=values(depId),
+        postion=values(postion),
+        avatar=values(avatar),
+        remark=values(remark),
+        dingUserId=values(dingUserId),
+        unionid=values(unionid)
+    </insert>
+
+</mapper>

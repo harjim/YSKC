@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.docservice.dao.rs.RdDeptDao">
+    <insert id="addBatch" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO rdDept
+        (companyId,deptName,parentId,`level`,`identity`,`remark`,creatorId,createTime,
+        lastUpdatorId,lastUpdateTime,msCreatorId,msLastUpdatorId,`year`,fullName,textDirection,nodeType,`seq`,align)
+        VALUES
+        <foreach collection="list" separator="," item="i">
+            (#{i.companyId},#{i.deptName},#{i.parentId},#{i.level},#{i.identity},#{i.remark},#{i.creatorId},
+            #{i.createTime},#{i.lastUpdatorId},#{i.lastUpdateTime},#{i.msCreatorId},#{i.msLastUpdatorId},#{i.year},
+             #{i.fullName},#{i.textDirection},#{i.nodeType},#{i.seq},#{i.align})
+        </foreach>
+    </insert>
+    <select id="getCompanyOrg" resultType="com.yskc.docservice.models.rs.CommonOrgModel">
+        select id, deptName as name, identity as fullpath from rdDept where companyId = #{companyId} and `year` = #{year}
+    </select>
+    <select id="getDeptName" resultType="java.lang.String">
+        select deptName from rdDept where id = #{id}
+    </select>
+    <select id="getParentNode" resultType="com.yskc.docservice.entity.rs.RdDeptEntity">
+        select id,deptName,companyId,`year`
+        from rdDept
+        where parentId=-1 and `level`=0 and companyId=#{companyId} and `year`=#{year}
+    </select>
+</mapper>

@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.SoftRegistrationDao">
+    <select id="getList" resultType="com.yskc.rs.models.SoftRegistrationModel">
+        select s.id,s.projectId,s.softName,s.ownerName,s.issueDate,s.registerNo,s.certificateNo,s.filepath,pp.rdTitle,s.source
+        from softRegistration s left join p_project pp on s.projectId = pp.id
+        <where>
+            s.companyId = #{model.companyId}
+            <if test="null != model.softName and '' != model.softName">
+                and s.softName like "%"#{model.softName}"%"
+            </if>
+            <if test="null != model.ownerName and '' != model.ownerName">
+                and s.ownerName like "%"#{model.ownerName}"%"
+            </if>
+            <if test="null != model.registerNo and '' != model.registerNo">
+                and s.registerNo like "%"#{model.registerNo}"%"
+            </if>
+            <if test="null != model.certificateNo and '' != model.certificateNo">
+                and s.certificateNo like "%"#{model.certificateNo}"%"
+            </if>
+        </where>
+    </select>
+    <select id="checkRegisterNo" resultType="java.lang.String">
+        select registerNo from softRegistration where companyId = #{companyId}
+            and registerNo = #{registerNo}
+            <if test="null != id">
+                and id != #{id}
+            </if>
+    </select>
+    <select id="checkCertificateNo" resultType="java.lang.String">
+        select certificateNo from softRegistration where companyId = #{companyId}
+        and certificateNo = #{certificateNo}
+        <if test="null != id">
+            and id != #{id}
+        </if>
+    </select>
+    <select id="getListByCompany" resultType="com.yskc.rs.entity.SoftRegistrationEntity">
+        select registerNo,certificateNo from softRegistration
+        where companyId=#{companyId}
+    </select>
+    <update id="updateSRs">
+        <foreach collection="softRegistrations" item="item" index="index" open="" close="" separator=";">
+            update softRegistration set
+            lastUpdatorId=#{item.lastUpdatorId},
+            lastUpdateTime=#{item.lastUpdateTime},
+            msLastUpdatorId=#{item.msLastUpdatorId},
+            softName=#{item.softName},
+            ownerName=#{item.ownerName},
+            issueDate=#{item.issueDate},
+            certificateNo=#{item.certificateNo},
+            `source`=#{item.source}
+            where registerNo=#{item.registerNo} and companyId=#{companyId}
+        </foreach>
+    </update>
+    <insert id="insertSRs">
+        insert into softRegistration
+        (`creatorId`,
+        `lastUpdatorId`,
+        `createTime`,
+        `lastUpdateTime`,
+        `msCreatorId`,
+        `msLastUpdatorId`,
+        `companyId`,
+        `softName`,
+        `ownerName`,
+        `issueDate`,
+        `registerNo`,
+        `certificateNo`,
+        `source`)
+        VALUES
+        <foreach collection="softRegistrations" item="item" separator=",">
+            (
+            #{item.creatorId},
+            #{item.lastUpdatorId},
+            #{item.createTime},
+            #{item.lastUpdateTime},
+            #{item.msCreatorId},
+            #{item.msLastUpdatorId},
+            #{companyId},
+            #{item.softName},
+            #{item.ownerName},
+            #{item.issueDate},
+            #{item.registerNo},
+            #{item.certificateNo},
+            #{item.source}
+            )
+        </foreach>
+    </insert>
+    <update id="editSR">
+        update softRegistration set
+            lastUpdatorId=#{entity.lastUpdatorId},
+            lastUpdateTime=#{entity.lastUpdateTime},
+            msLastUpdatorId=#{entity.msLastUpdatorId},
+            softName=#{entity.softName},
+            ownerName=#{entity.ownerName},
+            issueDate=#{entity.issueDate},
+            filepath=#{entity.filepath},
+            projectId=#{entity.projectId},
+            registerNo=#{entity.registerNo},
+            certificateNo=#{entity.certificateNo},
+            `source`=#{entity.source}
+        where id=#{entity.id}
+    </update>
+    <select id="getText" resultType="com.yskc.rs.models.SoftRegistrationModel">
+        select specification,claimContent from softRegistration where id = #{id}
+    </select>
+</mapper>

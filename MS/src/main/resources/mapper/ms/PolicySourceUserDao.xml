@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.PolicySourceUserDao">
+    <insert id="insertBatch">
+        INSERT INTO policySourceUser(createTime,sourceId,userId)
+        VALUES
+        <foreach collection="list" item="l" separator=",">
+            (#{l.createTime},#{l.sourceId},#{l.userId})
+        </foreach>
+    </insert>
+
+    <delete id="deleteSubscription">
+        delete from policySourceUser where userId = #{userId} and sourceId = #{sourceId}
+    </delete>
+    <delete id="deleteBySourceIds">
+        delete from policySourceUser where
+        sourceId in
+        <foreach collection="sourceIds" item="sourceId" open="(" separator="," close=")">
+            #{sourceId}
+        </foreach>
+    </delete>
+    <select id="checkSubscription" resultType="java.lang.Integer">
+        select count(id) from policySourceUser where userId = #{userId} and sourceId = #{sourceId}
+    </select>
+    <select id="getSubscription" resultType="java.lang.Integer">
+        select userId from policySourceUser where sourceId = #{sourceId}
+    </select>
+</mapper>

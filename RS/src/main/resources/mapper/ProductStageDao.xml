@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.tech.ProductStageDao">
+    <select id="getByProductIds" resultType="com.yskc.rs.models.tech.ProductStageModel">
+        select stageKey,id,productId from t_product_stage
+        where productId=#{productId}
+    </select>
+    <select id="getByDirectionId" resultType="com.yskc.rs.models.tech.ProductStageModel">
+        select stageKey,id,seq,directionId,expiryDate from t_product_stage
+        where directionId=#{directionId}
+    </select>
+</mapper>

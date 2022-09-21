@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.WorkshopDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.yskc.rs.entity.WorkshopEntity" id="workshopMap">
+        <result property="id" column="id"/>
+        <result property="creatorId" column="creatorId"/>
+        <result property="lastUpdatorId" column="lastUpdatorId"/>
+        <result property="createTime" column="createTime"/>
+        <result property="lastUpdateTime" column="lastUpdateTime"/>
+        <result property="msCreatorId" column="msCreatorId"/>
+        <result property="msLastUpdatorId" column="msLastUpdatorId"/>
+        <result property="companyId" column="companyId"/>
+        <result property="workshopName" column="workshopName"/>
+        <result property="parentId" column="parentId"/>
+        <result property="remark" column="remark"/>
+        <result property="fullPath" column="fullPath"/>
+    </resultMap>
+
+
+    <select id="queryWorkshop" resultType="com.yskc.rs.models.workshop.WorkshopModel">
+        select * from workshop where companyId = #{companyId}
+        <if test="workshopName != null and workshopName != ''">
+            and workshopName like "%"#{workshopName}"%"
+        </if>
+        order by seq ASC
+    </select>
+
+    <select id="getWorkshopTree" resultType="com.yskc.rs.models.workshop.WorkshopTreeModel">
+         SELECT
+            id AS `value`,
+            parentId,
+            workshopName AS title,
+            fullPath as `key`
+        FROM
+            workshop
+        WHERE
+            companyId = #{companyId}
+        ORDER BY
+            parentId
+    </select>
+
+    <select id="getDataByparentId" resultType="java.lang.Integer">
+        select count(id) from workshop where companyId = #{companyId} and parentId = #{parentId}
+    </select>
+
+    <select id="queryChildrenByTerm" resultType="com.yskc.rs.entity.WorkshopEntity">
+          SELECT
+                id,
+                parentId,
+                workshopName,
+                fullpath,
+                seq
+            FROM
+                workshop
+            WHERE
+                id != #{id}
+            AND companyId = #{companyId}
+            AND fullpath LIKE #{fullPath}"%"
+    </select>
+    <select id="getSameLevelShop" resultType="com.yskc.rs.entity.WorkshopEntity">
+        select * from workshop where companyId = #{companyId} and parentId = #{parentId} and workshopName = #{workshopName}
+    </select>
+    <select id="selectByNames" resultType="com.yskc.rs.entity.WorkshopEntity">
+        select * from workshop
+        where companyId = #{companyId}
+        and workshopName in
+        <foreach item="item" index="index" collection="workshopList" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <update id="updateList">
+        update workshop
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="seq =case" suffix="end,">
+                <foreach collection="updateList" item="item" index="index">
+                    <if test="item.seq!=null">
+                        when id=#{item.id} then #{item.seq}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="workshopName =case" suffix="end,">
+                <foreach collection="updateList" item="item" index="index">
+                    <if test="item.workshopName!=null">
+                        when id=#{item.id} then #{item.workshopName}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="fullPath =case" suffix="end,">
+                <foreach collection="updateList" item="item" index="index">
+                    <if test="item.fullPath!=null">
+                        when id=#{item.id} then #{item.fullPath}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="parentId =case" suffix="end,">
+                <foreach collection="updateList" item="item" index="index">
+                    <if test="item.parentId!=null">
+                        when id=#{item.id} then #{item.parentId}
+                    </if>
+                </foreach>
+            </trim>
+
+            <trim prefix="lastUpdatorId =case" suffix="end,">
+                <foreach collection="updateList" item="item" index="index">
+                    <if test="item.lastUpdatorId!=null">
+                        when id=#{item.id} then #{item.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdateTime =case" suffix="end,">
+                <foreach collection="updateList" item="item" index="index">
+                    <if test="item.lastUpdateTime!=null">
+                        when id=#{item.id} then #{item.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="msLastUpdatorId =case" suffix="end,">
+                <foreach collection="updateList" item="item" index="index">
+                    <if test="item.msLastUpdatorId!=null">
+                        when id=#{item.id} then #{item.msLastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="remark =case" suffix="end,">
+                <foreach collection="updateList" item="item" index="index">
+                    <if test="item.remark!=null">
+                        when id=#{item.id} then #{item.remark}
+                    </if>
+                </foreach>
+            </trim>
+
+        </trim>
+        where id in
+        <foreach collection="updateList" item="item" index="index"
+                 separator="," open="(" close=")">
+            #{item.id}
+        </foreach>
+    </update>
+
+    <select id="selectSeq" resultType="com.yskc.rs.entity.WorkshopEntity">
+        select * from workshop where companyId = #{companyId} and parentId = #{parentId} and seq = #{seq}
+    </select>
+    <select id="selectMaxSeq" resultType="java.lang.Integer">
+        select max(seq) from workshop where companyId = #{companyId} and parentId = #{parentId}
+    </select>
+    <select id="getCompanyOrg" resultType="com.yskc.rs.models.CommonOrgModel">
+        select id,workshopName as name,fullPath from workshop where companyId = #{companyId}
+    </select>
+    <select id="queryByCompanyId" resultType="com.yskc.rs.entity.WorkshopEntity">
+        select * from workshop where companyId = #{companyId}
+    </select>
+    <insert id="addBatch" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `workshop`
+        (
+        `companyId`,
+        `workshopName`,
+        `parentId`,
+        `remark`,
+        `fullPath`,
+        `seq`,
+        `creatorId`,
+        `createTime`,
+        `lastUpdatorId`,
+        `lastUpdateTime`,
+        `msCreatorId`,
+        `msLastUpdatorId`
+        )
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.companyId},
+            #{item.workshopName},
+            #{item.parentId},
+            #{item.remark},
+            #{item.fullPath},
+            #{item.seq},
+            #{item.creatorId},
+            #{item.createTime},
+            #{item.lastUpdatorId},
+            #{item.lastUpdateTime},
+            #{item.msCreatorId},
+            #{item.msLastUpdatorId}
+            )
+        </foreach>
+    </insert>
+</mapper>

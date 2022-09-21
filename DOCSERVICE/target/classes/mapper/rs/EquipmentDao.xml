@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.docservice.dao.rs.EquipmentDao">
+    <insert id="insertOrUpdate">
+        INSERT INTO equipment
+        (companyId,ename,ecode,emodal,unitPrice,unit,quantity,usefullife,purchaseDate,remark,
+        creatorId,createTime,deptId,depreciationDate,depreciationRate,usagePower,etype,lastUpdateTime,lastUpdatorId,
+        kinds,msCreatorId,msLastUpdatorId,workshopId,deptName,workshop,productLine,processSection,`data`,invalidated)
+        VALUES
+        <foreach collection="equipments" separator="," item="e">
+            (#{e.companyId},#{e.ename},#{e.ecode},#{e.emodal},#{e.unitPrice},#{e.unit},#{e.quantity},#{e.usefullife},#{e.purchaseDate},#{e.remark},
+            #{e.creatorId},#{e.createTime},#{e.deptId},#{e.depreciationDate},#{e.depreciationRate},#{e.usagePower},#{e.etype},
+            #{e.lastUpdateTime},#{e.lastUpdatorId}, #{e.kinds},#{e.msCreatorId},#{e.msLastUpdatorId},#{e.workshopId},
+            #{e.deptName},#{e.workshop},#{e.productLine},#{e.processSection},#{e.data},#{e.invalidated})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        emodal=values(emodal),
+        quantity=values(quantity),
+        usefullife=values(usefullife),
+        purchaseDate = values(purchaseDate),
+        depreciationDate=values(depreciationDate),
+        depreciationRate = values(depreciationRate),
+        etype = values(etype),
+        usagePower = values(usagePower),
+        ename = values(ename),
+        unitPrice = values(unitPrice),
+        kinds = values(kinds),
+        etype = values(etype),
+        remark = values(remark),
+        unit = values(unit),
+        deptName = values(deptName),
+        workshop = values(workshop),
+        productLine = values(productLine),
+        processSection = values(processSection),
+        `data` = values(`data`),
+        deptId = values(deptId),
+        lastUpdatorId = values(lastUpdatorId),
+        lastUpdateTime = values(lastUpdateTime),
+        msLastUpdatorId =values(msLastUpdatorId),
+        invalidated = values(invalidated)
+    </insert>
+    <select id="getEquipmentByEcodes" resultType="com.yskc.docservice.entity.rs.EquipmentEntity">
+        select ecode,ename,etype from equipment where companyId = #{companyId} and ecode in
+        <foreach collection="ecodes" item="ecode" open="(" close=")" separator=",">
+            #{ecode}
+        </foreach>
+    </select>
+</mapper>

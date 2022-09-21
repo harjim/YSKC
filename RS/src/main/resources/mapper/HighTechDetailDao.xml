@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.highTech.HighTechDetailDao">
+    <delete id="delByTech">
+    delete from highTech_detail
+    where companyId=#{companyId} and highTechId in
+    <foreach collection="highTechIds" item="highTechId" open="(" separator="," close=")">
+        #{highTechId}
+    </foreach>
+    </delete>
+    <select id="getTechDetail" resultType="com.yskc.rs.models.hightech.HighTechDetailModel">
+        select  `id`,
+    `highTechId`,
+    `hasSameTechStandard`,
+    `techStandard`,
+    `otherTechStandard`,
+    `hasQualityStandard`,
+    `qualityStandard`,
+    `passTest`,
+    `techLevel`,
+    `domesticFirst`,
+    `internationalLevel`,
+    `projectSource`,
+    `techSource`,
+    `devType`,
+    `advancedExplain`,
+    `patents`,
+    `patentsTech`,
+    `techCompare`,
+    `advantage`,
+    `evaluate`,
+    `contribution`,
+    `ownerProperty`,
+    `innovation`,
+    `advanced`,
+    `maturity`,
+    `award`
+    from highTech_detail
+    where companyId=#{companyId} and highTechId=#{highTechId}
+    </select>
+</mapper>

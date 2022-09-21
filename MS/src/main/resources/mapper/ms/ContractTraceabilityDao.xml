@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.ContractTraceabilityDao">
+    <select id="queryConTraceability" resultType="com.yskc.ms.entity.ms.models.ContractTraceabilityModel">
+        SELECT ct.id,ct.contractNumber,ct.thecover,ct.qrcode,ct.customerId,ct.customerName,ct.createTime from
+        contractTraceability as ct
+        where 1=1
+        <if test="query.contractNumber != null and query.contractNumber != ''">
+            and ct.contractNumber like "%"#{query.contractNumber}"%"
+        </if>
+        <if test="query.customerName != null and query.customerName != ''">
+            and ct.customerName like "%"#{query.customerName}"%"
+        </if>
+
+    </select>
+    <select id="countByContractNo" resultType="java.lang.Integer">
+        select count(id) from contractTraceability where contractNumber = #{contractNumber}
+    </select>
+
+
+</mapper>

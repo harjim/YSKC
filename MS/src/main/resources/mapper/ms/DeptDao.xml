@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.DeptDao">
+
+    <select id="queryDept" resultType="com.yskc.ms.models.dept.DeptModel">
+        SELECT
+        d.id,
+        d.deptName,
+        d.parentId,
+        d.`level`,
+        d.remark,
+        d.fullPath,
+        group_concat(u.realName) AS realName
+        FROM
+        ys_dept d
+        LEFT JOIN user_dept us ON us.depId = d.id and us.isAdmin=1
+        LEFT JOIN ys_user u ON u.id = us.userId
+        <where>
+            <if test="deptName != null and deptName != ''">
+                and d.deptName like concat('%',concat(#{deptName},'%')) or d.parentId=-1
+                OR d.id in (SELECT parentId from ys_dept where deptName LIKE "%"#{deptName}"%")
+            </if>
+        </where>
+        group by d.id
+    </select>
+
+    <select id="queryAll" resultType="com.yskc.ms.models.dept.DeptTree">
+   		select id as `key`, parentId,deptName as title,fullPath from ys_dept order by 'level'
+   </select>
+
+
+    <select id="getUser" resultType="com.yskc.ms.models.dept.DeptUserInfo">
+        select y.id,y.userName,y.realName,y.tel,y.gender,y.depId, y.postion,y.remark,y.status,y.mtypes,
+        (SELECT GROUP_CONCAT(u1.depId ORDER BY u1.userId) FROM user_dept u1 WHERE u1.userId = y.`id`) AS deptIdArrStr,
+        (SELECT GROUP_CONCAT(distinct d1.fullName order by d1.id) FROM user_dept ud1 left join ys_dept d1 on d1.id =
+        ud1.depId WHERE ud1.userId = y.`id`) AS deptName,
+        (SELECT du1.unionid FROM d_user du1 WHERE du1.userId = y.id) AS unionid,
+        (SELECT du2.dingUserId FROM d_user du2 WHERE du2.userId = y.id) AS dingUserId,
+        (SELECT GROUP_CONCAT(r.roleName) FROM app_user_role ur LEFT JOIN app_role as r on ur.roleId = r.id where
+        ur.userId=y.`id`) as relatedPermissions
+        from ys_user as y
+        where y.userName != 'ysadmin'
+        <if test="query.realName != null and query.realName != ''">
+            and y.realName like "%"#{query.realName}"%"
+        </if>
+        <if test="query.status != null">
+            and y.status=#{query.status}
+        </if>
+        <if test="query.fullPath != null and query.fullPath != ''">
+            and y.id in (
+                select ud.userId from user_dept ud inner join ys_dept d on ud.depId=d.id where d.fullPath like #{query.fullPath}"%"
+            )
+        </if>
+    </select>
+
+    <insert id="insertBatch">
+        INSERT INTO ys_dept
+        (id,deptName,parentId,`level`,`identity`,remark,creatorId,createTime,fullPath,fullname)
+        VALUES
+        <foreach collection="deptList" separator="," item="d">
+            (#{d.id},#{d.deptName},#{d.parentId},#{d.level},#{d.identity},#{d.remark},#{d.creatorId},#{d.createTime},#{d.fullPath},#{d.fullname})
+        </foreach>
+    </insert>
+
+    <update id="updateBatch" parameterType="java.util.List">
+        update ys_dept
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="deptName =case" suffix="end,">
+                <foreach collection="deptList" item="i" index="index">
+                    <if test="i.deptName!=null">
+                        when id=#{i.id} then #{i.deptName}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="parentId =case" suffix="end,">
+                <foreach collection="deptList" item="i" index="index">
+                    <if test="i.parentId!=null">
+                        when id=#{i.id} then #{i.parentId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="level =case" suffix="end,">
+                <foreach collection="deptList" item="i" index="index">
+                    <if test="i.level!=null">
+                        when id=#{i.id} then #{i.level}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="fullPath =case" suffix="end,">
+                <foreach collection="deptList" item="i" index="index">
+                    <if test="i.fullPath!=null">
+                        when id=#{i.id} then #{i.fullPath}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="fullname =case" suffix="end,">
+                <foreach collection="deptList" item="i" index="index">
+                    <if test="i.fullname!=null">
+                        when id=#{i.id} then #{i.fullname}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="remark =case" suffix="end,">
+                <foreach collection="deptList" item="i" index="index">
+                    <if test="i.remark!=null">
+                        when id=#{i.id} then #{i.remark}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="branchId =case" suffix="end,">
+                <foreach collection="deptList" item="i" index="index">
+                    <if test="i.branchId!=null">
+                        when id=#{i.id} then #{i.branchId}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="deptList" separator="or" item="i" index="index">
+            id=#{i.id}
+        </foreach>
+    </update>
+    <select id="queryDeptIds" resultType="java.lang.Integer">
+        select id from ys_dept
+    </select>
+
+    <select id="getUsed" resultType="java.lang.Integer">
+		select count(*) from user_dept where depId = #{deptId}
+	</select>
+
+    <select id="getByParentId" resultType="java.lang.Integer">
+        select count(id) from ys_dept where parentId = #{parentId}
+    </select>
+
+    <select id="getDataByDeptId" resultType="com.yskc.ms.models.dept.DeptModel">
+        SELECT
+        d.id,
+        d.deptName,
+        d.parentId,
+        d.`level`,
+        d.remark,
+        group_concat(u.realName) AS realName from user_dept us
+        LEFT JOIN ys_dept d ON us.depId = d.id
+        LEFT JOIN ys_user u ON u.id = us.userId
+        WHERE
+        us.isAdmin=1
+        and d.id =
+        <foreach collection="ids" item="id" index="index" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+    <select id="getExist" resultType="com.yskc.ms.entity.ms.Dept">
+        select * from ys_dept where parentId = #{parentId} and deptName = #{deptName} limit 1
+    </select>
+    <select id="getChildren" resultType="com.yskc.ms.entity.ms.Dept">
+        select * from ys_dept where id != #{id} and fullPath like #{fullPath}"%"
+    </select>
+
+    <select id="getUserDataByDeptId" resultType="com.yskc.ms.models.dept.DeptUserInfo">
+        SELECT
+        su.id,
+        su.userName,
+        su.realName,
+        sd.deptName,
+        sd.id as depId,
+        su.tel,
+        su.postion,
+        su.remark,
+        su.status
+        FROM
+        ys_user su
+        LEFT JOIN user_dept ud ON ud.userId = su.id
+        LEFT JOIN ys_dept sd ON ud.depId = sd.id
+        WHERE
+        ud.depId = #{deptId}
+        <if test="realName != null and realName != ''">
+            and su.realName like "%"#{realName}"%"
+        </if>
+    </select>
+
+    <select id="getSelectUserData" resultType="com.yskc.ms.models.dept.DeptUserInfo">
+        SELECT
+        su.id,
+        su.userName,
+        su.realName,
+        su.tel,
+        su.postion,
+        su.remark
+        FROM
+        ys_user su
+        LEFT JOIN user_dept ud ON ud.userId = su.id AND ud.depId = #{deptId}
+        LEFT JOIN user_dept ud2 ON ud2.userId = su.id
+        LEFT JOIN ys_dept yd ON ud2.depId = yd.id
+        WHERE
+        ud.userId IS NULL and su.userName != 'ysadmin'
+        <if test="realName != null and realName != ''">
+            and su.realName like "%"#{realName}"%"
+        </if>
+        <if test="fullPath != null and fullPath != ''">
+            and yd.fullPath like #{fullPath}"%"
+        </if>
+        group by su.id
+    </select>
+    <select id="queryDeptByUserId" resultType="java.lang.String">
+        select d.fullPath from ys_dept d
+        left join user_dept ud on ud.depId = d.id
+        left join ys_user u on u.id = ud.userId
+        where u.id = #{userId}
+    </select>
+    <!--根据用户获取所属部门信息 -->
+    <select id="getDeptByUserId" resultType="com.yskc.ms.models.dept.DeptModel">
+        select d.id,d.deptName,d.fullPath,d.parentId from ys_dept d
+        inner join user_dept ud on ud.depId = d.id
+        where ud.userId = #{userId}
+        order by d.level desc,d.id
+    </select>
+    <select id="getGeLevel" resultType="com.yskc.ms.entity.ms.Dept">
+        select id,fullPath,deptName,branchId from ys_dept where `level` >= #{level}
+    </select>
+    <select id="getByDeptIds" resultType="com.yskc.ms.entity.ms.Dept">
+        select id,deptName,fullPath from ys_dept where id in
+        <foreach collection="ids" open="(" separator="," close=")" item="id">
+            #{id}
+        </foreach>
+    </select>
+
+    <update id="updateDDDept" parameterType="java.util.Collection">
+        INSERT INTO ys_dept
+        (id,deptName,parentId,`level`,`identity`,remark,creatorId,createTime,fullPath,fullname,branchId)
+        VALUES
+        <foreach collection="deptList" separator="," item="d">
+            (#{d.id},#{d.deptName},#{d.parentId},#{d.level},#{d.identity},#{d.remark},#{d.creatorId},#{d.createTime},#{d.fullPath},#{d.fullname},#{d.branchId})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        deptName=values(deptName),
+        parentId=values(parentId),
+        level=values(level),
+        identity=values(identity),
+        remark=values(remark),
+        fullPath=values(fullPath),
+        fullname=values(fullname),
+        branchId=values(branchId)
+    </update>
+    <select id="getAllDept" resultType="com.yskc.ms.models.GroupRAndDManagementModel">
+        select id,deptName from  ys_dept
+        where `level` = 1
+    </select>
+</mapper>

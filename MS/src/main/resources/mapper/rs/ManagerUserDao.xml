@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.rs.ManagerUserDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.yskc.ms.entity.rs.ManagerUserEntity" id="userMap">
+        <result property="id" column="id"/>
+        <result property="companyId" column="companyId"/>
+        <result property="msUserId" column="msUserId"/>
+        <result property="creatorId" column="creatorId"/>
+        <result property="createTime" column="createTime"/>
+        <result property="lastUpdatorId" column="lastUpdatorId"/>
+        <result property="lastUpdateTime" column="lastUpdateTime"/>
+        <result property="remark" column="remark"/>
+    </resultMap>
+
+    <insert id="addManagerUserBatch">
+        INSERT INTO
+        app_manager_user(companyId,msUserId,creatorId,createTime,lastUpdatorId,lastUpdateTime,remark,realName,userName)
+        VALUES
+        <foreach collection="managerUserEntities" item="mu" separator=",">
+            (#{mu.companyId},#{mu.msUserId},#{mu.creatorId},#{mu.createTime},#{mu.lastUpdatorId},#{mu.lastUpdateTime},#{mu.remark},#{mu.realName},#{mu.userName})
+        </foreach>
+    </insert>
+
+    <select id="getManagerUserId" resultType="java.lang.Integer">
+        select  msUserId from app_manager_user where  companyId = #{companyId}
+    </select>
+
+    <delete id="delByCompanyId">
+        delete from app_manager_user where  companyId = #{companyId}
+    </delete>
+    <delete id="deleteByUserId">
+        delete from app_manager_user where msUserId = #{userId}
+    </delete>
+
+
+    <select id="getByCompanyIds" resultType="java.lang.Integer">
+        select distinct companyId from app_manager_user where companyId in
+        <foreach collection="companyIds" open="(" separator="," close=")" item="companyId">
+            #{companyId}
+        </foreach>
+        <if test="currentUserId != null">
+            and msUserId = #{currentUserId}
+        </if>
+        <if test="msUserIds != null">
+            and msUserId in
+            <foreach collection="msUserIds" open="(" separator="," close=")" item="userId">
+                #{userId}
+            </foreach>
+        </if>
+    </select>
+    <select id="getByCompanyIdAndUserId" resultType="com.yskc.ms.entity.rs.ManagerUserEntity">
+        select * from app_manager_user where msUserId = #{msUserId} and companyId = #{companyId} limit 1
+    </select>
+    <select id="getExistManagerUser" resultType="com.yskc.ms.entity.rs.ManagerUserEntity">
+        select * from app_manager_user where companyId = #{companyId}
+        <if test="userIds != null">
+            and msUserId in
+            <foreach collection="userIds" open="(" separator="," close=")" item="userId">
+                #{userId}
+            </foreach>
+        </if>
+    </select>
+</mapper>

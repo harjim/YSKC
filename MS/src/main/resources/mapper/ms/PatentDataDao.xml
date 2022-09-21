@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.PatentDataDao">
+    <select id="getList" resultType="com.yskc.ms.models.patent.PatentDataModel">
+        select
+        id,patentNo,patentName,inventor,applyName,applyDateTime,mainType,mainTypeNo,caseStatus,publicNo,publicDate,lastUpdateTime,address
+        from patentData
+        where 1=1
+        <if test="query.patentNo!=null and query.patentNo!=''">
+            and patentNo like "%"#{query.patentNo}"%"
+        </if>
+        <if test="query.inventor!=null and query.inventor!=''">
+            and inventor like "%"#{query.inventor}"%"
+        </if>
+        <if test="query.caseStatus!=null and query.caseStatus!=''">
+            and caseStatus=#{query.caseStatus}
+        </if>
+        <if test="query.applyDateTime!=null">
+            and applyDateTime = #{query.applyDateTime}
+        </if>
+        <if test="query.publicDate!=null">
+            and publicDate = #{query.publicDate}
+        </if>
+        <if test="query.patentName!=null and query.patentName!=''">
+            and patentName like "%"#{query.patentName}"%"
+        </if>
+        <if test="query.mainType!=null and query.mainType>0">
+            and mainType=#{query.mainType}
+        </if>
+        <if test="query.applyName!=null and query.applyName!='' ">
+            and applyName like "%"#{query.applyName}"%"
+        </if>
+
+    </select>
+</mapper>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.rs.DocListDao">
+
+    <select id="queryDocList" resultType="com.yskc.ms.entity.rs.models.DocListModel">
+        select id,listType,docName,desciption,seq,classify,subClassify,rdActivities,samplePath,childType
+        from sys_docList where companyId = 0
+        <if test="query.listType != null and query.listType != -1">
+            and listType = #{query.listType}
+        </if>
+        <if test="query.docName != null and query.docName != ''">
+            and docName like "%"#{query.docName}"%"
+        </if>
+    </select>
+    <select id="selectByListId" resultType="com.yskc.ms.entity.rs.SysDocumentEntity">
+        select * from sys_document where listId = #{listId}
+    </select>
+    <select id="selectMaxSeq" resultType="java.lang.Integer">
+        select MAX(seq) from sys_docList where listType = #{listType} AND companyId = 0
+    </select>
+    <select id="getDocList" resultType="com.yskc.ms.models.rs.NewReportsModel">
+        select sd.fileName,sd.filePath,sd.createTime,pp.pname,pp.rdTitle,pp.id as
+        projectId,sdl.docName,sd.id,sd.stageKey
+        from sys_document sd
+        left join p_project pp on sd.projectId=pp.id
+        inner join sys_docList sdl on sd.listId=sdl.id and sdl.listType=1001 and sdl.docName="查新报告"
+        where  sd.projectId=#{projectId}
+    </select>
+    <select id="getDocuments" resultType="com.yskc.ms.models.rs.DocumentListModel">
+        select sd.fileName,sd.filePath,sd.createTime,sdl.docName,sd.id,sd.buildType
+        from sys_document sd
+        left join sys_docList sdl on sd.listId=sdl.id and sdl.listType=6001
+        where sd.year=#{query.year} and sd.companyId=#{query.companyId} and sdl.companyId in (0,#{query.companyId})
+    </select>
+    <select id="getReports" resultType="com.yskc.ms.models.rs.NewReportsModel">
+        select sd.fileName,sd.filePath,sd.createTime,pp.pname,pp.rdTitle,pp.id as projectId,sdl.docName,sd.id,ps.stageName as stageKey
+        from sys_document sd
+        left join p_project pp on sd.projectId=pp.id
+        inner join sys_docList sdl on sd.listId=sdl.id and sdl.listType=1001 and sdl.docName="查新报告"
+        left join p_stage ps on sd.stageKey=ps.stageKey and ps.projectId = sd.projectId
+        where sd.projectId=#{projectId}
+         order by sd.createTime
+    </select>
+</mapper>

@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.SysDocumentDao">
+    <select id="queryDocument" resultType="com.yskc.rs.models.sysDocument.SysDocumentModel">
+        select
+        d.id,
+        d.fileName,
+        d.downloadTimes,
+        d.creatorId,
+        d.createTime,
+        u.userName,
+        d.filePath,
+        d.year,
+        d.month,
+        d.fileType,
+        d.docMonth,
+        d.docDate,
+        d.workshop
+        from sys_document d
+        left join `user` u on d.creatorId = u.id
+        where d.companyId = #{companyId} and d.fileType = #{query.fileType}
+        <if test="query.fileName != null and query.fileName != ''">
+            and d.fileName like "%"#{query.fileName}"%"
+        </if>
+        <if test="query.workshop !=null and query.workshop !=''">
+            and d.workshop like "%"#{query.workshop}"%"
+        </if>
+        <if test="query.year != null and query.year != 0">
+            and d.year = #{query.year}
+        </if>
+        <if test="query.projectId != null and query.projectId != 0">
+            and d.projectId = #{query.projectId}
+        </if>
+        <if test="query.docMonth != null">
+            and d.docMonth = #{query.docMonth}
+        </if>
+    </select>
+    <select id="selectByParam" resultType="com.yskc.rs.models.sysDocument.SysDocumentModel">
+        select * from sys_document
+        where companyId = #{companyId}
+        <if test="fileType != null and fileType != '' and fileType != 0">
+            and fileType = #{fileType}
+        </if>
+        <if test="year != null and year != '' and year != 0">
+            and year = #{year}
+        </if>
+        <if test="projectId != null and projectId != '' and projectId != 0">
+            and projectId = #{projectId}
+        </if>
+    </select>
+    <select id="queryAppendixList" resultType="com.yskc.rs.models.sysDocument.SysDocumentModel">
+        select
+        d.id,
+        d.fileName,
+        d.downloadTimes,
+        d.creatorId,
+        d.createTime,
+        u.userName,
+        d.filePath,
+        d.year,
+        d.month,
+        d.fileType
+        from sys_document d
+        left join user u on d.creatorId = u.id
+        where d.companyId = #{companyId} and
+        d.fileType in
+        <foreach item="item" index="index" collection="fileType" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        <if test="fileName != null and fileName != ''">
+            and d.fileName like "%"#{fileName}"%"
+        </if>
+        <if test="year != null and year != '' and year != 0">
+            and d.year = #{year}
+        </if>
+        <if test="projectId != null and projectId != '' and projectId != 0">
+            and d.projectId = #{projectId}
+        </if>
+    </select>
+    <select id="queryDocByProjectIds" resultType="com.yskc.rs.entity.SysDocumentEntity">
+        select * from sys_document where projectType = 1 and
+        projectId in
+         <foreach collection="projectIds" item="projectId" open="(" close=")" separator=",">
+             #{projectId}
+         </foreach>
+    </select>
+    <select id="queryDocList" resultType="com.yskc.rs.models.sysDocument.DocListModel">
+        SELECT l.id,l.docName,l.desciption,l.seq,l.companyId,l.classify,l.rdActivities,l.subClassify,l.samplePath,o.operators
+        FROM sys_docList l
+        left join sys_docOperator o on o.listId = l.id AND o.companyId = #{companyId}
+        WHERE l.listType = #{listType} AND l.companyId in (0,#{companyId}) ORDER BY companyId ASC, seq ASC
+    </select>
+    <select id="queryDocForDocList" resultType="com.yskc.rs.models.sysDocument.SysDocumentModel">
+        select d.*,u.realName from sys_document d
+        left join user u on u.id = d.creatorId
+        where d.companyId = #{companyId}
+        <if test="year != 0">
+            and d.year = #{year}
+        </if>
+        <if test="projectId != null and projectId != '' and projectId != 0">
+            and d.projectId = #{projectId}
+        </if>
+        <if test="patentNo != null and patentNo != ''">
+            and d.patentNo = #{patentNo}
+        </if>
+        and d.listId in
+        <foreach collection="ids" open="(" close=")" item="id" separator=",">
+            #{id}
+        </foreach>
+    </select>
+    <select id="selectByListId" resultType="com.yskc.rs.entity.SysDocumentEntity">
+        select * from sys_document where listId = #{listId}
+    </select>
+    <select id="selectByPatentNo" resultType="com.yskc.rs.entity.SysDocumentEntity">
+        select * from sys_document where patentNo = #{patentNo}
+    </select>
+    <select id="getReportByProject" resultType="com.yskc.rs.entity.SysDocumentEntity">
+        select fileName,filePath,projectId
+        from sys_document
+        where projectId=#{projectId} and listId=3
+    </select>
+    <insert id="insertDocuments" parameterType="java.util.List">
+        INSERT INTO sys_document (`fileName`,`filePath`,`downloadTimes`,`creatorId`,`createTime`,`companyId`,`fileType`,
+                                  `lastUpdatorId`,`lastUpdateTime`,`msCreatorId`,`msLastUpdatorId`,`month`,`projectId`,
+                                  `projectType`,`year`,`remark`,`listId`,`patentNo`,`docMonth`,`docDate`,`workShopId`,
+                                  `workshop`,`stageKey`,`buildType`)
+        VALUES
+        <foreach  collection="entities" item="item" index="index" separator=",">
+            (#{item.fileName},#{item.filePath},#{item.downloadTimes},#{item.creatorId},#{item.createTime},#{item.companyId},#{item.fileType},
+             #{item.lastUpdatorId},#{item.lastUpdateTime},#{item.msCreatorId},#{item.msLastUpdatorId},#{item.month},#{item.projectId},
+             #{item.projectType},#{item.year},#{item.remark},#{item.listId},#{item.patentNo},#{item.docMonth},#{item.docDate},#{item.workShopId},
+             #{item.workshop},#{item.stageKey},#{item.buildType})
+        </foreach>
+    </insert>
+    <select id="selectFileNameAndId" resultType="com.yskc.rs.models.sysDocument.SysDocumentModel">
+        select id,fileName,filePath from sys_document where listId = #{listId} and year = #{year} and companyId = #{companyId}
+    </select>
+    <select id="selectByYearAndComId" resultType="com.yskc.rs.entity.SysDocumentEntity">
+        select sd.* from sys_document sd left join sys_docList sdl on sd.listId = sdl.id
+        where sd.companyId = #{companyId} and sd.year = #{year} and sdl.listType = 6001
+    </select>
+    <select id="getYear" resultType="java.lang.Integer">
+        select distinct year from sys_document sd
+        left join sys_docList sdl on sd.listId = sdl.id
+        where sd.year &lt; #{year} and sd.companyId = #{companyId} and sdl.listType = 6001
+        order by year ASC
+    </select>
+    <select id="getChildBuildTypes" resultType="com.yskc.rs.models.highscore.ChildBuildTypeModel">
+        select sdl.childType,sd.buildType from sys_docList sdl
+        inner join sys_document sd on sd.listId=sdl.id
+        where sd.companyId=#{companyId} and sd.year >= #{beginYear} and sd.year &lt;=#{endYear} and sdl.listType=6001
+        and sdl.childType is not null group by childType,buildType
+    </select>
+</mapper>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.PatentAccountDao">
+    <update id="updateStatus">
+        update patent_account set status = #{status},password = #{password} where id = #{id}
+    </update>
+    <select id="queryPatentAccount" resultType="com.yskc.ms.models.patent.PatentAccountModel">
+        select * from patent_account
+        where 1=1
+        <if test="query.username!=null and query.username!=''">
+            and username like "%"#{query.username}"%"
+        </if>
+    </select>
+
+    <select id="getPatentAccountByUserName" resultType="com.yskc.ms.models.patent.PatentAccountModel">
+         select  * from patent_account where  userName =#{username}
+    </select>
+    <select id="getPatentAccountTree" resultType="com.yskc.ms.models.patent.PatentAccountTreeModel">
+        select id as accountId,username,password,status from patent_account where status &lt; 3
+    </select>
+
+</mapper>

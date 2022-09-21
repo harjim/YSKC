@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.rs.RsSummaryDao">
+    <insert id="insertOrUpdate">
+        INSERT INTO `p_summary`
+        (`lastUpdatorId`,`msCreatorId`,`msLastUpdatorId`,`projectId`,`month`,`rdType`,`accountNumber`,`rdFunds`,
+        `creatorId`,`createTime`,`updatorId`,`lastUpdateTime`)
+        VALUES
+        <foreach collection="list" item="l" separator=",">
+            (#{l.lastUpdatorId},#{l.msCreatorId},#{l.msLastUpdatorId},#{l.projectId},#{l.month},#{l.rdType},
+            #{l.accountNumber},#{l.rdFunds},#{l.creatorId},#{l.createTime},#{l.updatorId},#{l.lastUpdateTime})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        rdFunds=values(rdFunds),
+        updatorId=values(updatorId),
+        lastUpdateTime=values(lastUpdateTime),
+        lastUpdatorId=values(lastUpdatorId),
+        msLastUpdatorId=values(msLastUpdatorId)
+    </insert>
+    <update id="updateDataMaterial">
+        update d_material
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="remainQuantity =case" suffix="end,">
+                <foreach collection="list" item="i">
+                    <if test="i.remain!=null">
+                        when id=#{i.id} then #{i.remain}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        ,lastUpdateTime=#{now},msLastUpdatorId=#{msUserId},lastUpdatorId=-1
+        where
+        <foreach collection="list" separator="or" item="i">
+            id=#{i.id}
+        </foreach>
+    </update>
+    <update id="updateDataEnergy">
+        update d_energy
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="remainAmount =case" suffix="end,">
+                <foreach collection="list" item="i">
+                    <if test="i.remain!=null">
+                        when id=#{i.id} then #{i.remain}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        ,lastUpdateTime=#{now},msLastUpdatorId=#{msUserId},lastUpdatorId=-1
+        where
+        <foreach collection="list" separator="or" item="i">
+            id=#{i.id}
+        </foreach>
+    </update>
+    <update id="updateDataDesign">
+        update d_design
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="remainDFee =case" suffix="end,">
+                <foreach collection="list" item="i">
+                    <if test="i.remain!=null">
+                        when id=#{i.id} then #{i.remain}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        ,lastUpdateTime=#{now},msLastUpdatorId=#{msUserId},lastUpdatorId=-1
+        where
+        <foreach collection="list" separator="or" item="i">
+            id=#{i.id}
+        </foreach>
+    </update>
+    <update id="updateDataInspection">
+        update d_inspection
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="remainExpense =case" suffix="end,">
+                <foreach collection="list" item="i">
+                    <if test="i.remain!=null">
+                        when id=#{i.id} then #{i.remain}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        ,lastUpdateTime=#{now},msLastUpdatorId=#{msUserId},lastUpdatorId=-1
+        where
+        <foreach collection="list" separator="or" item="i">
+            id=#{i.id}
+        </foreach>
+    </update>
+    <delete id="deleteByProjectId">
+        delete from p_summary where projectId = #{projectId}
+    </delete>
+    <delete id="deleteProjectMaterial">
+        delete from p_material where projectId=#{projectId}
+    </delete>
+    <delete id="deleteProjectEnergy">
+        delete from p_energy where projectId=#{projectId}
+    </delete>
+    <delete id="deleteProjectDesign">
+        delete from p_design where projectId=#{projectId}
+    </delete>
+    <delete id="deleteProjectInspection">
+        delete from p_inspection where projectId=#{projectId}
+    </delete>
+    <delete id="deleteInfoSummary">
+        delete from p_info_summary where projectId=#{projectId}
+    </delete>
+
+
+    <select id="getDataReportFunds" resultType="com.yskc.ms.models.project.DataReportModel">
+        SELECT p.id,p.pname,p.rdTitle,p.beginDate,p.endDate,
+        SUM(CASE WHEN s.rdType div 100 = 100 THEN s.rdFunds ELSE 0 END) AS salary,
+        SUM(CASE WHEN s.rdType div 100 = 101 THEN s.rdFunds ELSE 0 END) AS insurance,
+        SUM(CASE WHEN s.rdType div 100 = 300 THEN s.rdFunds ELSE 0 END) AS prod,
+        SUM(CASE WHEN s.rdType div 100 = 301 THEN s.rdFunds ELSE 0 END) AS lab,
+        SUM(CASE WHEN s.rdType div 100 = 200 THEN s.rdFunds ELSE 0 END) AS material,
+        SUM(CASE WHEN s.rdType div 100 = 201 THEN s.rdFunds ELSE 0 END) AS stimulus,
+        SUM(CASE WHEN s.rdType div 100 = 202 THEN s.rdFunds ELSE 0 END) AS fuel,
+        SUM(CASE WHEN s.rdType div 100 = 203 THEN s.rdFunds ELSE 0 END) AS trial,
+        SUM(CASE WHEN s.rdType div 100 = 206 THEN s.rdFunds ELSE 0 END) AS repair,
+        SUM(CASE WHEN s.rdType div 100 = 205 THEN s.rdFunds ELSE 0 END) AS inspection,
+        SUM(CASE WHEN s.rdType div 100 = 207 THEN s.rdFunds ELSE 0 END) AS sampleMachine,
+        SUM(CASE WHEN s.rdType div 100 = 500 THEN s.rdFunds ELSE 0 END) AS design,
+        SUM(CASE WHEN s.rdType div 100 = 400 OR s.rdType div 100 = 401 OR s.rdType div 100 = 402 THEN s.rdFunds ELSE 0
+        END) AS amortization,
+        SUM(CASE WHEN s.rdType div 100 = 604 THEN s.rdFunds ELSE 0 END) AS travel,
+        SUM(CASE WHEN s.rdType div 100 = 699 THEN s.rdFunds ELSE 0 END) AS other
+        FROM p_project AS p
+        LEFT JOIN p_summary AS s ON s.projectId = p.id and s.month >= #{beginMonth} and s.month &lt;= #{endMonth}
+        WHERE  p.companyId = #{companyId} and p.hasChild = false and p.beginYear &lt;= #{year} and p.endYear >= #{year}
+        group by p.id order by rdTitle
+    </select>
+    <select id="getMonthFee" resultType="com.yskc.ms.models.projectsummary.SummaryDataMonthModel">
+        select
+        SUM(CASE WHEN s.rdType div 100 = 100 OR s.rdType div 100 = 101 THEN s.rdFunds ELSE 0 END) AS k10000,
+        SUM(CASE WHEN s.rdType div 100 = 300 OR s.rdType div 100 = 301 THEN s.rdFunds ELSE 0 END) AS k30000,
+        SUM(CASE WHEN s.rdType div 100 = 200 THEN s.rdFunds ELSE 0 END) AS k20000,
+        SUM(CASE WHEN s.rdType div 100 = 201 THEN s.rdFunds ELSE 0 END) AS k20100,
+        SUM(CASE WHEN s.rdType div 100 = 202 THEN s.rdFunds ELSE 0 END) AS k20200,
+        SUM(CASE WHEN s.rdType div 100 = 203 THEN s.rdFunds ELSE 0 END) AS k20300,
+        SUM(CASE WHEN s.rdType div 100 = 206 THEN s.rdFunds ELSE 0 END) AS k20600,
+        SUM(CASE WHEN s.rdType div 100 = 205 THEN s.rdFunds ELSE 0 END) AS k20500,
+        SUM(CASE WHEN s.rdType div 100 = 207 THEN s.rdFunds ELSE 0 END) AS k20700,
+        SUM(CASE WHEN s.rdType div 100 = 500 THEN s.rdFunds ELSE 0 END) AS k50000,
+        SUM(CASE WHEN s.rdType div 100 = 400 OR s.rdType div 100 = 401 OR s.rdType div 100 = 402 THEN s.rdFunds ELSE 0
+        END) AS k40000,
+        SUM(CASE WHEN s.rdType div 100 = 604 THEN s.rdFunds ELSE 0 END) AS k60400,
+        SUM(CASE WHEN s.rdType div 100 = 699 THEN s.rdFunds ELSE 0 END) AS k69900
+        from p_summary as s
+        inner join p_project AS p on p.id = s.projectId
+        where s.projectId in (select p.id from p_project AS p where
+        <if test="query.companyId!=null and query.companyId>0">
+            p.companyId = #{query.companyId}
+        </if>
+        <if test="beginMonth!=null">
+            and p.endDate >= #{beginMonth}
+        </if>
+        <if test="endMonth!=null">
+            and p.beginDate &lt;= #{endMonth}
+        </if>)
+        <if test="query.month!=null">
+            and s.month = #{query.month}
+        </if>
+         order by s.projectId
+    </select>
+    <select id="getMonthFeeTotal" resultType="com.yskc.ms.models.projectsummary.SummaryDataMonthModel">
+        select
+        SUM(CASE WHEN s.rdType div 100 = 100 OR s.rdType div 100 = 101 THEN s.rdFunds ELSE 0 END) AS k10000,
+        SUM(CASE WHEN s.rdType div 100 = 300 OR s.rdType div 100 = 301 THEN s.rdFunds ELSE 0 END) AS k30000,
+        SUM(CASE WHEN s.rdType div 100 = 200 THEN s.rdFunds ELSE 0 END) AS k20000,
+        SUM(CASE WHEN s.rdType div 100 = 201 THEN s.rdFunds ELSE 0 END) AS k20100,
+        SUM(CASE WHEN s.rdType div 100 = 202 THEN s.rdFunds ELSE 0 END) AS k20200,
+        SUM(CASE WHEN s.rdType div 100 = 203 THEN s.rdFunds ELSE 0 END) AS k20300,
+        SUM(CASE WHEN s.rdType div 100 = 206 THEN s.rdFunds ELSE 0 END) AS k20600,
+        SUM(CASE WHEN s.rdType div 100 = 205 THEN s.rdFunds ELSE 0 END) AS k20500,
+        SUM(CASE WHEN s.rdType div 100 = 207 THEN s.rdFunds ELSE 0 END) AS k20700,
+        SUM(CASE WHEN s.rdType div 100 = 500 THEN s.rdFunds ELSE 0 END) AS k50000,
+        SUM(CASE WHEN s.rdType div 100 = 400 OR s.rdType div 100 = 401 OR s.rdType div 100 = 402 THEN s.rdFunds ELSE 0
+        END) AS k40000,
+        SUM(CASE WHEN s.rdType div 100 = 604 THEN s.rdFunds ELSE 0 END) AS k60400,
+        SUM(CASE WHEN s.rdType div 100 = 699 THEN s.rdFunds ELSE 0 END) AS k69900
+        from p_summary as s
+        inner join p_project AS p on p.id = s.projectId
+        where s.projectId in (select p.id from p_project AS p where
+        <if test="query.companyId!=null and query.companyId>0">
+            p.companyId = #{query.companyId}
+        </if>
+        <if test="beginMonth!=null">
+            and p.endDate >= #{beginMonth}
+        </if>
+        <if test="endMonth!=null">
+            and p.beginDate &lt;= #{endMonth}
+        </if>)
+        <if test="query.month!=null">
+            and s.month >= #{beginYear}
+        </if>
+        <if test="query.month!=null">
+            and s.month &lt;= #{query.month}
+        </if>
+        order by s.projectId
+    </select>
+    <select id="getRdMonthFunds" resultType="com.yskc.ms.models.rs.RdMonthFundsStatusModel">
+        <!-- todo zdf 统计问题 2021年1月30日-->
+        select ps.*,pps.status from
+        (select s.`month`,s.projectId,
+        SUM(CASE WHEN s.rdType div 100 = 100 THEN s.rdFunds ELSE 0 END) AS salary,
+        SUM(CASE WHEN s.rdType div 100 = 101 THEN s.rdFunds ELSE 0 END) AS insurance,
+        SUM(CASE WHEN s.rdType div 100 = 300 THEN s.rdFunds ELSE 0 END) AS prod,
+        SUM(CASE WHEN s.rdType div 100 = 301 THEN s.rdFunds ELSE 0 END) AS lab,
+        SUM(CASE WHEN s.rdType div 100 = 200 THEN s.rdFunds ELSE 0 END) AS material,
+        SUM(CASE WHEN s.rdType div 100 = 201 THEN s.rdFunds ELSE 0 END) AS stimulus,
+        SUM(CASE WHEN s.rdType div 100 = 202 THEN s.rdFunds ELSE 0 END) AS fuel,
+        SUM(CASE WHEN s.rdType div 100 = 203 THEN s.rdFunds ELSE 0 END) AS trial,
+        SUM(CASE WHEN s.rdType div 100 = 206 THEN s.rdFunds ELSE 0 END) AS repair,
+        SUM(CASE WHEN s.rdType div 100 = 205 THEN s.rdFunds ELSE 0 END) AS inspection,
+        SUM(CASE WHEN s.rdType div 100 = 207 THEN s.rdFunds ELSE 0 END) AS sampleMachine,
+        SUM(CASE WHEN s.rdType div 100 = 500 THEN s.rdFunds ELSE 0 END) AS design,
+        SUM(CASE WHEN s.rdType div 100 = 400 OR s.rdType div 100 = 401 OR s.rdType div 100 = 402 THEN s.rdFunds ELSE 0
+        END) AS amortization,
+        SUM(CASE WHEN s.rdType div 100 = 604 THEN s.rdFunds ELSE 0 END) AS travel,
+        SUM(CASE WHEN s.rdType div 10000 = 6 AND s.rdType div 100 != 604 THEN s.rdFunds ELSE 0 END) AS other
+        from p_project p
+        INNER JOIN p_summary s on p.id = s.projectId
+        where p.companyId = #{companyId} and p.hasChild = false and s.`month` >= #{beginMonth} and s.`month` &lt;=
+        #{endMonth}
+        GROUP BY projectId,`month`) ps LEFT JOIN p_project_status pps on pps.projectId = ps.projectId and pps.month =
+        ps.month
+    </select>
+
+    <select id="getSummaryCost" resultType="java.util.Map">
+        SELECT month,SUM(rdFunds) totalData,rdType
+        from p_summary
+        WHERE `month` &gt;=#{yearFirstDay} AND `month` &lt;=#{yearLastDay}
+        <if test="unUsedTypes!=null and unUsedTypes.size()>0">
+            and rdType not in
+            <foreach collection="unUsedTypes" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        GROUP BY rdType,`month`
+    </select>
+    <select id="getProjectSummary" resultType="com.yskc.ms.models.rs.ProjectBudgetModel">
+        select projectId,rdType,sum(rdFunds) rdFunds
+        from p_summary
+        where projectId=#{projectId}
+        <if test="beginDate!=null and endDate !=null">
+            and `month` >= #{beginDate} and `month` &lt;= #{endDate}
+        </if>
+        group by rdType,projectId
+    </select>
+
+    <select id="getMinMaxMonth" resultType="java.util.Map">
+        select max(`month`) as maxMonth,min(`month`) as minMonth from p_summary
+        where projectId=#{projectId}
+    </select>
+    <select id="getRdTypes" resultType="java.lang.Integer">
+        select rdType from  p_summary where projectId=#{projectId} group by rdType
+    </select>
+    <select id="getMaterialUsedAndRemain" resultType="com.yskc.ms.models.rs.summary.BaseRemainModel">
+        select dm.id,dm.remainQuantity remain,dm.quantity total,pm.used rdUsed from p_material pm
+        inner join d_material dm on dm.id=pm.materialDataId
+        where pm.projectId=#{projectId}
+    </select>
+    <select id="getEnergyFeeAndRemain" resultType="com.yskc.ms.models.rs.summary.BaseRemainModel">
+        select de.id,de.remainAmount remain,de.amount total,pe.rdAmount rdUsed from p_energy pe
+        inner join d_energy de on de.id=pe.energyDataId
+        where pe.projectId=#{projectId}
+    </select>
+    <select id="getDesignFeeAndRemain" resultType="com.yskc.ms.models.rs.summary.BaseRemainModel">
+        select dd.id,dd.remainDFee remain,dd.dFee total,pd.rdAmount rdUsed from p_design pd
+        inner join d_design dd on dd.id=pd.designDataId
+        where pd.projectId=#{projectId}
+    </select>
+    <select id="getOtherFeeAndRemain" resultType="com.yskc.ms.models.rs.summary.BaseRemainModel">
+        select di.id,di.remainExpense remain,di.expense total,pi.rdAmount rdUsed from p_inspection pi
+        inner join d_inspection di on di.id=pi.inspectionDataId
+        where pi.projectId=#{projectId}
+    </select>
+    <select id="getDataFunds" resultType="com.yskc.ms.models.rs.DataFundsModel">
+        SELECT ps.projectId,ps.`month`,ps.rdType,ps.rdFunds,p.parentId
+        from p_summary ps
+        INNER JOIN p_project p on p.id = ps.projectId
+        WHERE p.companyId = #{companyId} and ps.`month` &lt;= #{endMonth} and ps.`month` >= #{beginMonth}
+        <if test="projectId!=null and projectId>0">
+            and ps.projectId=#{projectId}
+        </if>
+        order by ps.`month`,ps.rdType
+    </select>
+    <select id="getBudgetByYear" resultType="com.yskc.ms.models.rs.ProjectBudgetModel">
+        select projectId,rdType,sum(rdFunds) rdFunds
+        from p_summary
+        where projectId=#{projectId} and YEAR(`month`)=#{year}
+        group by rdType,projectId
+    </select>
+    <select id="getFundByYearAndProId" resultType="java.util.Map">
+        select projectId,sum(rdFunds) as rdFunds from p_summary where projectId in
+        <foreach collection="projectIds" item="projectId" open="(" separator="," close=")">
+            #{projectId}
+        </foreach>
+        and month &lt;= #{endDate} and month >= #{beginDate}
+        group by projectId
+    </select>
+    <select id="getProjectRdFundsSum" resultType="java.math.BigDecimal">
+        select sum(rdFunds) from p_summary where projectId=#{projectId}
+    </select>
+
+
+</mapper>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xxl.job.executor.dao.rs.RsSysLogDao">
+    <select id="getLastOperation" resultType="com.xxl.job.executor.entity.ms.OperationLog">
+        select userId, max(logTime) lastOperationTime,count(id) operationCnt,date_format(logTime,'%Y-%m-%d') operationDate
+        from sys_log where userId > 0 and logTime >= #{lastTime} and `source` = 1 and `description` not like '%登录'
+        group by userId,operationDate order by lastOperationTime
+    </select>
+</mapper>

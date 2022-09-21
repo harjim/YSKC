@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.FlowBranchDao">
+    <insert id="insertList">
+        insert into flowBranch (creatorId,lastUpdatorId,createTime,lastUpdateTime,nodeId,`condition`,flowId,seq) values
+        <foreach collection="insertList" item="item" separator=",">
+            (#{item.creatorId},#{item.lastUpdatorId},#{item.createTime},#{item.lastUpdateTime},#{item.nodeId},
+            #{item.condition},#{item.flowId},#{item.seq})
+        </foreach>
+    </insert>
+    <update id="updateList">
+        <foreach collection="updateList" item="item" separator=";">
+            update flowBranch set
+            lastUpdatorId=#{item.lastUpdatorId},lastUpdateTime=#{item.lastUpdateTime},nodeId=#{item.nodeId},
+            `condition`=#{item.condition},seq=#{item.seq},flowId=#{item.flowId}
+            where id=#{item.id}
+        </foreach>
+    </update>
+    <delete id="delByNode">
+        delete from flowBranch where nodeId in
+        <foreach collection="nodeIds" item="nodeId" open="(" close=")" separator=",">
+            #{nodeId}
+        </foreach>
+    </delete>
+    <select id="getByNode" resultType="com.yskc.ms.models.flow.FlowBranchTree">
+        select a.id as branchId,a.seq,a.`condition`,a.flowId,a.nodeId,f.name as newFlowName from flowBranch a left join flow f on a.flowId=f.id
+        where a.nodeId in
+        <foreach collection="nodeIds" item="nodeId" open="(" separator="," close=")">
+            #{nodeId}
+        </foreach>
+        order by nodeId,seq
+    </select>
+    <select id="getBranchBySeq" resultType="com.yskc.ms.entity.ms.FlowBranch">
+        select * from flowBranch
+        where nodeId=#{nextNode} and seq=0
+    </select>
+    <select id="getNodeBranch" resultType="com.yskc.ms.entity.ms.FlowBranch">
+        select id,`condition`,nodeId,seq,`type`,flowId
+        from flowBranch
+        where nodeId in (<foreach collection="nodeIds" item="nodeId" separator=",">#{nodeId}</foreach>)
+    </select>
+</mapper>

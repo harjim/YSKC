@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.TrialProdDao">
+    <update id="updateAllColumn">
+         UPDATE p_trialProd
+         SET trialDate=#{trial.trialDate},planPO=#{trial.planPO},actualPO=#{trial.actualPO},pos=#{trial.pos},
+         trialGroup=#{trial.trialGroup},auxMaterial=#{trial.auxMaterial},fuel=#{trial.fuel},gas=#{trial.gas},
+         mainMaterial=#{trial.mainMaterial},`power`=#{trial.power},spare=#{trial.spare},lastUpdatorId=#{trial.lastUpdatorId},
+         lastUpdateTime=#{trial.lastUpdateTime},msLastUpdatorId=#{trial.msLastUpdatorId},unit=#{trial.unit},place=#{trial.place},
+         startTime=#{trial.startTime},endTime=#{trial.endTime}
+         WHERE id=#{trial.id}
+    </update>
+
+
+    <select id="queryTrial" resultType="com.yskc.rs.models.trialprod.TrialProdModel">
+        select id,trialDate,planPO,actualPO,pos,trialGroup,auxMaterial,fuel,
+        gas,mainMaterial,power,spare, unit,place,startTime,endTime
+        from p_trialProd
+        where companyId = #{companyId} and projectId = #{query.projectId}
+    </select>
+
+    <select id="getSummaryList" resultType="com.yskc.rs.models.trialprod.TrialProdSumarryModel">
+        SELECT id,(CASE WHEN startTime IS NOT NULL AND endTime IS NOT NULL THEN TIMESTAMPDIFF(MINUTE ,startTime,endTime) ELSE 0 END) AS workHours,
+        trialDate,startTime,endTime,unit,place,actualPO,planPO
+        FROM p_trialProd
+        where companyId=#{companyId} and projectId=#{projectId}  and trialDate is not null
+        order by trialDate
+    </select>
+
+    <select id="queryListByStage" resultType="com.yskc.rs.models.trialprod.StageTrialModel">
+        SELECT pt.id,(CASE WHEN pt.startTime IS NOT NULL AND pt.endTime IS NOT NULL THEN TIMESTAMPDIFF(MINUTE ,pt.startTime,pt.endTime) ELSE 0 END) AS `minute`,
+        pt.trialDate,pt.startTime,pt.endTime,pt.unit,pt.deptName,pt.rdYield,pt.planYield
+        FROM p_yield_config pt
+        left join p_docFile_trial pdt on pt.id=pdt.trialId
+        where pt.companyId=#{companyId} and pt.projectId=#{projectId}  and pt.trialDate is not null and pdt.id is null
+        <if test="endDate!=null">
+           and trialDate &gt;= #{startDate}
+        </if>
+        <if test="endDate!=null">
+            and trialDate &lt;= #{endDate}
+        </if>
+        order by trialDate
+    </select>
+
+    <select id="queryDocFileTrial" resultType="com.yskc.rs.models.trialprod.StageTrialModel">
+        SELECT pt.id,(CASE WHEN pt.startTime IS NOT NULL AND pt.endTime IS NOT NULL THEN TIMESTAMPDIFF(MINUTE ,pt.startTime,pt.endTime) ELSE 0 END) AS `minute`,
+        pt.trialDate,pt.startTime,pt.endTime,pt.unit,pt.deptName,pt.rdYield,pt.planYield,pdt.pdocFileId,pt.trialProduct,pt.selected
+        FROM p_yield_config pt
+        inner join p_docFile_trial pdt on pt.id=pdt.trialId
+        where pt.companyId=#{companyId} and pt.projectId=#{projectId} and pdt.pdocFileId in (
+        <foreach collection="docFileIds" item="docFileId" separator=",">#{docFileId}</foreach>)
+        order by pt.trialDate
+    </select>
+
+    <select id="queryTrialPlan" resultType="com.yskc.rs.models.trialprod.TrialProdPlanModel">
+        select
+        p.rdIndex,p.deptName,p.processSection,p.pname,p.estimateExpense,p.beginDate,p.endDate,p.trialProd,p.beginYear,p.rdTitle,t.planPO,
+        t.actualPO,t.pos,t.trialGroup,t.mainMaterial,t.auxMaterial,t.fuel,t.power,t.gas,t.spare,t.trialDate,t.startTime,t.endTime
+        from
+        p_trialProd t
+        inner join p_project p on t.projectId=p.id and t.companyId=p.companyId and p.hasChild=false
+        where t.companyId=#{companyId}  and p.beginYear &lt;=#{query.year} and
+        p.endYear &gt;= #{query.year}
+        <if test="query.monthFirstDay!=null and query.monthLastDay!=null">
+            and t.trialDate &gt;= #{query.monthFirstDay} and t.trialDate &lt;= #{query.monthLastDay}
+        </if>
+        <if test="query.projectName!=null and query.projectName!=''">
+            and p.pname like "%"#{query.projectName}"%"
+        </if>
+    </select>
+
+    <select id="exportTrialPlanData" resultType="com.yskc.rs.models.trialprod.TrialProdPlanModel">
+        select
+        p.rdIndex,p.deptName,p.processSection,p.pname,p.estimateExpense,p.beginDate,p.endDate,p.trialProd,p.beginYear,p.rdTitle,t.planPO,
+        t.actualPO,t.pos,t.trialGroup,t.mainMaterial,t.auxMaterial,t.fuel,t.power,t.gas,t.spare,t.trialDate,t.startTime,t.endTime,t.unit
+        from
+        p_trialProd t
+        inner join p_project p on t.projectId=p.id and t.companyId=p.companyId and p.hasChild=false
+        where t.companyId=#{companyId} and p.beginYear &lt;=#{query.year} and
+        p.endYear &gt;= #{query.year}
+        <if test="query.monthFirstDay!=null and query.monthLastDay!=null">
+            and t.trialDate &gt;= #{query.monthFirstDay} and t.trialDate &lt;= #{query.monthLastDay}
+        </if>
+        <if test="query.projectName!=null and query.projectName!=''">
+            and p.pname like "%"#{query.projectName}"%"
+        </if>
+    </select>
+
+    <select id="getRecordsByProject" resultType="com.yskc.rs.entity.TrialProdEntity">
+        select * from p_trialProd
+        where companyId=#{companyId} and projectId=#{projectId}
+    </select>
+    <!-- 试验试制工时按项目查询 姚娟 and YEAR(pt.trialDate)=#{year} -->
+    <select id="getTrialByProject" resultType="com.yskc.rs.models.trialprod.StageTrialModel">
+        SELECT pt.id,(CASE WHEN pt.startTime IS NOT NULL AND pt.endTime IS NOT NULL THEN TIMESTAMPDIFF(MINUTE ,pt.startTime,pt.endTime) ELSE 0 END) AS `minute`,
+        pt.trialDate,pt.startTime,pt.endTime,pt.unit,pt.deptName,pt.rdYield,pt.planYield
+        FROM p_yield_config pt
+        where  pt.projectId=#{projectId} and pt.companyId=#{companyId}
+        order by pt.trialDate
+    </select>
+    <select id="getTrialInfo" resultType="com.yskc.rs.models.trialprod.StageTrialModel">
+        select rdYield,planYield,trialDate,unit,startTime,endTime,deptName
+        from p_yield_config
+        where projectId=#{projectId} and `month`=#{month}
+    </select>
+    <select id="getTrialByMonth" resultType="com.yskc.rs.models.trialprod.StageTrialModel">
+         SELECT id,(CASE WHEN startTime IS NOT NULL AND endTime IS NOT NULL THEN TIMESTAMPDIFF(MINUTE ,startTime,endTime) ELSE 0 END) AS `minute`,
+        trialDate,startTime,endTime,unit,deptName,rdYield,planYield,trialProduct,selected
+        FROM p_yield_config
+        where companyId=#{companyId} and projectId=#{projectId} and `month`=#{month}
+        order by trialDate
+    </select>
+    <select id="chooseGetTrial" resultType="com.yskc.rs.models.trialprod.StageTrialModel">
+        SELECT id,(CASE WHEN startTime IS NOT NULL AND endTime IS NOT NULL THEN TIMESTAMPDIFF(MINUTE ,startTime,endTime) ELSE 0 END) AS `minute`,
+               trialDate,startTime,endTime,unit,deptName,rdYield,planYield,trialProduct
+        FROM p_yield_config
+        where companyId=#{companyId} and projectId=#{projectId} and `month`=#{month} and selected = 1
+        order by trialDate
+    </select>
+    <select id="getTrials" resultType="com.yskc.rs.models.trialprod.StageTrialModel">
+        SELECT id,(CASE WHEN startTime IS NOT NULL AND endTime IS NOT NULL THEN TIMESTAMPDIFF(MINUTE ,startTime,endTime) ELSE 0 END) AS `minute`,
+        trialDate,startTime,endTime,unit,deptName,rdYield,planYield,`month` as trialMonth
+        FROM p_yield_config
+        where companyId=#{companyId} and projectId=#{projectId} and `month` in
+        (<foreach collection="monthes" item="month" separator=",">#{month}</foreach>)
+    </select>
+</mapper>

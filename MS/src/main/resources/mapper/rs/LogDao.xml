@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.rs.LogDao">
+    <select id="queryRsLog" resultType="com.yskc.ms.models.log.SysLogModel">
+        SELECT * from sys_log where 1=1
+        <if test="query.userName!=null and query.userName !=''">
+            and userName like "%"#{query.userName}"%"
+        </if>
+        <if test="query.description!=null and query.description !=''">
+            and description like "%"#{query.description}"%"
+        </if>
+        <if test="query.logType!=null and query.logType >= 0">
+            and logType = #{query.logType}
+        </if>
+        <if test="query.companyName!=null and query.companyName!=''">
+            and companyName like "%"#{query.companyName}"%"
+        </if>
+    </select>
+
+    <select id="getDataByRsUserName" resultType="com.yskc.ms.models.user.MiniUserModel">
+        select distinct userName from sys_log
+        where 1=1
+        <if test="userName != null and userName != ''">
+            and userName like "%"#{userName}"%"
+        </if>
+        limit 5
+    </select>
+    <select id="getUserLog" resultType="com.yskc.ms.models.log.UserRsLogModel">
+        select id,companyName,`description`,logTime from sys_log where `source`=1 and userId=#{query.userId}
+        <if test="query.beginDate != null">
+            and logTime>= #{query.beginDate}
+        </if>
+        <if test="query.endDate != null">
+            and logTime &lt;= #{query.endDate}
+        </if>
+        <if test="query.companyName != null and query.companyName.length > 0">
+            and companyName like "%"#{query.companyName}"%"
+        </if>
+        <if test="query.description != null and query.description.length > 0">
+            and `description` like "%"#{query.description}"%"
+        </if>
+    </select>
+
+</mapper>

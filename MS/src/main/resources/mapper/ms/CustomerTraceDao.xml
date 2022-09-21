@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.CustomerTraceDao">
+
+    <insert id="insertInfo">
+        insert into customer_trace (customerId,`type`,info,creatorId,createTime)
+        VALUES (#{query.customerId},#{query.status},#{query.info},#{query.creatorId},#{query.createTime})
+    </insert>
+    <insert id="insertInfoList">
+        insert into customer_trace (customerId,`type`,info,creatorId,createTime)
+        VALUES <foreach collection="customerIds" item="id" separator=",">
+            (#{id},#{type},#{info},#{userId},now())
+        </foreach>
+    </insert>
+    <insert id="insertOwerList">
+        insert into customer_trace (customerId,`type`,info,creatorId,createTime)
+        VALUES <foreach collection="owerList" item="item" separator=",">
+        (#{item.id},#{type},#{item.info},#{userId},now())
+        </foreach>
+    </insert>
+    <select id="getTraceList" resultType="com.yskc.ms.models.customer.CustomerTraceModel">
+        select ct.id, ct.customerId, ys.realName effectUser, ct.info, ct.createTime effectDate, ct.type,ct.creatorId
+        from customer_trace ct
+        left join ys_user ys on ys.id = ct.creatorId
+        where customerId = #{customerId}
+    </select>
+    <select id="getMobileTraceList" resultType="com.yskc.ms.models.customer.CustomerTraceModel">
+        select ct.id, ct.customerId, ys.realName effectUser, ct.info, ct.createTime effectDate, ct.type,ct.creatorId
+        from customer_trace ct
+                 left join ys_user ys on ys.id = ct.creatorId
+        where customerId = #{customerId} order by ct.createTime desc
+    </select>
+    <select id="getMobileTraceMap" resultType="java.util.Map">
+        select ct.id, ct.customerId, ys.realName effectUser, ct.createTime effectDate,ct.creatorId
+        from customer_trace ct
+            inner join (select MAX(id) id from customer_trace where customerId in
+                                                                    (<foreach collection="customerIds" item="cid" separator=",">
+                                                                        #{cid}
+                                                                    </foreach>) group by customerId) cut on cut.id = ct.id
+                 left join ys_user ys on ys.id = ct.creatorId
+    </select>
+</mapper>

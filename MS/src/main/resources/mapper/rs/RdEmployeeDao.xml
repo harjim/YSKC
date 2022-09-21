@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.rs.RdEmployeeDao">
+    <select id="getEmployeeByEnumber" resultType="com.yskc.ms.models.rs.EmployeeSelectModel">
+        select enumber,ename,autographUrl from employee
+        where companyId = #{companyId} and enumber in
+        <foreach collection="enumbers" item="enumber" separator="," open="(" close=")">
+            #{enumber}
+        </foreach>
+    </select>
+</mapper>

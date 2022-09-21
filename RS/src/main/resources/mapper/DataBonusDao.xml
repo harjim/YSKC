@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.data.DataBonusDao">
+    <insert id="insertOrUpdate">
+        INSERT INTO `d_bonus`
+        (
+        `enumber`,
+        `ename`,
+        `month`,
+        `beginDay`,
+        `endDay`,
+        `companyId`,
+        `creatorId`,
+        `createTime`,
+        `remark`,
+        `bonus`,
+        `isUsed`,
+        `endTime`,
+        `startTime`,
+        `accountTitleId`,
+        `lastUpdateTime`,
+        `lastUpdatorId`,
+        `msCreatorId`,
+        `msLastUpdatorId`,
+        `totalBonus`,
+        deptName)
+        VALUES
+        <foreach collection="dataBonusEntityList" item="item" index="index" separator=",">
+            (
+            #{item.enumber},
+            #{item.ename},
+            #{item.month},
+            #{item.beginDay},
+            #{item.endDay},
+            #{item.companyId},
+            #{item.creatorId},
+            #{item.createTime},
+            #{item.remark},
+            #{item.bonus},
+            #{item.isUsed},
+            #{item.endTime},
+            #{item.startTime},
+            #{item.accountTitleId},
+            #{item.lastUpdateTime},
+            #{item.lastUpdatorId},
+            #{item.msCreatorId},
+            #{item.msLastUpdatorId},
+            #{item.totalBonus},
+            #{item.deptName}
+            )
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        accountTitleId=values(accountTitleId),
+        totalBonus=values(totalBonus),
+        endTime=values(endTime),
+        bonus=values(bonus),
+        remark=values(remark),
+        month=values(month),
+        beginDay=values(beginDay),
+        deptName=values(deptName),
+        endDay=values(endDay),
+        startTime=values(startTime),
+        msLastUpdatorId=values(msLastUpdatorId),
+        lastUpdatorId=values(lastUpdatorId),
+        lastUpdateTime=values(lastUpdateTime)
+    </insert>
+    <insert id="addBatch" parameterType="java.util.List">
+        INSERT INTO `d_bonus`
+        (
+        `enumber`,
+        `ename`,
+        `month`,
+        `beginDay`,
+        `endDay`,
+        `companyId`,
+        `creatorId`,
+        `createTime`,
+        `remark`,
+        `bonus`,
+        `isUsed`,
+        `endTime`,
+        `startTime`,
+        `totalBonus`)
+        VALUES
+        <foreach collection="dataBonusEntityList" item="item" index="index" separator=",">
+            (
+            #{item.enumber},
+            #{item.ename},
+            #{item.month},
+            #{item.beginDay},
+            #{item.endDay},
+            #{item.companyId},
+            #{item.creatorId},
+            #{item.createTime},
+            #{item.remark},
+            #{item.bonus},
+            #{item.isUsed},
+            #{item.endTime},
+            #{item.startTime},
+            #{item.totalBonus}
+            )
+        </foreach>
+    </insert>
+    <select id="getDataBonusList" resultType="com.yskc.rs.models.data.DataBonusInfo"
+            parameterType="com.yskc.rs.models.data.DataBonusQuery">
+        SELECT db.id, db.ename,db.enumber,db.month,db.bonus,db.remark,db.endTime,db.startTime,db.totalBonus
+        ,db.deptName,a.fullAccountName
+        FROM d_bonus as db
+        left join accountTitle as a on db.accountTitleId=a.id and a.companyId=db.companyId
+        where db.companyId=#{dataBonusQuery.companyId}
+        <if test="dataBonusQuery.deptName != null and dataBonusQuery.deptName != '' ">
+            and db.deptName like "%"#{dataBonusQuery.deptName}"%"
+        </if>
+        <if test="dataBonusQuery.endMonth != null">
+            and db.month <![CDATA[ <= ]]> #{dataBonusQuery.endMonth}
+        </if>
+        <if test="dataBonusQuery.startMonth != null">
+            and db.month <![CDATA[ >= ]]> #{dataBonusQuery.startMonth}
+        </if>
+        <if test="dataBonusQuery.month != null">
+            and db.month=#{dataBonusQuery.month}
+        </if>
+        <if test="dataBonusQuery.ename != null and dataBonusQuery.ename.length()>0">
+            and db.ename like "%"#{dataBonusQuery.ename}"%"
+        </if>
+        <if test="dataBonusQuery.enumber != null and dataBonusQuery.enumber.length()>0">
+            and db.enumber like "%"#{dataBonusQuery.enumber}"%"
+        </if>
+    </select>
+    <select id="getDataBonusEntityList" resultType="com.yskc.rs.entity.data.DataBonusEntity">
+        select * from d_bonus
+        <where>
+            <foreach collection="queryModels" item="item" open="( " separator=") or (" close=" )">
+                companyId = #{item.companyId} AND enumber = #{item.enumber} And month=#{item.month}
+            </foreach>
+        </where>
+    </select>
+    <select id="getUsedBonusList" resultType="com.yskc.rs.models.attendance.UsedBonusModel">
+        select b.month, b.enumber, b.id,p.pname,p.rdIndex from d_bonus as b
+        join p_attendance as pa on b.companyId=pa.companyId and b.enumber=pa.enumber and b.month=pa.month
+        left join p_project as p on pa.companyId=p.companyId and pa.projectId=p.id
+        where b.companyId=#{companyId} and b.id in
+        <foreach item="item" index="index" collection="ids" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="exportBonusData" resultType="com.yskc.rs.models.excel.BonusExcel">
+        SELECT db.id, db.ename,db.enumber,db.month,db.bonus,db.remark,db.endTime,db.startTime,db.totalBonus
+        ,db.deptName,a.fullAccountName
+        FROM d_bonus as db
+        left join accountTitle as a on db.accountTitleId=a.id and a.companyId=db.companyId
+        where db.companyId=#{dataBonusQuery.companyId}
+        <if test="dataBonusQuery.deptName != null and dataBonusQuery.deptName != '' ">
+            and db.deptName like "%"#{dataBonusQuery.deptName}"%"
+        </if>
+        <if test="dataBonusQuery.endMonth != null">
+            and db.month <![CDATA[ <= ]]> #{dataBonusQuery.endMonth}
+        </if>
+        <if test="dataBonusQuery.startMonth != null">
+            and db.month <![CDATA[ >= ]]> #{dataBonusQuery.startMonth}
+        </if>
+        <if test="dataBonusQuery.month != null">
+            and db.month=#{dataBonusQuery.month}
+        </if>
+        <if test="dataBonusQuery.ename != null and dataBonusQuery.ename.length()>0">
+            and db.ename like "%"#{dataBonusQuery.ename}"%"
+        </if>
+        <if test="dataBonusQuery.enumber != null and dataBonusQuery.enumber.length()>0">
+            and db.enumber like "%"#{dataBonusQuery.enumber}"%"
+        </if>
+        order by db.month desc,db.enumber,db.createTime desc
+    </select>
+</mapper>

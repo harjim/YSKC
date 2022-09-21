@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.FlowDao">
+    <select id="getList" resultType="com.yskc.ms.models.flow.FlowModel">
+        select * from flow where `type` =0
+        <if test="query.flowName!=null and query.flowName!=''">
+            and name like "%"#{query.flowName}"%"
+        </if>
+    </select>
+</mapper>

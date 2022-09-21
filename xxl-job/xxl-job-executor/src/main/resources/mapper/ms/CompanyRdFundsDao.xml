@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xxl.job.executor.dao.ms.CompanyRdFundsDao">
+    <insert id="insertOrUpdate">
+        insert into c_rd_funds
+        (companyId,`year`, `month`,`type`,k10000,k10100,k20000,k20100,
+         k20200,k20300,k20500,k20600,k20700,k30000,k40000,k40200,k50000,k69900,
+         amount,revenue,createTime,lastUpdateTime)
+         values
+        <foreach collection="list" separator="," item="l">
+            (#{l.companyId},#{l.year}, #{l.month},#{l.type},#{l.k10000},#{l.k10100},#{l.k20000},#{l.k20100},
+            #{l.k20200},#{l.k20300},#{l.k20500},#{l.k20600},#{l.k20700},#{l.k30000},#{l.k40000},#{l.k40200},#{l.k50000},#{l.k69900},
+            #{l.amount},#{l.revenue},#{now},#{now})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        k10000=values(k10000),k10100=values(k10100),k20000=values(k20000),k20100=values(k20100),k20200=values(k20200),
+        k20300=values(k20300),k20500=values(k20500),k20600=values(k20600),k20700=values(k20700),k30000=values(k30000),
+        k40000=values(k40000),k40200=values(k40200),k50000=values(k50000),k69900=values(k69900),amount=values(amount),
+        revenue=values(revenue),lastUpdateTime=values(lastUpdateTime)
+    </insert>
+    <insert id="insertOrUpdateDistrict">
+        insert into c_rd_funds_district
+        (deptId,`year`, `month`,`type`,k10000,k10100,k20000,k20100,
+        k20200,k20300,k20500,k20600,k20700,k30000,k40000,k40200,k50000,k69900,
+        amount,revenue,createTime,lastUpdateTime)
+        values
+        <foreach collection="list" separator="," item="l">
+            (#{l.deptId},#{l.year}, #{l.month},#{l.type},#{l.k10000},#{l.k10100},#{l.k20000},#{l.k20100},
+            #{l.k20200},#{l.k20300},#{l.k20500},#{l.k20600},#{l.k20700},#{l.k30000},#{l.k40000},#{l.k40200},#{l.k50000},#{l.k69900},
+            #{l.amount},#{l.revenue},#{now},#{now})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        k10000=values(k10000),k10100=values(k10100),k20000=values(k20000),k20100=values(k20100),k20200=values(k20200),
+        k20300=values(k20300),k20500=values(k20500),k20600=values(k20600),k20700=values(k20700),k30000=values(k30000),
+        k40000=values(k40000),k40200=values(k40200),k50000=values(k50000),k69900=values(k69900),amount=values(amount),
+        revenue=values(revenue),lastUpdateTime=values(lastUpdateTime)
+    </insert>
+    <select id="getDistrictFunds" resultType="com.xxl.job.executor.entity.ms.CompanyRdFunds">
+        select yd.branchId deptId,#{year} `year`,crf.month,crf.type,sum(k10000)k10000,sum(k10100)k10100,sum(k20000)k20000,
+        sum(k20100)k20100,sum(k20200)k20200,sum(k20300)k20300,sum(k20500)k20500,sum(k20600)k20600,sum(k20700)k20700,
+        sum(k30000)k30000,sum(k40000)k40000,sum(k40200)k40200,sum(k50000)k50000,sum(k69900)k69900,
+        sum(amount)amount,sum(revenue)revenue from c_rd_funds crf
+        inner join customer c on c.companyId=crf.companyId
+        inner join ys_dept yd on yd.id=c.deptId
+        where crf.year=#{year} and yd.branchId in (<foreach collection="branchIds" separator="," item="bId">#{bId}</foreach>)
+        group by deptId,`year`,crf.month,crf.type
+    </select>
+</mapper>

@@ -1,0 +1,649 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.ProjectDao">
+
+    <insert id="insertProjectList" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `p_project`
+        ( `pname`, `rdIndex`, `beginDate`, `endDate`, `companyId`, createTime,`lastUpdateTime`, `creatorId`,
+        `msCreatorId`, `lastUpdatorId`, `msLastUpdatorId`, `estimateExpense`, `masterENumber`, `tecIndustry`,
+        `rdDeptId`, `formula`, `projectSource`, `beginYear`, `endYear`, `trialProd`, `tBeginDate`, `tEndDate`,
+        `deptName`, `processSection`, `productLine`, `workshop`,`rdTitle`,`rdNumber` )
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            ( #{item.pname}, #{item.rdIndex}, #{item.beginDate}, #{item.endDate}, #{item.companyId}, #{item.createTime},
+            #{item.lastUpdateTime}, #{item.creatorId}, #{item.msCreatorId}, #{item.lastUpdatorId},
+            #{item.msLastUpdatorId}, #{item.estimateExpense}, #{item.masterENumber}, #{item.tecIndustry},
+            #{item.rdDeptId}, #{item.formula}, #{item.projectSource}, #{item.beginYear}, #{item.endYear},
+            #{item.trialProd}, #{item.tBeginDate}, #{item.tEndDate}, #{item.deptName}, #{item.processSection},
+            #{item.productLine}, #{item.workshop} ,#{item.rdTitle},#{item.rdNumber})
+        </foreach>
+    </insert>
+    <update id="updateProjectList">
+        update p_project
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="pname =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.pname!=null">
+                        when id=#{i.id} then #{i.pname}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="rdIndex =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.rdIndex!=null">
+                        when id=#{i.id} then #{i.rdIndex}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="beginDate =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.beginDate!=null">
+                        when id=#{i.id} then #{i.beginDate}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="endDate =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.endDate!=null">
+                        when id=#{i.id} then #{i.endDate}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="beginYear =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.beginYear!=null">
+                        when id=#{i.id} then #{i.beginYear}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="endYear =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.endYear!=null">
+                        when id=#{i.id} then #{i.endYear}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="trialProd =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.trialProd!=null">
+                        when id=#{i.id} then #{i.trialProd}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="tBeginDate =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.tBeginDate!=null">
+                        when id=#{i.id} then #{i.tBeginDate}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="tEndDate =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.tEndDate!=null">
+                        when id=#{i.id} then #{i.tEndDate}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="estimateExpense =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.estimateExpense!=null">
+                        when id=#{i.id} then #{i.estimateExpense}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="masterENumber =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.masterENumber!=null">
+                        when id=#{i.id} then #{i.masterENumber}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="tecIndustry =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.tecIndustry!=null">
+                        when id=#{i.id} then #{i.tecIndustry}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="rdDeptId =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.rdDeptId!=null">
+                        when id=#{i.id} then #{i.rdDeptId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdatorId =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.lastUpdatorId!=null">
+                        when id=#{i.id} then #{i.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdateTime =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.lastUpdateTime!=null">
+                        when id=#{i.id} then #{i.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="msLastUpdatorId =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.msLastUpdatorId!=null">
+                        when id=#{i.id} then #{i.msLastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="rdTitle =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.rdTitle!=null">
+                        when id=#{i.id} then #{i.rdTitle}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="rdNumber =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.rdNumber!=null">
+                        when id=#{i.id} then #{i.rdNumber}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="processSection =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.processSection!=null">
+                        when id=#{i.id} then #{i.processSection}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="productLine =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.productLine!=null">
+                        when id=#{i.id} then #{i.productLine}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="workshop =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.workshop!=null">
+                        when id=#{i.id} then #{i.workshop}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="deptName =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.deptName!=null">
+                        when id=#{i.id} then #{i.deptName}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="projectEntitys" separator="or" item="i" index="index">
+            id=#{i.id}
+        </foreach>
+    </update>
+    <update id="saveProjectGovCost">
+        update p_project set govCost = #{govCost},lastUpdatorId = #{lastRsId}, msLastUpdatorId = #{lastMsId},
+        lastUpdateTime = #{now} where id = #{id}
+    </update>
+
+    <select id="selectRd" resultType="com.yskc.rs.models.project.ProjectModel">
+        select * from p_project where companyId = #{companyId} and beginYear = #{year} and rdIndex = #{rdIndex} and
+        parentId=0
+        <if test="projectId != null and projectId != 0">
+            and id != #{projectId}
+        </if>
+    </select>
+    <select id="selectMaxRd" resultType="java.lang.Integer">
+        SELECT max(rdIndex) FROM p_project where companyId = #{companyId} and beginYear = #{year} and parentId=0
+    </select>
+    <select id="countPname" resultType="java.lang.Integer">
+        select count(id) from p_project p
+        where p.pname = #{pname}
+        <if test="projectId != null and projectId != 0">
+            and p.id != #{projectId}
+        </if>
+    </select>
+    <select id="getProjectsByYear" resultType="com.yskc.rs.models.project.ProjectListModel">
+        select p.rdNumber, p.id, p.pname, p.rdDeptId, p.deptName,p.beginDate,p.endDate,p.estimateExpense,p.rdIndex,
+        p.masterENumber, e.ename,p.tecIndustry,p.projectSource,p.formula,p.result,p.targets,
+        p.beginYear,p.endYear,p.trialProd,p.tBeginDate,p.tEndDate,p.rdNumber,p.workshop,p.productLine,p.processSection,p.parentId,p.hasChild,p.rdTitle
+        from p_project as p
+        LEFT JOIN employee as e on e.enumber = p.masterENumber and e.companyId=#{companyId}
+        where p.beginYear &lt;= #{year} and p.endYear >= #{year} and p.companyId = #{companyId} and p.hasChild=false
+        <if test="formula != null">
+            and p.formula=#{formula}
+        </if>
+        <if test="pname != null and pname != ''">
+            and p.pname like "%"#{pname}"%"
+        </if>
+        order by p.beginYear ASC, p.rdIndex ASC, p.pname
+    </select>
+    <select id="getProjectsForImport" resultType="com.yskc.rs.models.project.ProjectListModel">
+        select p.rdNumber, p.id, p.pname, p.rdDeptId, rd.deptName AS rdDeptName,
+        p.beginDate,p.endDate,p.estimateExpense,p.rdIndex,p.masterENumber, e.ename,p.tecIndustry,p.projectSource,
+        p.formula,p.result,p.targets,p.beginYear,p.endYear
+        from p_project as p
+        LEFT JOIN employee as e on e.enumber = p.masterENumber and e.companyId=p.companyId
+        LEFT JOIN rdDept as rd on rd.id = p.rdDeptId
+        where p.beginYear = #{year} and p.companyId = #{companyId} and p.parentId=0
+    </select>
+    <select id="getProjectIdsByYear" resultType="com.yskc.rs.models.project.ProjectDetailModel">
+        SELECT id,pname,rdTitle,beginDate,endDate,workshop,formula FROM p_project
+        WHERE companyId = #{companyId} AND
+        <if test="!child">
+            parentId = 0
+        </if>
+        <if test="child">
+            hasChild = false
+        </if>
+        AND beginYear &lt;= #{year} AND endYear >= #{year}
+        order by beginYear, rdIndex
+    </select>
+    <select id="QueryProjectIdsByYear" resultType="com.yskc.rs.models.project.ProjectDetailModel">
+        SELECT id,pname,rdTitle,beginDate,endDate,workshop,formula FROM p_project
+        WHERE companyId = #{companyId}
+        AND beginYear &lt;= #{year} AND endYear >= #{year}
+        order by beginYear, rdIndex
+    </select>
+    <select id="getTotalSummary" resultType="com.yskc.rs.models.summary.TotalSummaryModel">
+        SELECT p.id,
+		SUM(CASE WHEN ps.rdType div 100 = 100 THEN ps.rdFunds ELSE 0 END) AS salary,
+		SUM(CASE WHEN ps.rdType div 100 = 101 THEN ps.rdFunds ELSE 0 END) AS insurance,
+		SUM(CASE WHEN ps.rdType div 100 = 200 THEN ps.rdFunds ELSE 0 END) AS material,
+		SUM(CASE WHEN ps.rdType div 100 = 201 THEN ps.rdFunds ELSE 0 END) AS stimulus,
+		SUM(CASE WHEN ps.rdType div 100 = 202 THEN ps.rdFunds ELSE 0 END) AS fuel,
+		SUM(CASE WHEN ps.rdType div 100 = 203 THEN ps.rdFunds ELSE 0 END) AS trialProd,
+		SUM(CASE WHEN ps.rdType div 100 = 204 THEN ps.rdFunds ELSE 0 END) AS trialTest,
+		SUM(CASE WHEN ps.rdType div 100 = 205 or ps.rdType div 100 = 206 THEN ps.rdFunds ELSE 0 END) AS inspection,
+		SUM(CASE WHEN ps.rdType div 100 = 300 THEN ps.rdFunds ELSE 0 END) AS prod,
+		SUM(CASE WHEN ps.rdType div 100 = 301 THEN ps.rdFunds ELSE 0 END) AS lab,
+		SUM(CASE WHEN ps.rdType div 100 = 400 THEN ps.rdFunds ELSE 0 END) AS softAmortization,
+		SUM(CASE WHEN ps.rdType div 100 = 401 THEN ps.rdFunds ELSE 0 END) AS patentAmortization,
+		SUM(CASE WHEN ps.rdType div 100 = 402 THEN ps.rdFunds ELSE 0 END) AS otherAmortization,
+		SUM(CASE WHEN ps.rdType div 100 = 500 THEN ps.rdFunds ELSE 0 END) AS design,
+		SUM(CASE WHEN ps.rdType div 100 = 501 THEN ps.rdFunds ELSE 0 END) AS techProcedure,
+		SUM(CASE WHEN ps.rdType div 100 = 502 THEN ps.rdFunds ELSE 0 END) AS clinicalTrials,
+		SUM(CASE WHEN ps.rdType div 100 = 503 THEN ps.rdFunds ELSE 0 END) AS explore,
+		SUM(CASE WHEN ps.rdType div 100 = 600 THEN ps.rdFunds ELSE 0 END) AS book,
+		SUM(CASE WHEN ps.rdType div 100 = 601 THEN ps.rdFunds ELSE 0 END) AS rdProduction,
+		SUM(CASE WHEN ps.rdType div 100 = 602 THEN ps.rdFunds ELSE 0 END) AS copyRight,
+		SUM(CASE WHEN ps.rdType div 100 = 603 THEN ps.rdFunds ELSE 0 END) AS benefits,
+		SUM(CASE WHEN ps.rdType div 100 = 604 THEN ps.rdFunds ELSE 0 END) AS travel,
+		SUM(CASE WHEN ps.rdType div 100 = 699 THEN ps.rdFunds ELSE 0 END) AS other,
+		p.rdTitle,p.rdIndex
+		FROM p_summary ps
+		INNER JOIN p_project p ON ps.projectId = p.id
+		WHERE p.companyId = #{companyId} and p.hasChild = false and ps.month >= #{beginMonth} and ps.month &lt;= #{endMonth}
+		and  p.beginYear &lt;= #{year} and p.endYear >= #{year}
+		GROUP BY p.id ORDER BY  p.beginYear, p.`rdIndex`
+    </select>
+
+    <select id="getRdsStatus" resultType="com.yskc.rs.models.project.RdStatusModel">
+        select `month`,projectId,status from p_project_status
+        where projectId in
+        <foreach collection="projectIds" open="(" separator="," close=")" item="id">
+            #{id}
+        </foreach>
+        order by `month`
+    </select>
+    <update id="updateProjectFee">
+        update  p_project set estimateExpense = #{estimateExpense}
+         where id = #{projectId}
+    </update>
+    <update id="updateMaster">
+        update p_project set masterENumber = #{enumber} where id = #{id}
+    </update>
+
+    <select id="getCompanyProjectList" resultType="com.yskc.rs.entity.project.ProjectEntity">
+        select * from p_project
+        where companyId=#{companyId} and parentId=0
+    </select>
+    <select id="getDeptIds" resultType="com.yskc.rs.entity.Dept">
+        select d.id, d.deptName from p_project p inner join dept d on p.deptId = d.id
+        where p.beginYear = #{year} and p.companyId = #{companyId} and (p.deptId is not null)
+    </select>
+
+    <select id="getProjectList" resultType="com.yskc.rs.models.project.ProjectListModel">
+        select p.rdNumber, p.id, p.pname, p.rdDeptId, p.deptName,p.deptId,p.beginDate,p.endDate,d.fullname,
+        case when pyi.budget is null then 0 else pyi.budget end as estimateExpense,p.rdIndex,
+        im.enumber as masterENumber, e.ename,p.tecIndustry,p.projectSource,p.formula,p.result,p.targets,
+        p.beginYear,p.endYear,p.trialProd,p.tBeginDate,p.tEndDate,p.rdNumber,p.workshop,p.productLine,p.processSection,
+        p.parentId,p.hasChild,p.rdTitle,p.involvedProduct,par.status,par.suggestion
+        from p_project as p
+        left join p_audit_report par on p.id=par.projectId and par.moduleId=4
+        left join i_member im on im.companyId=p.companyId and im.projectId=p.id and im.year=#{query.year} and isMaster
+        left join p_year_info pyi on p.id=pyi.projectId and pyi.year=#{query.year}
+        LEFT JOIN employee as e on e.enumber = im.enumber and e.companyId=#{companyId}
+        left join dept d on p.deptId = d.id
+        where p.beginYear &lt;= #{query.year} and p.endYear &gt;= #{query.year} and p.companyId = #{companyId}
+        <if test="query.pname != null and query.pname != ''">
+            and p.pname like "%"#{query.pname}"%"
+        </if>
+        order by p.beginYear ASC, p.rdIndex ASC
+    </select>
+
+    <select id="checkParentRd" resultType="com.yskc.rs.entity.project.ProjectEntity">
+        select * from p_project
+        where rdIndex=#{rdIndex} and companyId=#{companyId} and beginYear=#{beginYear} and parentId=0 and id not in
+        <foreach collection="projectIds" item="projectId" open="(" close=")" separator=",">
+            #{projectId}
+        </foreach>
+    </select>
+
+    <update id="updateChildProject">
+        <foreach collection="entities" item="item" separator=";">
+            update p_project set
+            parentId=#{item.parentId},lastUpdatorId=#{item.lastUpdatorId},lastUpdateTime=#{item.lastUpdateTime},rdTitle=#{item.rdTitle}
+            where id=#{item.id}
+        </foreach>
+    </update>
+    <update id="updateStage">
+        update p_project set lastUpdatorId = #{userId},msLastUpdatorId=#{msUserId},lastUpdateTime=#{now} where id = #{id}
+    </update>
+
+    <select id="queryAllParent" resultType="com.yskc.rs.models.project.ProjectSelectModel">
+        select p.id, p.pname,p.beginDate,p.endDate,p.estimateExpense,p.rdIndex,
+        p.masterENumber, e.ename,
+        p.beginYear,p.endYear,p.rdNumber,p.parentId,p.hasChild,p.rdTitle
+        from p_project as p
+        LEFT JOIN employee as e on e.enumber = p.masterENumber and e.companyId=#{companyId}
+        where p.companyId=#{companyId}
+        and p.parentId=0 and p.hasChild=true and p.beginYear&lt;=#{beginYear} and p.endYear&gt;=#{beginYear}
+        <if test="parentIds!=null and parentIds.size() >0">
+            and p.id not in
+            <foreach collection="parentIds" item="parentId" open="(" close=")" separator=",">
+                #{parentId}
+            </foreach>
+        </if>
+        order by p.rdTitle
+    </select>
+
+    <select id="getChildByParent" resultType="com.yskc.rs.entity.project.ProjectEntity">
+        select * from p_project
+        where companyId=#{companyId} and parentId in
+        <foreach collection="parentIds" item="parentId" open="(" close=")" separator=",">
+            #{parentId}
+        </foreach>
+    </select>
+
+    <select id="getAllProject" resultType="com.yskc.rs.models.project.ProjectListModel">
+        select p.id, p.pname, p.rdDeptId, p.deptName,p.beginDate,p.endDate,p.estimateExpense,p.rdIndex,
+        p.masterENumber, e.ename,p.tecIndustry,p.projectSource,p.formula,p.result,p.targets,
+        p.beginYear,p.endYear,p.trialProd,p.tBeginDate,p.tEndDate,p.rdNumber,p.workshop,p.productLine,
+        p.processSection,p.parentId,p.hasChild,p.rdTitle,p.companyId
+        from p_project as p
+        LEFT JOIN employee as e on e.enumber = p.masterENumber and e.companyId=#{companyId}
+        where p.beginYear &lt;= #{year} and p.endYear &gt;= #{year} and p.companyId = #{companyId}
+        order by p.rdTitle ASC
+    </select><!-- and p.formula=10-->
+    <select id="getSignatureList" resultType="com.yskc.rs.models.docFile.DocFileFooterModel">
+        select p.id projectId, p.pname,p.rdTitle,pdf.year,pdf.toCompileEnumber,pdf.auditEnumber,pdf.approvalEnumber
+        from p_project as p
+        left join p_docFile_footer pdf on p.id = pdf.projectId and pdf.companyId = p.companyId and pdf.year = #{year}
+        where p.companyId = #{companyId} and  p.hasChild=false
+        <if test="year != null">
+            and p.beginYear &lt;= #{year}
+        </if>
+        <if test="year != null">
+            and p.endYear &gt;= #{year}
+        </if>
+        order by p.rdTitle asc
+    </select>
+    <select id="getSelectList" resultType="com.yskc.rs.models.project.ProjectSelectModel">
+        select p.id, p.pname,p.beginDate,p.endDate,p.estimateExpense,p.rdIndex,p.deptName,p.deptId,
+        p.masterENumber, e.ename,p.trialProd,p.tBeginDate,p.tEndDate,rd.deptName rdDeptName,
+        p.beginYear,p.endYear,p.rdNumber,p.parentId,p.hasChild,p.rdTitle,p.workshop,p.productLine,p.processSection,p.formula
+        from p_project as p
+        LEFT JOIN employee as e on e.enumber = p.masterENumber and e.companyId=#{companyId}
+        left join rdDept rd on rd.id=p.rdDeptId
+        where p.companyId = #{companyId}
+        <if test="year != null">
+            and p.beginYear &lt;= #{year}
+        </if>
+        <if test="year != null">
+            and p.endYear &gt;= #{year}
+        </if>
+        <if test="sign!=null and sign==1">
+            and p.parentId=0
+        </if>
+        <if test="sign!=null and sign==2">
+            and p.hasChild=false
+        </if>
+        order by p.rdTitle asc
+    </select><!--  and p.formula=10 -->
+
+    <select id="queryListByYear" resultType="com.yskc.rs.models.project.ProjectListModel">
+        select p.rdNumber, p.id, p.pname, p.rdDeptId, p.deptName,d.fullname,p.beginDate,p.endDate,
+               case when pyi.budget is null then 0 else pyi.budget end as estimateExpense,p.rdIndex,
+        p.masterENumber, e.ename,p.tecIndustry,p.projectSource,p.formula,p.result,p.targets,
+        p.beginYear,p.endYear,p.trialProd,p.tBeginDate,p.tEndDate,p.rdNumber,p.workshop,p.productLine,
+        p.processSection,p.parentId,p.hasChild,p.rdTitle,rd.deptName rdDeptName
+        from p_project as p
+        LEFT JOIN p_year_info pyi on pyi.projectId=p.id and pyi.year=#{year}
+        left join i_member im on im.companyId=p.companyId and im.projectId=p.id and im.year=#{year} and isMaster
+        LEFT JOIN employee as e on e.companyId=pyi.companyId and e.enumber = im.enumber
+        LEFT JOIN rdDept rd on rd.companyId=p.companyId and rd.id=p.rdDeptId
+        left join dept d on d.id = p.deptId
+        where p.companyId = #{companyId} and p.beginYear &lt;= #{year} and p.endYear >= #{year}
+        order by p.rdTitle asc
+    </select>
+
+    <select id="getListByIds" resultType="com.yskc.rs.entity.project.ProjectEntity">
+        select * from p_project where companyId=#{companyId}
+        and id in
+        <foreach collection="ids" item="projectId" separator="," open="(" close=")">
+            #{projectId}
+        </foreach>
+    </select>
+    <select id="getChildsById" resultType="com.yskc.rs.entity.project.ProjectEntity">
+        select * from p_project where parentId=#{parentId}
+    </select>
+    <select id="getByRdTitles" resultType="com.yskc.rs.entity.project.ProjectEntity">
+        select id,rdTitle,beginDate,endDate ,hasChild from p_project where
+        companyId = #{companyId} and rdTitle in
+        <foreach collection="rdTitles" open="(" separator="," close=")" item="rdTitle">
+            #{rdTitle}
+        </foreach>
+    </select>
+    <select id="countChild" resultType="java.lang.Integer">
+        select count(id) from p_project where companyId = #{companyId}  AND beginYear &lt;= #{year} AND endYear >= #{year}
+        AND parentId != 0
+    </select>
+    <select id="getProjectsByMonth" resultType="com.yskc.rs.models.project.ProjectDetailModel">
+        SELECT id,rdTitle FROM p_project
+        WHERE companyId = #{companyId} AND parentId = 0
+        AND beginDate &lt;= #{end} AND endDate >= #{begin}
+        order by beginYear, rdIndex
+    </select>
+    <select id="getBeginYear" resultType="java.lang.Integer">
+        select beginYear from p_project where id = #{id}
+    </select>
+    <select id="getMeetingEmployees" resultType="com.yskc.rs.models.employee.EmployeeSelectModel">
+        select DISTINCT(e.enumber),e.ename from p_project pp
+        inner join i_member im on pp.id=im.projectId and im.companyId=pp.companyId and im.year=#{year}
+        inner join rdEmployee rd on pp.companyId=rd.companyId and im.enumber=rd.enumber and rd.year=#{year}
+        inner join employee e on e.enumber=im.enumber and e.companyId=im.companyId
+        left join p_rdEmployee pre on pre.projectId=pp.id and pre.enumber = im.enumber
+        where pp.companyId=#{companyId} and pp.id=#{projectId} and rd.etype in (1,2) and pre.month=#{docDate}
+    </select>
+    <select id="getAuditors" resultType="com.yskc.rs.models.employee.EmployeeSelectModel">
+        select e.enumber,e.ename
+        from  p_reviewCommittee pr
+        inner join employee e on e.enumber=pr.enumber and e.companyId=pr.companyId
+        where  pr.companyId=#{companyId} and pr.year=#{year}
+        order by pr.seq,pr.enumber
+    </select>
+    <select id="getSummaryProjectInfo" resultType="com.yskc.rs.models.project.ProjectListModel">
+        select p.rdTitle,p.pname,e.ename,p.beginDate,p.endDate,p.deptName,p.processSection from p_project p
+        left join employee e on e.enumber = p.masterENumber and e.companyId = p.companyId
+        where p.companyId = #{companyId} AND beginYear &lt;= #{year} AND endYear >= #{year} and p.parentId = 0
+        order by p.beginYear asc, p.rdTitle asc
+    </select>
+    <select id="getYearSelectList" resultType="com.yskc.rs.models.project.ProjectInfoModel">
+          select id,pname,rdTitle from p_project where companyId = #{companyId} and beginYear &lt;= #{year} and endYear &gt;=#{year}
+          and !hasChild order by rdTitle
+    </select>
+    <select id="getProjectInfo" resultType="com.yskc.rs.models.projectSummary.ProjectSituationModel">
+        select pp.id as projectId,pp.rdTitle,pp.pname,pp.beginDate,pp.endDate,pp.estimateExpense as budget,e.ename as manager
+        from p_project pp
+        inner join employee e on e.enumber=pp.masterENumber and pp.companyId=e.companyId
+        where pp.beginYear &lt;= #{year} and pp.endYear &gt;= #{year} and pp.companyId=#{companyId}
+    </select>
+    <select id="getProjectByCompany" resultType="com.yskc.rs.entity.project.ProjectEntity">
+        select id,rdTitle,pname,beginDate,endDate,beginYear,endYear,companyId
+        from p_project
+        where beginYear &lt;= #{year} and endYear &gt;= #{year} and companyId=#{companyId} and !hasChild
+        order by beginYear asc,rdTitle asc
+    </select><!-- and formula=10 -->
+
+    <select id="getRdTitle" resultType="com.yskc.rs.entity.project.ProjectEntity">
+        SELECT pp.id,pp.beginDate,pp.endDate,pp.rdTitle
+        FROM p_project pp
+        where
+        pp.companyId = #{companyId}
+        AND pp.rdTitle in
+        <foreach collection="rdTitles" open="(" separator="," close=")" item="rdTitle">
+        #{rdTitle}
+        </foreach>
+
+    </select>
+    <select id="getByTechYear" resultType="com.yskc.rs.models.project.ProjectInfoModel">
+        select id,pname,rdTitle,rdNumber
+        from p_project
+        where companyId=#{companyId} and endYear &lt;= #{startYear} and endYear &gt;= #{startYear}-2
+    </select>
+    <select id="getOutsourcingProject" resultType="com.yskc.rs.models.outsourcing.ProjectOutsourcingModel">
+        select id projectId,rdTitle,rdNumber,beginDate,endDate,pname
+        from p_project
+        where companyId=#{companyId} and beginYear &lt;= #{year} and endYear &gt;= #{year} and formula>10 order by rdTitle
+    </select>
+    <select id="getRdManages" resultType="com.yskc.rs.entity.project.ProjectEntity">
+        select id,deptName,workshop,productLine,processSection
+        from p_project
+        where beginYear &lt;= #{year} and endYear &gt;= #{year} and companyId=#{companyId} and !hasChild
+        and deptName is not null and workshop is not null and productLine is not null and processSection is not null
+        ORDER BY deptName,productLine ASC
+    </select>
+    <select id="getProjectNum" resultType="java.lang.Integer">
+        select count(id)
+        from p_project
+        where companyId=#{companyId} and beginYear &lt;= #{year} and endYear &gt;= #{year} and formula=10
+         <if test="sign==1">
+             and parentId=0
+         </if>
+        <if test="sign==2">
+            and parentId!=0
+        </if>
+    </select>
+    <select id="getProjects" resultType="com.yskc.rs.entity.project.ProjectEntity">
+        select id,rdTitle,beginYear,endYear,pname,hasChild,parentId
+        from p_project
+        where companyId=#{companyId} and beginYear &lt;=#{year} and endYear &gt;= #{year} and formula=10
+        order by rdTitle
+    </select>
+    <select id="getBudgetAndCost" resultType="com.yskc.rs.models.company.ProjectDataModel">
+        select pp.id,pp.rdTitle,pp.pname,pp.hasChild,pp.parentId,
+        case when pyi.budget is null then 0.00 else pyi.budget end budget,
+        case when ps.rdFunds is null then 0.00 else ps.rdFunds end rdFunds
+        from p_project pp
+        left join p_year_info pyi on pp.id=pyi.projectId and pp.companyId=pyi.companyId and pyi.year=#{year}
+        left join
+            (select projectId,Sum(rdFunds) as rdFunds
+            from p_summary
+            where projectId in (<foreach collection="projectIds" item="projectId" separator=",">#{projectId}</foreach> ) and YEAR(`month`)=#{year}
+            group by projectId ) ps
+        on ps.projectId=pp.id
+        where !pp.hasChild and  pp.id in (<foreach collection="projectIds" item="projectId" separator=",">#{projectId}</foreach> )
+        order by pp.rdTitle
+    </select>
+    <select id="getBeginAndEndDate" resultType="com.yskc.rs.entity.project.ProjectEntity">
+        select id,endDate,beginDate from p_project where id=#{id}
+    </select>
+    <select id="getYieldDept" resultType="com.yskc.rs.entity.project.ProjectEntity">
+        select id,deptName,workshop,productLine,processSection from p_project where id = #{id}
+    </select>
+    <select id="getProject" resultType="com.yskc.rs.models.project.ProjectDetailModel">
+        select formula,tecIndustry from p_project where Id = #{projectId}
+    </select>
+    <select id="getList" resultType="com.yskc.rs.models.employee.EmployeeSelectModel">
+        select e.enumber,e.ename
+        from p_reviewCommittee as pr
+        inner join employee as e on e.enumber=pr.enumber and e.companyId=pr.companyId
+        where pr.companyId=#{companyId} and pr.year=#{year}
+        <if test="ename != null and ename != ''">
+            and (e.ename like "%"#{ename}"%" or e.enumber like "%"#{ename}"%")
+        </if>
+        order by pr.seq,pr.enumber
+    </select>
+    <select id="getSimpleList" resultType="com.yskc.rs.models.project.ProjectSelectModel">
+        select id, pname,rdTitle
+        from p_project
+        where companyId = #{companyId}
+        <if test="year != null">
+            and (beginYear &lt;= #{year} and endYear &gt;= #{year})
+        </if>
+        <if test="sign!=null and sign==1">
+            and parentId=0
+        </if>
+        <if test="sign!=null and sign==2">
+            and hasChild=false
+        </if>
+        order by rdTitle asc
+    </select>
+    <select id="getProjectIds" resultType="java.lang.Integer">
+        select distinct id from p_project where companyId=#{companyId}
+        and endDate >= #{begin} and beginDate &lt;= #{end}
+    </select>
+    <select id="gethtProgressList" resultType="com.yskc.rs.models.hightech.HighTechProgressModel">
+        SELECT p.companyId, p.id projectId, p.rdTitle,p.rdNumber, p.pname,cm.companyName,p.beginDate,p.endDate,
+        cw.ysTech, cw.ysFina, opt.ftyTech, opt.ftyFina, opt.areaTech, opt.areaFina
+        FROM p_project p
+        INNER JOIN 	p_audit_opt opt on p.id = opt.projectId and opt.`year` = #{year}
+        INNER JOIN company cm on p.companyId = cm.id
+        LEFT JOIN c_worker cw on p.companyId = cw.companyId and cw.`year` = opt.`year`
+        WHERE p.beginYear &lt;= #{year} and p.endYear >= #{year}
+          and p.companyId in (
+        <foreach collection="companyIds" separator="," item="id" >
+            #{id}
+        </foreach>
+        )
+    </select>
+    <select id="getHighTechProjects" resultType="com.yskc.rs.models.hightechprogress.HighTechProjectModel">
+        select distinct pp.id,pp.rdTitle,c.companyName,pd.node,pd.status,pd.id as deliverId,pd.deliverType
+        from p_project pp
+        inner join company c on c.id = pp.companyId
+        inner join p_docFile pdf on pdf. projectId = pp.id and deleted = 0
+        inner join p_deliver pd on pd.projectId = pp.id
+        where pp.companyId in (<foreach collection="companyIds" item="companyId" separator=",">
+                #{companyId}
+            </foreach> )
+        <if test="null !=model.deliverType">
+            and pd.deliverType = #{model.deliverType}
+        </if>
+        <if test="null != model.month">
+            and pd.month = #{model.month}
+        </if>
+        <if test="null != model.year">
+            and (pp.beginYear &lt;= #{model.year} and pp.endYear >=#{model.year})
+        </if>
+        <choose>
+            <when test="1 == model.audit">
+                and pd.node >= #{model.node}
+            </when>
+            <otherwise>
+                and pd.node = #{model.node}
+            </otherwise>
+        </choose>
+        <if test="null != model.status">
+            and pd.status = #{model.audit}
+        </if>
+        order by rdTitle
+    </select>
+    <select id="checkProjectName" resultType="java.lang.Integer">
+        SELECT id
+        FROM p_project
+        WHERE pname = #{pname}
+    </select>
+
+</mapper>

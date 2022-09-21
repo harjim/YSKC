@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.rs.AuditReportDao">
+    <select id="getByProject" resultType="com.yskc.ms.entity.rs.AuditReportEntity">
+         select id,projectId,companyId,moduleId,status
+        from p_audit_report
+        where projectId=#{projectId} and moduleId=8
+    </select>
+    <select id="getAuditInfo" resultType="com.yskc.ms.entity.rs.AuditReportEntity">
+        select par.*
+        from  p_audit_report par
+        inner join p_project pp on pp.id=par.projectId
+        where pp.beginYear &lt;=#{year} and pp.endYear &gt;=#{year} and pp.companyId=#{companyId} and par.moduleId=4
+    </select>
+</mapper>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.rs.EmployeeDao">
+
+    <select id="getByNumber" resultType="com.yskc.ms.entity.rs.EmployeeEntity">
+        select * from employee e where e.companyId=#{companyId} and e.enumber=#{enumber} limit 1
+    </select>
+    <select id="getParentNode" resultType="com.yskc.ms.entity.rs.RdDeptEntity">
+        select id,deptName,companyId,`year`
+        from rdDept
+        where parentId=-1 and `level`=0 and companyId=#{companyId} and `year`=#{year}
+    </select>
+    <select id="getEmployeeByenumber"
+            resultType="com.yskc.ms.models.employee.EmployeeModel">
+        select * from employee e where e.companyId=#{companyId} and
+            e.enumber=#{enumber}
+    </select>
+    <select id="getDeptName" resultType="java.lang.String">
+        select deptName from rdDept where id = #{id}
+    </select>
+    <select id="getEmployee" resultType="hashmap">
+        select enumber,ename from employee where companyId = #{companyId} and enumber in
+        <foreach collection="list" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+        group by enumber
+    </select>
+</mapper>

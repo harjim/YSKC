@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.docservice.dao.rs.project.ProjectRdEquipmentDao">
+    <select id="getSummary" resultType="com.yskc.docservice.models.rs.projectrdequipment.ProjectRdEquipmentTotalModel">
+        select
+        sum(case when re.etype = 30000 then pre.rdDepreciation else 0 end) as prod,
+        sum(case when re.etype = 30100 then pre.rdDepreciation else 0 end) as lab,
+        sum(case when re.etype = 40001 then pre.rdDepreciation else 0 end) as assets,
+        sum(case when pre.powerRate is not null then pre.powerRate else 0 end ) as power,
+        pre.`month`,pre.projectId
+        from p_rdEquipment pre
+        INNER JOIN rdEquipment re on re.companyId=pre.companyId and re.ecode=pre.ecode and re.year=#{year}
+        where pre.projectId in (<foreach collection="projectIds" separator="," item="pId">#{pId}</foreach>)
+        and pre.month in
+        <foreach collection="months" open="(" separator="," close=")" item="m">
+            #{m}
+        </foreach>
+        group by projectId,`month`
+    </select>
+
+    <select id="getUsedSum" resultType="com.yskc.docservice.models.rs.projectrdequipment.ProjectRdEquipmentModel">
+        select d.ecode,d.workHours,d.depreciation,(d.workHours - sum(pre.rdHour)) as remainHour,d.month from d_equipment
+        d
+        left join p_rdEquipment pre on pre.companyId = d.companyId and pre.month = d.month and pre.ecode = d.ecode and
+        pre.projectId != #{projectId}
+        where d.companyId = #{companyId}
+        and d.month in (<foreach collection="months" separator="," item="m">#{m}</foreach>)
+        and d.ecode in (<foreach collection="ecodes" separator="," item="ecode">#{ecode}</foreach>)
+        group by d.companyId,d.ecode,d.month
+    </select>
+    <select id="getEcodeId" resultType="com.yskc.docservice.entity.rs.project.ProjectRdEquipmentEntity">
+        select id,ecode,`month` from p_rdEquipment where projectId = #{projectId}
+        and `month` in (<foreach collection="months" separator="," item="m">#{m}</foreach>)
+        and ecode in (<foreach collection="ecodes" separator="," item="ecode">#{ecode}</foreach>)
+    </select>
+    <insert id="insertOrUpdate">
+        INSERT INTO p_rdEquipment
+        (createTime,lastUpdateTime,creatorId,lastUpdatorId,msCreatorId,msLastUpdatorId,
+        companyId,projectId,`month`,rdDepreciation,ecode,rdHour)
+        VALUES
+        <foreach collection="list" item="l" separator=",">
+            (#{l.createTime},#{l.lastUpdateTime},#{l.creatorId},#{l.lastUpdatorId},#{l.msCreatorId},#{l.msLastUpdatorId},
+            #{l.companyId},#{l.projectId},#{l.month},#{l.rdDepreciation},#{l.ecode},#{l.rdHour})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        rdDepreciation=values(rdDepreciation),
+        rdHour=values(rdHour),
+        msLastUpdatorId=values(msLastUpdatorId),
+        lastUpdatorId=values(lastUpdatorId),
+        lastUpdateTime=values(lastUpdateTime),
+        powerUnitPrice=values(powerUnitPrice),
+        powerRate=values(powerRate)
+    </insert>
+    <update id="updateBatch">
+        <foreach collection="list" separator=";" item="l">
+            update p_rdEquipment set lastUpdateTime=#{now},lastUpdatorId=#{userId},msLastUpdatorId=#{msUserId},
+            powerUnitPrice=#{l.powerUnitPrice},powerRate=#{l.powerRate} where id=#{l.id}
+        </foreach>
+    </update>
+    <select id="queryEquipmentList" resultType="com.yskc.docservice.models.rs.rdequipment.RdEquipmentResultModel">
+        select ie.effect, e.ename, e.emodal, ie.ecode, pr.rdHour as monthHour
+        from i_equipment ie
+                 INNER JOIN rdEquipment re on re.companyId = ie.companyId and re.ecode = ie.ecode and re.year = ie.year
+                 INNER join equipment e on ie.ecode = e.ecode and ie.companyId = e.companyId
+                 INNER join p_rdEquipment pr
+                            on ie.ecode = pr.ecode and ie.companyId = pr.companyId and ie.projectId = pr.projectId
+        where ie.projectId = #{projectId}
+          and ie.companyId = #{companyId}
+          and pr.month = #{month}
+          and re.etype != 40001
+          and ie.year = #{year}
+    </select>
+    <select id="queryYearList" resultType="com.yskc.docservice.models.rs.rdequipment.RdEquipmentResultModel">
+        select ie.effect,e.ename,e.emodal,ie.ecode,sum(pr.rdHour) as yearHour from
+        i_equipment ie
+        INNER JOIN rdEquipment re on re.companyId=ie.companyId and re.ecode=ie.ecode and re.year=ie.year
+        INNER join equipment e on ie.ecode=e.ecode and ie.companyId=e.companyId
+        INNER join p_rdEquipment pr on ie.ecode=pr.ecode and ie.companyId=pr.companyId and ie.projectId=pr.projectId
+        where ie.projectId=#{projectId} and ie.companyId=#{companyId} and re.etype != 40001 and ie.year=#{year}
+        group by ie.effect,e.ename,e.emodal,ie.ecode
+        <!-- // todo 过程文件设备查询过滤软件摊销类型  zdf-->
+    </select>
+</mapper>

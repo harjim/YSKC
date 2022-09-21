@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.AppRoleMenuDao">
+    <insert id="insertByBatch" parameterType="java.util.List">
+        INSERT INTO app_role_menu (roleId,menuId,creatorId,createTime)
+        VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.roleId},#{item.menuId},#{item.creatorId},#{item.createTime})
+        </foreach>
+    </insert>
+    <delete id="delRoleMenuByRoleIds">
+        delete FROM app_role_menu where roleId in
+        <foreach collection="roleIds" open="(" separator="," close=")" item="roleId">
+            #{roleId}
+        </foreach>
+    </delete>
+    <delete id="delRoleMenuByMenuId">
+        delete FROM app_role_menu  where menuId=#{menuId}
+    </delete>
+    <select id="getRoleMenuIds" resultType="com.yskc.ms.models.role.RoleDataModel">
+        SELECT rm.menuId,dataType from app_role_menu as rm
+        LEFT JOIN app_role_data as rd on rd.roleId = rm.roleId and rd.functionId = rm.menuId
+        where rm.roleId=#{roleId}
+     </select>
+    <select id="getPermData" resultType="com.yskc.ms.models.role.MenuPermModel">
+    SELECT m.id AS menuId,m.perms,m.url,rd.dataType,m.parentId,m.platform
+        FROM app_menu m
+        INNER JOIN app_role_menu rm ON m.id = rm.menuId
+        LEFT JOIN app_role_data rd ON rm.menuId = rd.functionId AND rd.roleId = #{roleId}
+        WHERE rm.roleId = #{roleId} order by m.`level`
+    </select>
+</mapper>

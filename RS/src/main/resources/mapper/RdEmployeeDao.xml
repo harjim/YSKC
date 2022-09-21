@@ -1,0 +1,431 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.RdEmployeeDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.yskc.rs.entity.RdEmployeeEntity" id="rdEmployeeMap">
+        <result property="id" column="id"/>
+        <result property="creatorId" column="creatorId"/>
+        <result property="lastUpdatorId" column="lastUpdatorId"/>
+        <result property="createTime" column="createTime"/>
+        <result property="lastUpdateTime" column="lastUpdateTime"/>
+        <result property="msCreatorId" column="msCreatorId"/>
+        <result property="msLastUpdatorId" column="msLastUpdatorId"/>
+        <result property="year" column="year"/>
+        <result property="companyId" column="companyId"/>
+        <result property="enumber" column="enumber"/>
+        <result property="etype" column="etype"/>
+        <result property="rdDeptId" column="rdDeptId"/>
+    </resultMap>
+
+    <select id="getRdEmployeeData" resultType="com.yskc.rs.models.employee.RdEmployeeExportModel">
+        SELECT
+        re.id,
+        e.ename,
+        re.companyId,
+        re.enumber,
+        e.deptName,
+        re.position,
+        e.idNumber,
+        e.edate,
+        e.eduLevel,
+        re.etype,
+        e.remark,
+        re.rdDeptId,
+        e.title,
+        e.leaveDate,
+        e.specialities,
+        e.birthday,
+        e.gender,
+        r.fullName,
+        e.position basePosition
+        FROM
+        rdEmployee re
+        LEFT JOIN employee e ON re.enumber = e.enumber
+        LEFT JOIN rdDept r ON re.rdDeptId = r.id
+        WHERE
+        re.companyId = #{companyId} and re.year=#{termModel.year}
+        and e.companyId =#{companyId}
+        <if test="termModel.ename != null and termModel.ename != ''">
+            and e.ename like "%"#{termModel.ename}"%"
+        </if>
+        <if test="termModel.etypes!=null">
+            and re.etype in
+            <foreach collection="termModel.etypes" open="(" separator="," close=")" item="type">
+                #{type}
+            </foreach>
+        </if>
+        <if test="termModel.enumber != null and termModel.enumber !=''">
+            and re.enumber like "%"#{termModel.enumber}"%"
+        </if>
+        <if test="termModel.idNumber!=null and termModel.idNumber !=''">
+            and e.idNumber like "%"#{termModel.idNumber}"%"
+        </if>
+        <if test="termModel.eduLevel!=null and termModel.eduLevel >=0">
+            and e.eduLevel = #{termModel.eduLevel}
+        </if>
+        <if test="termModel.position !=null and termModel.position!=''">
+            and e.position like "%"#{termModel.position}"%"
+        </if>
+        <if test="termModel.beginEdate !=null and termModel.endEdate!=null">
+            AND e.edate &gt;= #{termModel.beginEdate}
+            AND e.edate &lt;= #{termModel.endEdate}
+        </if>
+        <if test="termModel.rdDeptPath!=null and termModel.rdDeptPath != ''">
+            and r.identity like #{termModel.rdDeptPath}"%"
+        </if>
+        <if test="termModel.title !=null and termModel.title!=''">
+            and e.title like "%"#{termModel.title}"%"
+        </if>
+        <if test="termModel.specialities !=null and termModel.specialities!=''">
+            and e.specialities like "%"#{termModel.specialities}"%"
+        </if>
+        <if test="termModel.deptName!=null and termModel.deptName!=''">
+            and e.deptName like "%"#{termModel.deptName}"%"
+        </if>
+    </select>
+
+
+    <insert id="addRdEmployeeBatch">
+        INSERT INTO `rdEmployee`
+        (`creatorId`,`lastUpdatorId`,`createTime`,`lastUpdateTime`,`msCreatorId`,`msLastUpdatorId`,`year`,companyId,enumber,etype,rdDeptId)
+        VALUES
+        <foreach collection="entityLists" item="item" separator=",">
+            (#{item.creatorId},#{item.lastUpdatorId},#{item.createTime},#{item.lastUpdateTime},#{item.msCreatorId},#{item.msLastUpdatorId},#{item.year},#{item.companyId},#{item.enumber},#{item.etype},#{item.rdDeptId})
+        </foreach>
+    </insert>
+
+
+    <select id="getData" resultType="java.lang.Integer">
+        <!--        select DISTINCT re.id from ${tableName} as u LEFT JOIN rdEmployee as re on-->
+        <!--        <if test="tableName == 'p_project'">-->
+        <!--            u.masterENumber = enumber-->
+        <!--        </if>-->
+        <!--        <if test="tableName != 'p_project'">-->
+        <!--            u.enumber = re.enumber-->
+        <!--        </if>-->
+        <!--        and u.companyId = re.companyId-->
+        <!--        where re.companyId = #{companyId} and re.id in-->
+        <!--        <foreach collection="ids" item="id" open="(" close=")" separator=",">-->
+        <!--            #{id}-->
+        <!--        </foreach>-->
+        select DISTINCT re.id from i_member i
+        INNER JOIN rdEmployee re on re.companyId = i.companyId and i.enumber = re.enumber
+        where re.id in
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+        and i.year=#{year}
+    </select>
+    <select id="getByEnumbers" resultType="java.lang.String">
+        select enumber from rdEmployee as re where companyId = #{companyId} and `year` = #{year}
+        and enumber in
+        <foreach collection="numberList" open="(" separator="," close=")" item="enumber">
+            #{enumber}
+        </foreach>
+    </select>
+
+    <update id="setRdEmployeeEtype">
+        update rdEmployee
+        set etype=#{etype},
+        lastUpdatorId = #{userId},
+        msLastUpdatorId = #{msUserId},
+        lastUpdateTime = #{now}
+        where id in
+        <foreach collection="ids" separator="," open="(" close=")" item="id">
+            #{id}
+        </foreach>
+    </update>
+
+    <update id="setRdEmployeeDeptId">
+        update rdEmployee
+        set rdDeptId=#{rdDeptId},
+        lastUpdatorId = #{userId},
+        msLastUpdatorId = #{msUserId},
+        lastUpdateTime = #{now}
+        where id in
+        <foreach collection="ids" separator="," open="(" close=")" item="id">
+            #{id}
+        </foreach>
+    </update>
+    <update id="updateList">
+        <foreach collection="entities" item="item" separator=";">
+            update rdEmployee set rdDeptId=#{item.rdDeptId},
+            lastUpdatorId = #{item.lastUpdatorId},
+            msLastUpdatorId = #{item.msLastUpdatorId},
+            lastUpdateTime = #{item.lastUpdateTime},
+            etype=#{item.etype},position=#{item.position}
+            where id=#{item.id}
+        </foreach>
+    </update>
+    <update id="setRdEmployeePosition">
+        update rdEmployee
+        set `position`=#{position},
+        lastUpdatorId = #{userId},
+        msLastUpdatorId = #{msUserId},
+        lastUpdateTime = #{now}
+        where id in
+        <foreach collection="ids" separator="," open="(" close=")" item="id">
+            #{id}
+        </foreach>
+    </update>
+
+    <select id="deriveRdEmployee" resultType="com.yskc.rs.models.excel.EmployeeExcel">
+        SELECT e.ename,re.companyId,re.enumber,e.deptName,re.position,e.position basePosition,e.idNumber,
+        e.eduLevel as level,re.etype as type,e.remark,e.title,e.leaveDate,
+        e.edate,e.specialities,e.birthday,e.gender as genderType,r.fullName AS rdDeptName
+        FROM
+        rdEmployee re
+        LEFT JOIN employee e ON re.enumber = e.enumber
+        LEFT JOIN rdDept r ON re.rdDeptId = r.id
+        WHERE
+        re.companyId = #{companyId} and re.year=#{termModel.year}
+        and e.companyId =#{companyId}
+        <if test="termModel.ename != null and termModel.ename != ''">
+            and e.ename like "%"#{termModel.ename}"%"
+        </if>
+        <if test="termModel.etypes!=null">
+            and re.etype in
+            <foreach collection="termModel.etypes" open="(" separator="," close=")" item="type">
+                #{type}
+            </foreach>
+        </if>
+        <if test="termModel.enumber != null and termModel.enumber !=''">
+            and re.enumber like "%"#{termModel.enumber}"%"
+        </if>
+        <if test="termModel.idNumber!=null and termModel.idNumber !=''">
+            and e.idNumber like "%"#{termModel.idNumber}"%"
+        </if>
+        <if test="termModel.eduLevel!=null and termModel.eduLevel >=0">
+            and e.eduLevel = #{termModel.eduLevel}
+        </if>
+        <if test="termModel.position !=null and termModel.position!=''">
+            and e.position like "%"#{termModel.position}"%"
+        </if>
+        <if test="termModel.beginEdate !=null and termModel.endEdate!=null">
+            AND e.edate &gt;= #{termModel.beginEdate}
+            AND e.edate &lt;= #{termModel.endEdate}
+        </if>
+        <if test="termModel.rdDeptPath!=null and termModel.rdDeptPath != ''">
+            and r.identity like #{termModel.rdDeptPath}"%"
+        </if>
+        <if test="termModel.title !=null and termModel.title!=''">
+            and e.title like "%"#{termModel.title}"%"
+        </if>
+        <if test="termModel.specialities !=null and termModel.specialities!=''">
+            and e.specialities like "%"#{termModel.specialities}"%"
+        </if>
+        ORDER BY
+        re.enumber,
+        re.createTime DESC
+    </select>
+    <select id="queryByCompanyIdAndYear" resultType="com.yskc.rs.models.employee.RdEmployeeModel">
+        select rde.enumber, e.ename
+        from rdEmployee rde
+                 left join employee e on e.enumber = rde.enumber AND e.companyId = #{companyId}
+        where rde.companyId = #{companyId}
+          and rde.year = #{year}
+    </select>
+    <select id="getEmployeeSelect" resultType="com.yskc.rs.models.employee.EmployeeSelectModel">
+        select rde.enumber,e.ename
+        from rdEmployee rde
+        LEFT JOIN employee e on e.enumber = rde.enumber and e.companyId = rde.companyId
+        where e.companyId = #{companyId} and rde.year = #{year}
+        <if test="ename != null and ename != ''">
+            and (e.ename like "%"#{ename}"%" or e.enumber like "%"#{ename}"%")
+        </if>
+        limit 5
+    </select>
+    <select id="getBaseEmployeeSelect" resultType="com.yskc.rs.models.employee.EmployeeSelectModel">
+        select enumber,ename from employee
+        where companyId = #{companyId}
+        <if test="ename != null and ename != ''">
+            and (ename like "%"#{ename}"%" or enumber like "%"#{ename}"%")
+        </if>
+        limit 5
+    </select>
+
+    <select id="getProjectEmployeeInfos" resultType="com.yskc.rs.models.project.ProjectEmployeeInfo">
+        select e.enumber,e.ename,re.position,re.etype,e.specialities,rd.id as rdDeptId,e.deptName,rd.deptName rdDeptName
+        from rdEmployee as re
+        left join employee as e on re.enumber = e.enumber and re.companyId = e.companyId
+        left join rdDept as rd on re.rdDeptId=rd.id
+        where re.year = #{query.year} and e.companyId=#{query.companyId}
+        <if test="query.etype != null and query.etype>0">
+            and re.etype=#{query.etype}
+        </if>
+        <if test="query.rdDeptPath!=null and query.rdDeptPath != ''">
+            and rd.identity like #{query.rdDeptPath}"%"
+        </if>
+        <if test="query.deptName !=null and query.deptName != ''">
+            and e.deptName like "%"#{query.deptName}"%"
+        </if>
+        <if test="query.ename != null and query.ename.length()>0">
+            and e.ename like "%"#{query.ename}"%"
+        </if>
+        <if test="query.enumber != null and query.enumber.length()>0">
+            and e.enumber like "%"#{query.enumber}"%"
+        </if>
+    </select>
+    <select id="getEmployeeInfos" resultType="com.yskc.rs.models.project.ProjectEmployeeInfo">
+        select e.enumber,e.ename,re.position,re.etype,e.specialities,rd.id as rdDeptId,e.deptName,rd.deptName rdDeptName
+        from rdEmployee as re
+                 left join employee as e on re.enumber = e.enumber and re.companyId = e.companyId
+                 left join rdDept as rd on re.rdDeptId=rd.id
+        where re.year = #{year} and e.companyId=#{companyId}
+        <if test="query.ename != null and query.ename.length()>0">
+            and e.ename like "%"#{query.ename}"%"
+        </if>
+        <if test="query.enumber != null and query.enumber.length()>0">
+            and e.enumber like "%"#{query.enumber}"%"
+        </if>
+        <if test="query.etype != null and query.etype>0">
+            and re.etype=#{query.etype}
+        </if>
+    </select>
+    <select id="getListByEnumbers" resultType="com.yskc.rs.entity.RdEmployeeEntity">
+        select * from rdEmployee as re where companyId = #{companyId} and `year` = #{year}
+        and enumber in
+        <foreach collection="numberList" open="(" separator="," close=")" item="enumber">
+            #{enumber}
+        </foreach>
+    </select>
+    <select id="getDeptByEnumbers" resultType="com.yskc.rs.models.employee.RdEmployeeModel">
+        select re.enumber,rd.deptName,re.position
+        from rdEmployee re
+        left join rdDept rd on rd.id = re.rdDeptId
+        where re.companyId = #{companyId} and re.`year` = #{year}
+        and re.enumber in
+        <foreach collection="numberList" open="(" separator="," close=")" item="enumber">
+            #{enumber}
+        </foreach>
+    </select>
+    <select id="getEmployeeList" resultType="com.yskc.rs.models.init.member.ProjectEmployeeModel">
+        select im.enumber,e.ename,im.projectId,im.year from i_member im
+        inner JOIN employee e on e.enumber = im.enumber and e.companyId = im.companyId
+        where im.companyId = #{companyId} and im.projectId in
+        <foreach collection="projectIds" item="projectId" open="(" separator="," close=")">
+            #{projectId}
+        </foreach>
+    </select>
+    <select id="getEmployeeByEnumber" resultType="com.yskc.rs.models.employee.EmployeeAutographModel">
+        select enumber,ename,autographUrl from employee
+        where companyId = #{companyId} and enumber in
+        <foreach collection="enumbers" item="enumber" separator="," open="(" close=")">
+            #{enumber}
+        </foreach>
+    </select>
+    <select id="getRdTitles" resultType="com.yskc.rs.models.rdequipment.FullYearProjectModel">
+        select im.enumber `key`,group_concat(p.rdTitle order by p.rdTitle) rdTitle
+        <if test="needTerm != null and needTerm">
+            ,min(p.beginDate) beginDate,max(p.endDate)endDate,e.leaveDate
+        </if>
+        from p_project p
+        inner join i_member im on im.companyId=p.companyId and im.projectId=p.id and im.year=#{year}
+        inner join employee e on e.companyId=im.companyId and e.enumber=im.enumber
+        where p.companyId=#{companyId} and p.beginYear&lt;=#{year} and p.endYear >=#{year}
+        and im.enumber in(<foreach collection="enumbers" separator="," item="enumber">#{enumber}</foreach> )
+        group by im.enumber
+    </select>
+    <select id="getRdEmployeeRdsList" resultType="com.yskc.rs.models.projectrdemployee.RdEmployeeAggModel">
+        SELECT
+        e.ename,re.enumber,re.etype,rd.deptName rdDeptName
+        FROM
+        rdEmployee re
+        INNER JOIN employee e ON re.enumber = e.enumber and re.companyId=e.companyId
+        LEFT JOIN rdDept rd ON re.rdDeptId = rd.id
+        WHERE
+        re.companyId = #{companyId} and re.year=#{query.year}
+        <if test="query.ename != null and query.ename != ''">
+            and e.ename like "%"#{query.ename}"%"
+        </if>
+        <if test="query.enumber != null and query.enumber !=''">
+            and re.enumber like "%"#{query.enumber}"%"
+        </if>
+        <if test="query.etype!=null and query.etype > 0">
+            and re.etype = #{query.etype}
+        </if>
+
+    </select>
+    <select id="getUnionEmployee" resultType="com.yskc.rs.models.employee.EmployeeSelectModel">
+        (select rde.enumber,e.ename
+        from rdEmployee rde
+        LEFT JOIN employee e on e.enumber = rde.enumber and e.companyId = rde.companyId
+        where e.companyId = #{companyId} and rde.year = #{year}
+        <if test="ename != null and ename != ''">
+            and (e.ename like "%"#{ename}"%" or e.enumber like "%"#{ename}"%")
+        </if>)
+        union (
+        select pr.enumber,e1.ename from p_reviewCommittee pr
+        LEFT JOIN employee e1 on e1.enumber = pr.enumber and e1.companyId = pr.companyId
+        where e1.companyId=#{companyId} and pr.year=#{year}
+        <if test="ename != null and ename != ''">
+            and (e1.ename like "%"#{ename}"%" or e1.enumber like "%"#{ename}"%")
+        </if>
+        order by pr.seq,pr.enumber)
+        limit 5
+    </select>
+    <select id="countNum" resultType="java.lang.Integer">
+        select count(distinct enumber)
+        from i_member
+        where companyId = #{companyId}
+          and `year` = #{year}
+    </select>
+    <select id="countYearEnumber" resultType="java.lang.Integer">
+        select count(distinct enumber)
+        from rdEmployee
+        where companyId = #{companyId}
+          and `year` = #{year}
+    </select>
+    <select id="getRdEmployeeHours" resultType="com.yskc.rs.models.rdemployeehour.RdEmployeeHourModel">
+        SELECT re.id,e.ename,re.enumber,re.position,e.eduLevel,re.etype,e.remark,r.fullName
+        FROM
+        rdEmployee re
+        LEFT JOIN employee e ON re.companyId=e.companyId and re.enumber = e.enumber
+        LEFT JOIN rdDept r ON re.rdDeptId = r.id
+        WHERE re.companyId = #{companyId} and re.year=#{query.year}
+        <if test="query.ename != null and query.ename != ''">
+            and e.ename like "%"#{query.ename}"%"
+        </if>
+        <if test="query.enumber != null and query.enumber !=''">
+            and re.enumber like "%"#{query.enumber}"%"
+        </if>
+        <if test="query.etypes!=null">
+            and re.etype in
+            <foreach collection="query.etypes" open="(" separator="," close=")" item="type">
+                #{type}
+            </foreach>
+        </if>
+        <if test="query.eduLevel!=null and query.eduLevel >=0">
+            and e.eduLevel = #{query.eduLevel}
+        </if>
+        <if test="query.position !=null and query.position!=''">
+            and re.position like "%"#{query.position}"%"
+        </if>
+        <if test="query.rdDeptPath!=null and query.rdDeptPath != ''">
+            and r.identity like #{query.rdDeptPath}"%"
+        </if>
+    </select>
+    <select id="getRdsAndEntryDate" resultType="com.yskc.rs.models.rdemployeehour.RdEmployeeHourProjectModel">
+        select im.enumber,group_concat(p.rdTitle order by p.rdTitle) rds,min(im.entryDate) entryDate,sum(pre.rdHour) rdHour
+        from p_project p
+        inner join i_member im on im.companyId=p.companyId and im.projectId=p.id and im.year=#{year}
+        left join p_rdEmployee pre on pre.companyId=p.companyId and pre.projectId=p.id and pre.enumber=im.enumber
+        where p.companyId=#{companyId} and p.beginYear&lt;=#{year} and p.endYear >=#{year}
+        and im.enumber in(<foreach collection="enumbers" separator="," item="enumber">#{enumber}</foreach> )
+        and pre.month >=#{begin} and pre.month &lt;=#{end}
+        group by im.enumber
+    </select>
+
+    <insert id="saveRdEmployeeLists" parameterType="java.util.List">
+        insert into rdEmployee
+        (creatorId,lastUpdatorId,createTime,lastUpdateTime,year,companyId,msCreatorId,msLastUpdatorId,enumber,etype,rdDeptId,`position`)
+        values
+        <foreach collection="RdEmployeeEntitys" item="employees" index="index" separator="," close=";">
+            (#{employees.creatorId},#{employees.lastUpdatorId},#{employees.createTime},#{employees.lastUpdateTime},#{employees.year},
+            #{employees.companyId},#{employees.msCreatorId},#{employees.msLastUpdatorId},#{employees.enumber},#{employees.etype},#{employees.rdDeptId},#{employees.position})
+        </foreach>
+    </insert>
+
+</mapper>

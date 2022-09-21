@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.SupportDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.yskc.rs.entity.SupportEntity" id="supportMap">
+        <result property="id" column="id"/>
+        <result property="creatorId" column="creatorId"/>
+        <result property="createTime" column="createTime"/>
+        <result property="lastUpdatorId" column="lastUpdatorId"/>
+        <result property="lastUpdateTime" column="lastUpdateTime"/>
+        <result property="companyId" column="companyId"/>
+        <result property="projectName" column="projectName"/>
+        <result property="startTime" column="startTime"/>
+        <result property="endTime" column="endTime"/>
+        <result property="supportTime" column="supportTime"/>
+        <result property="supportDeptName" column="supportDeptName"/>
+        <result property="supportAmount" column="supportAmount"/>
+        <result property="checkTime" column="checkTime"/>
+        <result property="checkResult" column="checkResult"/>
+        <result property="remark" column="remark"/>
+    </resultMap>
+
+    <select id="querySupportList" resultType="com.yskc.rs.entity.SupportEntity">
+        select * from c_support where companyId = #{companyId}
+        <if test="projectName!=null and projectName!=''">
+            and projectName like  "%"#{projectName}"%"
+
+        </if>
+        <if test="supportDeptName!=null and supportDeptName!=''">
+            and supportDeptName like "%"#{supportDeptName}"%"
+        </if>
+        <if test="supportTime!=null  and supportTime!=''">
+            and supportTime like "%"#{supportTime}"%"
+        </if>
+        <if test="checkTime!=null ">
+            and checkTime = #{checkTime}
+        </if>
+        order by syear desc
+    </select>
+</mapper>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.project.AuditDocFileDao">
+    <insert id="batchAdd">
+        insert into p_audit_docFile (companyId,projectId,docFileId,moduleId,status,
+        msCreatorId,msLastUpdatorId,createTime,lastUpdateTime) values
+        <foreach collection="inserts" item="item" separator=",">
+            (#{item.companyId},#{item.projectId},#{item.docFileId},#{item.moduleId},
+            #{item.status},#{item.msCreatorId},#{item.msLastUpdatorId},#{item.createTime},#{item.lastUpdateTime})
+        </foreach>
+    </insert>
+    <update id="batchUpdate">
+        update p_audit_docFile set msLastUpdatorId=#{msUserId},lastUpdateTime=#{date},status=#{status},suggestion = ''
+        where docFileId in
+        <foreach collection="updateIds" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </update>
+    <select id="getDocAuditStatus" resultType="com.yskc.rs.entity.project.AuditDocFileEntity">
+        select *
+         from p_audit_docFile
+        where projectId=#{projectId} and docFileId in
+        <foreach collection="docFileIds" item="docFileId" open="(" close=")" separator=",">
+            #{docFileId}
+        </foreach>
+    </select>
+    <select id="countAuditData" resultType="com.yskc.rs.models.projectDocFile.ProjectDocFileModel">
+        select pd.id,pd.projectId,(case when pa.status is null then 5 else pa.status end) status from p_docFile pd
+        left join p_audit_docFile pa on pd.id=pa.docFileId
+        where pd.projectId=#{projectId} and pd.deleted=false
+    </select>
+
+    <select id="getByDocFileId" resultType="com.yskc.rs.entity.project.AuditDocFileEntity">
+        select pd.id as docFileId from p_docFile pd
+        left join  p_audit_docFile padf on padf.docFileId=pd.id
+        inner join docFile df on df.id=pd.docFileId and df.owner=0
+        where pd.id in
+        <foreach collection="docFileIds" item="docFileId" open="(" close=")" separator=",">
+            #{docFileId}
+        </foreach>
+        and ((padf.status is null) or (padf.status is not null
+        <if test="status!=null and status.size()>0">
+            and padf.status in (<foreach collection="status" item="state" separator=",">#{state}</foreach>)
+        </if>) )
+    </select>
+    <select id="getAuditStatus" resultType="java.lang.Integer">
+        select `status` from p_audit_docFile pad
+        inner join p_docFile pd on pd.id = pad.docFileId
+        where !pd.deleted and pd.projectId=#{projectId} and pad.moduleId=#{moduleId} limit 1
+    </select>
+    <select id="countAuditDoc" resultType="java.lang.Integer">
+        select count(pd.id) from p_docFile pd
+        left join  p_audit_docFile padf on padf.docFileId=pd.id
+        where pd.id=#{docFileId}
+        <if test="status!=null and status.size()>0">
+            and padf.status in (<foreach collection="status" item="state" separator=",">#{state}</foreach>)
+        </if>
+    </select>
+</mapper>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.InnovationMemberDao">
+    <insert id="addBatch">
+        insert into innovation_member (mType,memberId,isMaster,innovationId,creatorId,createTime)
+        values
+        <foreach collection="list" item="l" separator=",">
+            (#{l.mType},#{l.memberId},#{l.isMaster},#{l.innovationId},#{l.creatorId},#{l.createTime})
+        </foreach>
+        on duplicate key update
+        mType = values(mType),
+        memberId = values(memberId),
+        isMaster = values(isMaster),
+        innovationId = values(innovationId),
+        creatorId = values(creatorId),
+        createTime = values(createTime)
+    </insert>
+    <delete id="deleteMembers">
+        delete from innovation_member
+        where innovationId in (<foreach collection="innovationIds" separator="," item="iId">#{iId}</foreach>)
+        and mType in (<foreach collection="mTypes" separator="," item="mType">#{mType}</foreach>)
+    </delete>
+    <select id="getMemberListByCompany" resultType="com.yskc.ms.models.innovationproject.InnovationMemberSelectModel">
+        select distinct im.memberId,yu.username,yu.realName from innovation_member im
+        inner join innovation_project ip on ip.id = im.innovationId
+        inner join customer c on c.id = ip.customerId
+        inner join ys_user yu on yu.id = im.memberId
+        where c.companyId = #{companyId} and ip.year=#{year} and im.mType=#{mType}
+    </select>
+    <select id="getMasters" resultType="com.yskc.ms.models.project.RsProjectSummaryModel">
+        select c.companyId,ip.year,yu.realName from innovation_member im
+         inner join innovation_project ip on ip.id = im.innovationId
+         inner join customer c on c.id = ip.customerId
+         inner join ys_user yu on yu.id = im.memberId
+        where im.mType=#{mType} and isMaster and (
+            <foreach collection="list" item="l" separator="or">
+                (c.companyId = #{l.companyId} and ip.year=#{l.year})
+            </foreach>)
+        group by companyId,`year`,realName
+    </select>
+    <select id="getMembers" resultType="com.yskc.ms.entity.ms.InnovationMember">
+        select id,memberId,mType,isMaster from innovation_member where innovationId=#{innovationId} and mType in (1,2)
+    </select>
+</mapper>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.project.ProjectTrialConfigDao">
+    <insert id="insertOrUpdate">
+        insert into p_trial_config (companyId,trialTime,startTime,endTime,creatorId,lastUpdatorId,
+        createTime,lastUpdateTime,msCreatorId,msLastUpdatorId)
+        VALUES
+        (#{entity.companyId},#{entity.trialTime},#{entity.startTime},#{entity.endTime},#{entity.creatorId},
+        #{entity.lastUpdatorId},#{entity.createTime},#{entity.lastUpdateTime},#{entity.msCreatorId},#{entity.msLastUpdatorId})
+        ON DUPLICATE KEY UPDATE
+         trialTime=values(trialTime),
+         startTime=values(startTime),
+         endTime=values(endTime),
+         lastUpdatorId=values(lastUpdatorId),
+         lastUpdateTime=values(lastUpdateTime),
+         msLastUpdatorId=values(msLastUpdatorId)
+    </insert>
+    <select id="getTrialConfig" resultType="com.yskc.rs.models.projectyieldconfig.RefreshYieldConfigModel">
+        select trialTime,startTime,endTime from p_trial_config where companyId=#{companyId}
+    </select>
+</mapper>

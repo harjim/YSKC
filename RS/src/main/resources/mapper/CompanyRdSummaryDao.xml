@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.company.CompanyRdSummaryDao">
+    <select id="getList" resultType="com.yskc.rs.models.companyrdsummary.CompanyRdSummaryModel">
+        select c.companyName,c.id,c.companyType, crs.rdPlanCount,crs.rdCount,crs.budget,crs.rdFunds,crs.rdEmployeeCount,
+               crs.rdEquipmentCount,crs.docFileCount,crs.buildCount,crs.highTechCount,crs.highTechIncome,crs.totalIncome
+        from company_group cg
+        inner join company c on cg.companyId=c.id
+        left join c_rd_summary crs on c.id=crs.companyId and crs.year=#{query.year}
+        where c.id in (<foreach collection="companyIds" separator="," item="cId">#{cId}</foreach>)
+          and cg.fullPath like #{groupFullPath}"%"
+        <if test="query.companyName!=null and query.companyName != ''">
+           and c.companyName like "%"#{query.companyName}"%"
+        </if>
+    </select>
+    <select id="getTotal" resultType="com.yskc.rs.models.companyrdsummary.CompanyRdSummaryModel">
+        select sum(crs.rdPlanCount) rdPlanCount,sum(crs.rdCount) rdCount,sum(crs.budget) budget,
+               sum(crs.rdFunds) rdFunds,sum(crs.rdEmployeeCount) rdEmployeeCount,sum(crs.rdEquipmentCount) rdEquipmentCount,
+               sum(crs.docFileCount) docFileCount,sum(crs.buildCount) buildCount,sum(crs.highTechCount) highTechCount,
+               sum(crs.highTechIncome) highTechIncome,sum(crs.totalIncome) totalIncome from company_group cg
+        inner join company c on cg.companyId=c.id
+        inner join c_rd_summary crs on c.id=crs.companyId
+        where c.id in (<foreach collection="companyIds" separator="," item="cId">#{cId}</foreach>)
+          and cg.fullPath like #{groupFullPath}"%" and crs.year=#{query.year}
+        <if test="query.companyName!=null and query.companyName != ''">
+            and c.companyName like "%"#{query.companyName}"%"
+        </if>
+    </select>
+    <select id="getInfo" resultType="java.lang.Integer">
+        select buildCount from c_rd_summary where companyId=#{companyId} and `year`=#{year}
+    </select>
+
+</mapper>

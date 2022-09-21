@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.docservice.dao.rs.project.ProjectDao">
+
+    <insert id="insertProjectList" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `p_project`
+        ( `pname`, `rdIndex`, `beginDate`, `endDate`, `companyId`, createTime,`lastUpdateTime`, `creatorId`,
+        `msCreatorId`, `lastUpdatorId`, `msLastUpdatorId`, `estimateExpense`, `masterENumber`, `tecIndustry`,
+        `rdDeptId`, `formula`, `projectSource`, `beginYear`, `endYear`, `trialProd`, `tBeginDate`, `tEndDate`,
+        `deptName`, `processSection`, `productLine`, `workshop`,`rdTitle`,`rdNumber`,`deptId` )
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            ( #{item.pname}, #{item.rdIndex}, #{item.beginDate}, #{item.endDate}, #{item.companyId}, #{item.createTime},
+            #{item.lastUpdateTime}, #{item.creatorId}, #{item.msCreatorId}, #{item.lastUpdatorId},
+            #{item.msLastUpdatorId}, #{item.estimateExpense}, #{item.masterENumber}, #{item.tecIndustry},
+            #{item.rdDeptId}, #{item.formula}, #{item.projectSource}, #{item.beginYear}, #{item.endYear},
+            #{item.trialProd}, #{item.tBeginDate}, #{item.tEndDate}, #{item.deptName}, #{item.processSection},
+            #{item.productLine}, #{item.workshop} ,#{item.rdTitle},#{item.rdNumber},#{item.deptId})
+        </foreach>
+    </insert>
+    <update id="updateProjectList">
+        update p_project
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="pname =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.pname!=null">
+                        when id=#{i.id} then #{i.pname}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="deptId =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.deptId!=null">
+                        when id=#{i.id} then #{i.deptId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="rdIndex =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.rdIndex!=null">
+                        when id=#{i.id} then #{i.rdIndex}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="beginDate =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.beginDate!=null">
+                        when id=#{i.id} then #{i.beginDate}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="endDate =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.endDate!=null">
+                        when id=#{i.id} then #{i.endDate}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="beginYear =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.beginYear!=null">
+                        when id=#{i.id} then #{i.beginYear}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="endYear =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.endYear!=null">
+                        when id=#{i.id} then #{i.endYear}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="trialProd =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.trialProd!=null">
+                        when id=#{i.id} then #{i.trialProd}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="tBeginDate =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.tBeginDate!=null">
+                        when id=#{i.id} then #{i.tBeginDate}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="tEndDate =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.tEndDate!=null">
+                        when id=#{i.id} then #{i.tEndDate}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="estimateExpense =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.estimateExpense!=null">
+                        when id=#{i.id} then #{i.estimateExpense}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="masterENumber =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.masterENumber!=null">
+                        when id=#{i.id} then #{i.masterENumber}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="tecIndustry =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.tecIndustry!=null">
+                        when id=#{i.id} then #{i.tecIndustry}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="rdDeptId =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.rdDeptId!=null">
+                        when id=#{i.id} then #{i.rdDeptId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdatorId =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.lastUpdatorId!=null">
+                        when id=#{i.id} then #{i.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdateTime =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.lastUpdateTime!=null">
+                        when id=#{i.id} then #{i.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="msLastUpdatorId =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.msLastUpdatorId!=null">
+                        when id=#{i.id} then #{i.msLastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="rdTitle =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.rdTitle!=null">
+                        when id=#{i.id} then #{i.rdTitle}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="rdNumber =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.rdNumber!=null">
+                        when id=#{i.id} then #{i.rdNumber}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="processSection =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.processSection!=null">
+                        when id=#{i.id} then #{i.processSection}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="productLine =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.productLine!=null">
+                        when id=#{i.id} then #{i.productLine}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="workshop =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.workshop!=null">
+                        when id=#{i.id} then #{i.workshop}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="deptName =case" suffix="end,">
+                <foreach collection="projectEntitys" item="i" index="index">
+                    <if test="i.deptName!=null">
+                        when id=#{i.id} then #{i.deptName}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="projectEntitys" separator="or" item="i" index="index">
+            id=#{i.id}
+        </foreach>
+    </update>
+    <select id="getByRdTitles" resultType="com.yskc.docservice.entity.rs.project.ProjectEntity">
+        select id,rdTitle,beginDate,endDate ,hasChild,beginYear,endYear from p_project where
+        companyId = #{companyId} and rdTitle in
+        <foreach collection="rdTitles" open="(" separator="," close=")" item="rdTitle">
+            #{rdTitle}
+        </foreach>
+    </select>
+    <select id="getTrialByRdTitles" resultType="com.yskc.docservice.entity.rs.project.ProjectEntity">
+        select id,rdTitle,beginDate,endDate,trialProd,hasChild,tBeginDate,tEndDate from p_project where
+        companyId = #{companyId} and rdTitle in
+        <foreach collection="rdTitles" open="(" separator="," close=")" item="rdTitle">
+            #{rdTitle}
+        </foreach>
+    </select>
+
+    <select id="getDocFileList" resultType="com.yskc.docservice.models.rs.PDocFile">
+        SELECT pf.id,pf.docFileName,pf.`month`,pf.docFileId,pf.stage,pdd.data,tpl.docTemplateName,pf.deleted FROM p_docFile pf inner join docFileTemplate tpl on pf.docFileTemplateId=tpl.id  left join p_docFile_data pdd                                                                                                                                   on pf.id = pdd.pdocFileId
+        where pf.projectId=#{docParam.projectId} and pf.id in
+            <foreach collection="docParam.pDocFileId" open="(" separator="," close=")" item="fId">#{fId}</foreach>
+        order by seq;
+    </select>
+    <select id="getProjectsForImport" resultType="com.yskc.docservice.models.rs.project.ProjectListModel">
+        select p.rdNumber, p.id, p.pname, p.rdDeptId, rd.deptName AS rdDeptName,
+               p.beginDate,p.endDate,p.estimateExpense,p.rdIndex,p.masterENumber, e.ename,p.tecIndustry,p.projectSource,
+               p.formula,p.result,p.targets,p.beginYear,p.endYear
+        from p_project as p
+                 LEFT JOIN employee as e on e.enumber = p.masterENumber and e.companyId=p.companyId
+                 LEFT JOIN rdDept as rd on rd.id = p.rdDeptId
+        where p.beginYear = #{year} and p.companyId = #{companyId} and p.parentId=0
+    </select>
+    <select id="getRdTitle" resultType="com.yskc.docservice.entity.rs.project.ProjectEntity">
+        SELECT pp.id,pp.beginDate,pp.endDate,pp.rdTitle,pp.tBeginDate,pp.tEndDate,pp.trialProd
+        FROM p_project pp
+        where
+        pp.companyId = #{companyId}
+        AND pp.rdTitle in
+        <foreach collection="rdTitles" open="(" separator="," close=")" item="rdTitle">
+            #{rdTitle}
+        </foreach>
+    </select>
+    <select id="getCompanyProjectList" resultType="com.yskc.docservice.entity.rs.project.ProjectEntity">
+        select * from p_project
+        where companyId=#{companyId} and parentId=0
+    </select>
+    <select id="getOutsourcingProject" resultType="com.yskc.docservice.models.rs.outsourcing.ProjectOutsourcingModel">
+        select id projectId,rdTitle,rdNumber,beginDate,endDate,pname
+        from p_project
+        where companyId=#{companyId} and beginYear &lt;= #{year} and endYear &gt;= #{year} and formula>10 order by rdTitle
+    </select>
+    <select id="getInfoByIds" resultType="com.yskc.docservice.entity.rs.project.ProjectEntity">
+        select id,rdTitle,beginDate,endDate,hasChild from p_project
+        where id in (<foreach collection="ids" separator="," item="id">#{id}</foreach>)
+        order by rdTitle
+    </select>
+    <select id="getRdsStatus" resultType="com.yskc.docservice.models.rs.project.RdStatusModel">
+        select `month`,projectId,status from p_project_status
+        where projectId in
+        <foreach collection="projectIds" open="(" separator="," close=")" item="id">
+            #{id}
+        </foreach>
+        order by `month`
+    </select>
+    <select id="getProject" resultType="com.yskc.docservice.models.rs.project.ProjectDetailModel">
+        select formula,tecIndustry from p_project where Id = #{projectId}
+    </select>
+    <select id="getChildrenById" resultType="com.yskc.docservice.entity.rs.project.ProjectEntity">
+        select * from p_project where parentId=#{parentId}
+    </select>
+    <select id="getYearInfos" resultType="com.yskc.docservice.models.rs.project.ProjectYearModel">
+        select e.ename as masterName,y.budget,y.companyId,projectId,y.year from p_year_info y left join employee e on y.masterENumber=e.enumber and y.companyId=e.companyId where projectId=#{projectId}
+    </select>
+</mapper>

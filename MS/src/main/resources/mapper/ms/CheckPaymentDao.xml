@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.CheckPaymentDao">
+
+    <select id="getList" resultType="com.yskc.ms.models.checkPayment.CheckPaymentModel">
+        select cp.id, yu.realName creatorName,  cp.createTime, cp.lastUpdateTime,c.companyName,yd.deptName,
+               cp.customerId, cp.year, cp.ownerId, cp.deptId, cp.techId, cp.ownerMangerId,
+               cp.finaManagerId, cp.finaDirectorId, cp.checkDate, cp.checkInstId, cp.rdCnt,ci.instName checkInstName,
+               cp.unitPrice, cp.totalAmount, cp.checkUsername, cp.checkPassword, cp.payType,
+               cp.paymentFile, cp.remark,fn.nodeName,ff.instanceId,f.auditUsers,
+                case when ff.status is null then 5 else ff.status end as status,
+                case when fn.nodeNumber is null then 0 else fn.nodeNumber end as nodeNumber
+        from checkPayment cp
+         left join customer c on cp.customerId = c.id
+         left join ys_dept yd on cp.deptId = yd.id
+        left join ys_user yu on cp.creatorId = yu.id
+        left join checkInst ci on cp.checkInstId = ci.id
+         left join flowInstance_form ff on ff.formId = cp.id and ff.moduleId = #{moduleId}
+         left join flowInstance f on ff.instanceId = f.id
+         left join flowInstance_curNode fm on fm.instanceId = f.id
+         left join flowNode fn on fn.flowId = fm.flowId and fm.curNodeId = fn.id
+        where 1=1
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.byInTables">
+            <property name="userCols" value="cp.ownerId,cp.techId, cp.ownerMangerId,
+               cp.finaManagerId, cp.finaDirectorId"/>
+        </include>
+        <if test="query.companyName!=null and query.companyName!=''">
+            and c.companyName like concat('%',#{query.companyName},'%')
+        </if>
+        <if test="query.status!=null and query.status!=5">
+            and ff.status = #{query.status}
+        </if>
+        <if test="query.status!=null and query.status == 5">
+            and ff.status is null
+        </if>
+        <if test="query.nodeNumber!=null and query.nodeNumber!=0">
+            and fn.nodeNumber = #{query.nodeNumber}
+        </if>
+        <if test="query.nodeNumber==0">
+            and fn.nodeNumber is null
+        </if>
+        <if test="query.ownerId!=null and query.ownerId!=0">
+            and cp.ownerId = #{query.ownerId}
+        </if>
+        <if test="query.year != null and query.year!=0">
+            and cp.year = #{query.year}
+        </if>
+        <if test="query.techId != null and query.techId!=0">
+            and cp.techId = #{query.techId}
+        </if>
+        <if test="query.finaManagerId != null and query.finaManagerId!=0">
+            and cp.finaManagerId = #{query.finaManagerId}
+        </if>
+        <if test="query.auditUsers != null and query.auditUsers!=''">
+            and f.auditUsers like concat('%',#{query.auditUsers},'%')
+        </if>
+    </select>
+    <select id="getInfo" resultType="com.yskc.ms.models.checkPayment.CheckPaymentModel">
+        select cp.id, yu.realName creatorName,  cp.createTime, cp.lastUpdateTime,c.companyName,yd.deptName,
+               cp.customerId, cp.year, cp.ownerId, cp.deptId, cp.techId, cp.ownerMangerId,
+               cp.finaManagerId, cp.finaDirectorId, cp.checkDate, cp.checkInstId, cp.rdCnt,ci.instName checkInstName,
+               cp.unitPrice, cp.totalAmount, cp.checkUsername, cp.checkPassword, cp.payType,
+               cp.paymentFile, cp.remark,fn.nodeName,ff.instanceId,f.auditUsers,
+               case when ff.status is null then 5 else ff.status end as status,
+               case when fn.nodeNumber is null then 0 else fn.nodeNumber end as nodeNumber
+        from checkPayment cp
+                 left join customer c on cp.customerId = c.id
+                 left join ys_dept yd on cp.deptId = yd.id
+                 left join ys_user yu on cp.creatorId = yu.id
+                 left join checkInst ci on cp.checkInstId = ci.id
+                 left join flowInstance_form ff on ff.formId = cp.id and ff.moduleId = #{moduleId}
+                 left join flowInstance f on ff.instanceId = f.id
+                 left join flowInstance_curNode fm on fm.instanceId = f.id
+                 left join flowNode fn on fn.flowId = fm.flowId and fm.curNodeId = fn.id
+        where cp.id = #{id}
+    </select>
+</mapper>

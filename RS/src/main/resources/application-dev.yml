@@ -1,0 +1,59 @@
+server:
+  port: 8001
+#pagehelper
+pagehelper:
+  helperDialect: mysql
+  reasonable: true
+  supportMethodsArguments: true
+  params: count=countSql
+  returnPageInfo: check
+spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 100MB
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://192.168.0.11:3306/rsdb?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&useSSL=false
+    username: root
+    password: YCCloud_@0769
+  redis:
+    database: 0
+    host: 192.168.0.11
+    port: 6380
+    #    host: 192.168.125.140
+    #    port: 6379
+    password: 123456
+  mvc:
+    async:
+      request-timeout: 180000
+
+logging:
+  level:
+    com.yskc.rs.dao: debug
+rs:
+  login:
+    expireTime: 1 #登录过期时间
+  uploadConfig:
+    basicPath: E:\YSIS\RS-VUE\public\images #通用文件路径,logo等文件路径
+    importPath: ..\RS-VUE\public\import #导入数据文件目录
+    resourcePath: E:\YSIS\resource
+    msImportPath: E:\YSIS\MS-VUE\public\import
+    docPath: E:\upload #上传的各种文档的路径,按公司ID分文件夹
+    maxRow: 50000
+    generateByPdf7: false
+  openApiConfing:
+    msApiUrl: http://localhost:9001
+    domain: http://localhost:8000
+guava:
+  cache:
+    config:
+      expireAfterAccessDuration: 36000
+kafka:
+  bootstrapServers: 192.168.0.251:9092
+  producer:
+    #  clientId: 0
+    acks: 1
+    retries: 5
+    batchSize: 16384
+    lingerMs: 5

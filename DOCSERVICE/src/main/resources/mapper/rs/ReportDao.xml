@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.docservice.dao.rs.ReportDao">
+    <select id="getPlanInfo" resultType="com.yskc.docservice.models.rs.project.PlanInfo">
+		select cnt,rdFee,employeeAmount,revenueFcst,deptIds from p_report where  companyId = #{companyId} and ryear = #{year}
+	</select>
+
+</mapper>

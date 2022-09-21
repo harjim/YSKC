@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.DesignDao">
+
+    <select id="queryDesign" resultType="com.yskc.rs.models.design.DesignModel">
+        select
+        d.id,
+        d.dname,
+        d.designDate,
+        d.dFee,
+        d.companyId,
+        d.creatorId,
+        d.createTime,
+        d.remark,
+        d.deptName,
+        d.accountTitleId,
+        a.fullAccountName
+        from d_design d
+        LEFT JOIN accountTitle a ON d.accountTitleId = a.id
+        WHERE
+        d.companyId =#{companyId}
+        <if test="designQuery.dName != null and designQuery.dName != ''">
+            and d.dname like "%"#{designQuery.dName}"%"
+        </if>
+        <if test="designQuery.startMonth !=null and designQuery.endMonth!=null">
+            AND d.designDate &gt;= #{designQuery.startMonth}
+            AND d.designDate &lt; #{designQuery.endMonth}
+        </if>
+        <if test="designQuery.deptName!=null and designQuery.deptName != ''">
+            and d.deptName like "%"#{designQuery.deptName}"%"
+        </if>
+    </select>
+
+    <select id="getDesignData" resultType="com.yskc.rs.models.excel.DesginExcel">
+        select
+        d.id,
+        d.dname,
+        d.designDate,
+        d.dFee,
+        d.companyId,
+        d.creatorId,
+        d.createTime,
+        d.remark,
+        d.deptName,
+        a.fullAccountName
+        from d_design d
+        LEFT JOIN accountTitle a ON d.accountTitleId = a.id
+        WHERE
+        d.companyId =#{companyId}
+        <if test="designQuery.dName != null and designQuery.dName != ''">
+            and d.dname like "%"#{designQuery.dName}"%"
+        </if>
+        <if test="designQuery.startMonth !=null and designQuery.endMonth!=null">
+            AND d.designDate &gt;= #{designQuery.startMonth}
+            AND d.designDate &lt; #{designQuery.endMonth}
+        </if>
+        <if test="designQuery.deptName!=null and designQuery.deptName != ''">
+            and d.deptName like "%"#{designQuery.deptName}"%"
+        </if>
+        order by d.designDate desc
+    </select>
+
+    <select id="queryDesignByTerm" resultType="com.yskc.rs.models.design.DesignModel">
+        SELECT d.id, d.dname, d.designDate, d.dFee, d.deptName, d.remainDFee,d.remark
+        FROM
+        d_design AS d
+        LEFT JOIN p_design p ON d.id = p.designDataId and p.projectId =#{query.projectId}
+        WHERE
+        p.designDataId IS NULL
+        AND d.companyId = #{companyId}
+        AND d.designDate &gt;= #{beginDate}
+        AND d.designDate &lt;= #{endDate}
+        and d.remainDFee!=0.00
+        <if test="query.name !=null and query.name  !=''">
+            and d.dname like "%"#{query.name }"%"
+        </if>
+        <if test="query.deptName !=null and query.deptName != ''">
+            and d.deptName like "%"#{query.deptName}"%"
+        </if>
+        <if test="query.remark !=null and query.remark != ''">
+            and d.remark like "%"#{query.remark}"%"
+        </if>
+    </select>
+
+    <select id="getDesignByTerm" resultType="com.yskc.rs.entity.DesignEntity">
+        SELECT
+        d.id,
+        d.dname,
+        d.designDate,
+        d.dFee,
+        d.companyId,
+        d.creatorId,
+        d.createTime,
+        d.deptName,
+        d.remainDFee
+        FROM
+        d_design AS d
+        LEFT JOIN p_design p ON d.id = p.designDataId and p.projectId =#{projectId}
+        WHERE
+        p.designDataId IS NULL
+        AND d.companyId = #{companyId}
+        AND d.designDate &gt;= #{beginDate}
+        AND d.designDate &lt;= #{endDate}
+        and d.remainDFee!=0.00
+        <if test="dname!=null and dname !=''">
+            and d.dname like "%"#{dname}"%"
+        </if>
+        <if test="deptName !=null and deptName != ''">
+            and d.deptName like "%"#{deptName}"%"
+        </if>
+        order by d.createTime desc
+    </select>
+
+    <update id="updateDesignRdDept">
+        update d_design
+        set rdDeptId=#{entity.rdDeptId}
+        where id = #{entity.id}
+          and companyId = #{companyId}
+    </update>
+    <update id="updateList">
+        <foreach collection="designEntities" item="item" separator=";">
+            update d_design set remainDFee=#{item.remainDFee},lastUpdateTime=#{item.lastUpdateTime},
+            lastUpdatorId=#{item.lastUpdatorId},msLastUpdatorId=#{item.msLastUpdatorId}
+            where id=#{item.id}
+        </foreach>
+    </update>
+    <update id="updateRemainFee">
+        update d_design set remainDFee=0.00,lastUpdateTime=#{now},lastUpdatorId=#{userId},msLastUpdatorId=#{msUserId}
+        where id in
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </update>
+
+
+    <select id="getFeeCount" resultType="java.math.BigDecimal">
+        SELECT
+        sum(d.dFee)
+        FROM
+        d_design AS d
+        LEFT JOIN p_design p ON d.id = p.designDataId
+        WHERE
+        p.designDataId IS NULL
+        and d.remainDFee!=0.00
+        AND d.companyId = #{companyId}
+        AND d.designDate &gt;= #{beginDate}
+        AND d.designDate &lt;= #{endDate}
+        <if test="query.name!=null and query.name !=''">
+            and d.dname like "%"#{query.name}"%"
+        </if>
+        <if test="query.deptName !=null and query.deptName != ''">
+            and d.deptName like "%"#{query.deptName}"%"
+        </if>
+        <if test="query.remark !=null and query.remark != ''">
+            and d.remark like "%"#{query.remark}"%"
+        </if>
+    </select>
+    <select id="getProjectUsed" resultType="java.lang.Integer">
+        select DISTINCT d.id from p_design as pd LEFT JOIN d_design as d on pd.designDataId = d.id
+        where d.id in
+        <foreach collection="ids" item="id" index="index" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <insert id="addDesignBatch">
+        INSERT INTO `d_design`
+        (
+        `dname`,
+        `designDate`,
+        `dFee`,
+        `companyId`,
+        `creatorId`,
+        `createTime`,
+        `remark`,
+        `rdDeptId`,
+        `deptId`,
+        `lastUpdateTime`,
+        `lastUpdatorId`,
+        `msCreatorId`,
+        `msLastUpdatorId`,
+        accountTitleId,
+        deptName,
+        remainDFee
+        )
+        VALUES
+        <foreach collection="designEntityList" item="item" separator=",">
+            ( #{item.dname},
+            #{item.designDate},
+            #{item.dFee},
+            #{item.companyId},
+            #{item.creatorId},
+            #{item.createTime},
+            #{item.remark},
+            #{item.rdDeptId},
+            #{item.deptId},
+            #{item.lastUpdateTime},
+            #{item.lastUpdatorId},
+            #{item.msCreatorId},
+            #{item.msLastUpdatorId},
+            #{item.accountTitleId},
+            #{item.deptName},
+            #{item.remainDFee}
+            )
+        </foreach>
+    </insert>
+
+</mapper>

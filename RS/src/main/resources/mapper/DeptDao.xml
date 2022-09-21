@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.DeptDao">
+    <insert id="addBatch" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `dept`
+        (
+        `companyId`,
+        `deptName`,
+        `parentId`,
+        `level`,
+        `identity`,
+        `remark`,
+        `creatorId`,
+        `createTime`,
+        `fullPath`,
+        `fullname`,
+        `lastUpdatorId`,
+        `lastUpdateTime`,
+        `msCreatorId`,
+        `msLastUpdatorId`
+        )
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.companyId},
+            #{item.deptName},
+            #{item.parentId},
+            #{item.level},
+            #{item.identity},
+            #{item.remark},
+            #{item.creatorId},
+            #{item.createTime},
+            #{item.fullPath},
+            #{item.fullname},
+            #{item.lastUpdatorId},
+            #{item.lastUpdateTime},
+            #{item.msCreatorId},
+            #{item.msLastUpdatorId}
+            )
+        </foreach>
+    </insert>
+
+    <select id="queryDept"
+            resultType="com.yskc.rs.models.dept.DeptModel">
+		SELECT * from dept d where d.companyId=#{companyId}
+		order by d.level
+	</select>
+
+    <select id="queryAll"
+            resultType="com.yskc.rs.models.dept.DeptTree">
+		select id as `value`, parentId,deptName as title, fullPath as `key` from dept where companyId=#{companyId}
+		order by 'level'
+	</select>
+
+    <select id="getUser"
+            resultType="com.yskc.rs.models.dept.DeptUserInfo">
+        select
+        y.id,y.userName,y.realName,y.tel,y.gender,y.depId,d.deptName,y.postion,y.remark
+        from user as y left join dept as d on y.depId = d.id where d.id =
+        #{deptId}
+        <if test="realName != null and realName != ''">
+            and y.realName like "%"#{realName}"%"
+        </if>
+    </select>
+
+    <select id="getNode"
+            resultType="com.yskc.rs.models.dept.DeptModel">
+		SELECT * FROM dept t WHERE t.id= #{tid} and
+		t.companyId=#{companyId};
+	</select>
+
+    <select id="queryNode"
+            resultType="com.yskc.rs.models.dept.DeptModel">
+        SELECT * FROM dept t WHERE t.parentId= #{tid} and
+        t.companyId=#{companyId}
+        <if test="deptName != null and deptName != ''">
+            and t.deptName like "%"#{deptName}"%"
+
+        </if>
+    </select>
+    <select id="selectDeptByName" resultType="com.yskc.rs.entity.Dept">
+		select * from dept where companyId=#{companyId} and  deptName=#{deptName} limit 1
+	</select>
+    <select id="selectParentDept" resultType="com.yskc.rs.entity.Dept">
+		select * from dept where companyId=#{companyId} and  parentId= -1 limit 1
+	</select>
+
+
+    <select id="selectByNames" resultType="com.yskc.rs.entity.Dept">
+        select * from dept
+        where companyId=#{companyId} and deptName in
+        <foreach item="item" index="index" collection="deptNames" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="queryDeptByIds" resultType="java.lang.String">
+        select deptName from dept
+        where companyId=#{companyId} and id in
+        <foreach item="item" index="index" collection="ids" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="getDeptByTerm" resultType="com.yskc.rs.entity.Dept">
+        select * from dept
+        where companyId=#{companyId} and deptName in
+        <foreach item="item" index="index" collection="deptNames" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+    <select id="getUsed" resultType="java.lang.Integer">
+		select e.deptId from employee as e where e.deptId = #{deptId} limit 1;
+        select eq.deptId from equipment as eq where eq.deptId = #{deptId} limit 1
+	</select>
+
+    <select id="queryChildrenByTerm" resultType="com.yskc.rs.entity.Dept">
+        SELECT
+                id,
+                parentId,
+                deptName,
+                fullpath,
+                fullname
+            FROM
+                dept
+            WHERE
+          companyId = #{companyId} AND id != #{id} AND fullpath like  #{fullPath}"%"
+    </select>
+    <select id="getChildByDeptList" resultType="com.yskc.rs.models.dept.DeptTree">
+        select id as `value`, parentId,deptName as title, fullPath as `key` from dept
+        where companyId = #{companyId}
+        and
+        (<foreach collection="deptList" separator="or" item="dept">
+        fullPath like #{dept.fullPath}"%"
+        </foreach>)
+        order by 'level'
+    </select>
+    <select id="getDeptByDeptList" resultType="com.yskc.rs.entity.Dept">
+        select distinct d.* from dept d
+        INNER JOIN dept dep on d.fullPath like concat(dep.fullPath,"%")
+        where d.companyId = #{companyId}
+        and dep.id in (<foreach collection="list" item="item" separator=",">
+                #{item}
+            </foreach>)
+        order by d.level
+    </select>
+
+    <select id="getSameLevelDept" resultType="com.yskc.rs.entity.Dept">
+        select * from dept where companyId = #{companyId} and parentId = #{parentId} and deptName = #{deptName}
+    </select>
+    <select id="getByParentId" resultType="java.lang.Integer">
+        select count(id) from dept where companyId = #{companyId} and parentId = #{parentId}
+    </select>
+    <select id="queryByCompanyId" resultType="com.yskc.rs.entity.Dept">
+        select * from dept where companyId = #{companyId}
+    </select>
+    <select id="getCompanyOrg" resultType="com.yskc.rs.models.CommonOrgModel">
+        select id,deptName as name, fullPath, fullname  from dept where companyId = #{companyId}
+    </select>
+
+    <update id="updateList">
+        update dept
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="deptName =case" suffix="end,">
+                <foreach collection="updateList" item="item" index="index">
+                    <if test="item.deptName!=null">
+                        when id=#{item.id} then #{item.deptName}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="level =case" suffix="end,">
+                <foreach collection="updateList" item="item" index="index">
+                    <if test="item.level!=null">
+                        when id=#{item.id} then #{item.level}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="parentId =case" suffix="end,">
+                <foreach collection="updateList" item="item" index="index">
+                    <if test="item.parentId!=null">
+                        when id=#{item.id} then #{item.parentId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="remark =case" suffix="end,">
+                <foreach collection="updateList" item="item" index="index">
+                    <if test="item.remark!=null">
+                        when id=#{item.id} then #{item.remark}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdatorId =case" suffix="end,">
+                <foreach collection="updateList" item="item" index="index">
+                    <if test="item.lastUpdatorId!=null">
+                        when id=#{item.id} then #{item.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdateTime =case" suffix="end,">
+                <foreach collection="updateList" item="item" index="index">
+                    <if test="item.lastUpdateTime!=null">
+                        when id=#{item.id} then #{item.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="msLastUpdatorId =case" suffix="end,">
+                <foreach collection="updateList" item="item" index="index">
+                    <if test="item.msLastUpdatorId!=null">
+                        when id=#{item.id} then #{item.msLastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="fullPath =case" suffix="end,">
+                <foreach collection="updateList" item="item" index="index">
+                    <if test="item.fullPath!=null">
+                        when id=#{item.id} then #{item.fullPath}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="fullname =case" suffix="end,">
+                <foreach collection="updateList" item="item" index="index">
+                    <if test="item.fullname!=null">
+                        when id=#{item.id} then #{item.fullname}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where id in
+        <foreach collection="updateList" item="item" index="index"
+                 separator="," open="(" close=")">
+            #{item.id}
+        </foreach>
+    </update>
+</mapper>

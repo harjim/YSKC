@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.ProductStageDao">
+    <update id="updateList">
+        <foreach collection="stageModels" item="stage" separator=";">
+            update product_stage set stageKey=#{stage.stageKey},`order`=#{stage.order},lastUpdateTime=#{date},lastUpdatorId=#{userId}
+            where id=#{stage.id}
+        </foreach>
+    </update>
+
+    <select id="getByProductId" resultType="com.yskc.ms.models.product.StageModel">
+        select `id`,`order`,`stageKey`
+        from product_stage
+        where productId=#{productId}
+        order by `order` asc
+    </select>
+    <select id="getListByStage" resultType="com.yskc.ms.entity.ms.ProductStageEntity">
+        select * from product_stage
+        where stageKey=#{stageKey} and productId in
+        <foreach collection="productIds" item="productId" open="(" close=")" separator=",">
+            #{productId}
+        </foreach>
+    </select>
+    <insert id="insertList">
+        insert into product_stage (`creatorId`,`lastUpdatorId`, `createTime`,`lastUpdateTime`,`order`,`stageKey`,`productId`)
+        values
+        <foreach collection="entityList" item="item" separator=",">
+            (#{item.creatorId},#{item.lastUpdatorId},#{item.createTime},#{item.lastUpdateTime},#{item.order},#{item.stageKey},#{item.productId})
+        </foreach>
+    </insert>
+
+    <delete id="delByProductId">
+        delete from product_stage where productId=#{productId}
+    </delete>
+
+    <delete id="delByIds">
+        delete  from product_stage
+        where id in
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </delete>
+
+    <select id="selectByProductIds" resultType="com.yskc.ms.entity.ms.ProductStageEntity">
+        select * from product_stage
+        where productId in
+        <foreach collection="productIds" item="productId" open="(" close=")" separator=",">
+            #{productId}
+        </foreach>
+    </select>
+
+    <select id="checkDelStage" resultType="com.yskc.ms.entity.ms.ProductStageEntity">
+        select * from product_stage ps
+        inner join project_tech_stage pts on ps.id=pts.stageId
+        where ps.productId=#{productId} and ps.stageKey in
+        <foreach collection="stageKeys" item="stageKey" open="(" close=")" separator=",">
+            #{stageKey}
+        </foreach>
+
+    </select>
+</mapper>

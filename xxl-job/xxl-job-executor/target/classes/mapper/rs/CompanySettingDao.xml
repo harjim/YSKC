@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.xxl.job.executor.dao.rs.CompanySettingDao">
+    <select id="getAccountPeriods" resultType="com.xxl.job.executor.entity.rs.CompanySettingEntity">
+        select distinct prp.companyId,cs.accountPeriod from p_rdEmployee_plan prp
+        left join c_setting cs on cs.companyId = prp.companyId
+        where prp.month in (<foreach collection="months" separator="," item="m">#{m}</foreach>)
+    </select>
+</mapper>

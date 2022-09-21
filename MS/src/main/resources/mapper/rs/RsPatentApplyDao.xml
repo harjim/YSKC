@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.rs.RsPatentApplyDao">
+
+    <insert id="insertBatch">
+        INSERT INTO patent_apply
+        (creatorId,lastUpdatorId,createTime,lastUpdateTime,patentNo,applyName,address,msCreatorId,msLastUpdatorId)
+        VALUES
+        <foreach collection="applyList" separator="," item="item">
+            (#{item.creatorId},#{item.lastUpdatorId},#{item.createTime},#{item.lastUpdateTime},#{item.patentNo},
+            #{item.applyName},#{item.address},#{item.msCreatorId},#{item.msLastUpdatorId})
+        </foreach>
+    </insert>
+
+
+    <select id="queryListByPatentNos" resultType="com.yskc.ms.models.patent.PatentModel">
+        SELECT
+        a.patentNo,
+        group_concat(a.companyId) AS companyIdArry,
+        group_concat(a.applyName) AS applyName,
+        group_concat(a.address) AS Address
+
+        FROM
+        patent_apply a
+
+        where a.patentNo in
+        <foreach collection="patentNos" item="patentNo" index="index" open="(" separator="," close=")">
+            #{patentNo}
+        </foreach>
+        GROUP BY
+        a.patentNo
+    </select>
+
+    <delete id="deleteByPatentNo">
+        delete from patent_apply where patentNo=#{patentNo}
+    </delete>
+
+    <select id="getDataByPatentNo" resultType="com.yskc.ms.models.patent.RsPatentApplyModel">
+        select * from patent_apply where patentNo=#{patentNo}
+    </select>
+    <select id="getEntityDataByPatentNo" resultType="com.yskc.ms.entity.rs.RsPatentApplyEntity">
+       select * from patent_apply where patentNo=#{patentNo}
+    </select>
+</mapper>

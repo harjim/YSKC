@@ -1,0 +1,29 @@
+spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 100MB
+  redis:
+    host: 192.168.0.11
+    database: 0
+    port: 6380
+    password: 123456
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    rs:
+      url: jdbc:mysql://192.168.0.11:3306/rsdb?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&useSSL=false
+      username: root
+      password: YCCloud_@0769
+    ms:
+      url: jdbc:mysql://192.168.0.11:3306/msdb?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&useSSL=false
+      username: root
+      password: YCCloud_@0769
+logging:
+  level:
+    com.yskc.docservice.dao: debug
+docservice:
+  rsImportPath: ..\RS-VUE\public\import
+  msImportPath: E:\upload
+  msAdminName: ysadmin
+  resourcePath: ..\resource
+  templateDir: ..\resource\static\htmlTemplate\1

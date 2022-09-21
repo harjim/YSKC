@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.YearCostDao">
+    <sql id="sumCol">
+        SUM(case rdType when 10000 then cost else 0 end) as wages,
+        SUM(case rdType when 10100 then cost else 0 end) as insuranceAndFund,
+        SUM(case rdType when 20000 then cost else 0 end) as material,
+        SUM(case rdType when 20100 then cost else 0 end) as power,
+        SUM(case rdType when 20200 then cost else 0 end) as fuel,
+        SUM(case rdType when 20300 then cost else 0 end) as trial,
+        SUM(case rdType when 20500 then cost else 0 end) as test,
+        SUM(case rdType when 20600 then cost else 0 end) as repair,
+        SUM(case rdType when 20700 then cost else 0 end) as machine,
+        SUM(case rdType when 30000 then cost else 0 end) as depreciation,
+        SUM(case rdType when 40000 then cost else 0 end) as software,
+        SUM(case rdType when 40200 then cost else 0 end) as otherAmortization,
+        SUM(case rdType when 50000 then cost else 0 end) as design,
+        SUM(case rdType when 69900 then cost else 0 end) as other
+    </sql>
+    <select id="getList" resultType="com.yskc.rs.models.YearCost.YearCostExModel">
+        select year,
+               month,
+               <include refid="sumCol"></include>
+        from c_year_cost
+        where companyId = #{companyId}
+        group by year desc, month desc
+    </select>
+
+    <select id="getListByYear" resultType="com.yskc.rs.models.YearCost.YearCostModel">
+        select rdType,cost,year
+        from c_year_cost
+        where companyId = #{companyId} and year = #{year}
+    </select>
+
+    <select id="getListByMonth" resultType="com.yskc.rs.models.YearCost.YearCostExModel">
+        select year,
+               month,
+               <include refid="sumCol"></include>
+        from c_year_cost
+        where companyId = #{companyId} and year = #{year} and month = #{month}
+    </select>
+
+    <select id="getProjectYears" resultType="integer">
+        select beginYear
+        from p_project
+        where companyId = #{companyId}
+        group by beginYear
+    </select>
+
+    <select id="getYears" resultType="integer">
+        select year
+        from c_year_cost
+        where companyId = #{companyId}
+        group by year
+    </select>
+
+    <insert id="saveYearCost">
+        insert into c_year_cost
+        (creatorId,lastUpdatorId,createTime,lastUpdateTime,msCreatorId,msLastUpdatorId,companyId,year,month,rdType,cost)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.creatorId},#{item.lastUpdatorId},#{item.createTime},#{item.lastUpdateTime},#{item.msCreatorId},#{item.msLastUpdatorId},#{companyId},#{item.year},#{item.month},#{item.rdType},#{item.cost})
+        </foreach>
+        on duplicate key update
+        lastUpdatorId = values(lastUpdatorId),
+        lastUpdateTime= values(lastUpdateTime),
+        msLastUpdatorId = values(msLastUpdatorId),
+        cost = values(cost)
+    </insert>
+
+    <delete id="delYearCost">
+        delete from c_year_cost
+        where companyId=#{companyId} and (
+            <foreach collection="list" item="item" separator="or">
+                (
+                    year=#{item.year} and month=#{item.month} and rdType=#{item.rdType}
+                )
+            </foreach>
+        )
+    </delete>
+
+    <delete id="batchDelYearCost">
+        delete from c_year_cost
+        where companyId = #{companyId}
+        and (
+            <foreach collection="years" item="item" separator="or">
+                (
+                    year=#{item.year} and month=#{item.month}
+                )
+            </foreach>
+        )
+    </delete>
+</mapper>

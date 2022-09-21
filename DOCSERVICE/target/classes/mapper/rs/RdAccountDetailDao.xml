@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.docservice.dao.rs.RdAccountDetailDao">
+    <insert id="addList">
+        INSERT INTO rdAccountDetail
+        (rdDate,accNumber,summary,debit,credit,direction,balance,
+        accType,companyId,creatorId,createTime,lastUpdatorId,lastUpdateTime)
+        VALUES
+        <foreach collection="rdAccountDetails" item="acc" separator=",">
+            (#{acc.rdDate},#{acc.accNumber},#{acc.summary},#{acc.debit},#{acc.credit},#{acc.direction},#{acc.balance},
+            #{acc.accType},#{acc.companyId},#{acc.creatorId},#{acc.createTime},#{acc.lastUpdatorId},#{acc.lastUpdateTime})
+        </foreach>
+    </insert>
+</mapper>

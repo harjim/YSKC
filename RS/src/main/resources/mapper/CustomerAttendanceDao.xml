@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yskc.rs.dao.CustomerAttendanceDao">
+    <insert id="insertOrUpdate">
+        INSERT INTO c_attendance
+        (creatorId,lastUpdatorId,createTime,lastUpdateTime,msCreatorId,msLastUpdatorId,
+        enumber,ename,workDate,workHour,onTime1,offTime1,onTime2,offTime2,onTime3,offTime3,companyId,remark,deptName)
+        VALUES
+        <foreach collection="list" separator="," item="item">
+            (#{item.creatorId},#{item.lastUpdatorId},#{item.createTime},#{item.lastUpdateTime},#{item.msCreatorId},
+            #{item.msLastUpdatorId},#{item.enumber},#{item.ename},#{item.workDate},#{item.workHour},#{item.onTime1},
+            #{item.offTime1},#{item.onTime2}, #{item.offTime2},#{item.onTime3},
+            #{item.offTime3},#{item.companyId},#{item.remark},#{item.deptName})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        ename = values(ename),
+        workHour = values(workHour),
+        onTime1 = values(onTime1),
+        offTime1 = values(offTime1),
+        onTime2 = values(onTime2),
+        offTime2 = values(offTime2),
+        onTime3 = values(onTime3),
+        offTime3 = values(offTime3),
+        remark = values(remark),
+        deptName = values(deptName),
+        lastUpdatorId = values(lastUpdatorId),
+        lastUpdateTime = values(lastUpdateTime),
+        msLastUpdatorId =values(msLastUpdatorId)
+    </insert>
+    <update id="updateAttendance">
+        UPDATE c_attendance
+        set lastUpdatorId = #{entity.lastUpdatorId},lastUpdateTime = #{entity.lastUpdateTime},
+       msLastUpdatorId = #{entity.msLastUpdatorId},ename = #{entity.ename},enumber = #{entity.enumber},
+       workDate = #{entity.workDate},workHour = #{entity.workHour},onTime1 = #{entity.onTime1},onTime2 = #{entity.onTime2},
+       onTime3 = #{entity.onTime3},offTime1 = #{entity.offTime1},offTime2 = #{entity.offTime2},offTime3 = #{entity.offTime3},
+       remark = #{entity.remark},deptName = #{entity.deptName}
+       where id = #{entity.id}
+    </update>
+
+    <select id="getList" resultType="com.yskc.rs.models.customerattendance.CustomerAttendanceModel">
+        select ct.id,ct.enumber, ct.ename,ct.workDate,ct.workHour,ct.onTime1,ct.offTime1,ct.onTime2,ct.offTime2,
+        ct.onTime3,ct.offTime3,ct.remark,ct.deptName
+        from c_attendance as ct
+        left join employee as e on e.companyId = ct.companyId and e.enumber = ct.enumber
+        where ct.companyId = #{companyId}
+        <if test="query.endMonth != null">
+            and ct.workDate &lt;= #{query.endMonth}
+        </if>
+        <if test="query.startMonth != null">
+            and ct.workDate >= #{query.startMonth}
+        </if>
+        <if test="query.enumber != null and query.enumber != ''">
+            and ct.enumber like "%"#{query.enumber}"%"
+        </if>
+        <if test="query.workDate != null">
+            and ct.workDate = #{query.workDate}
+        </if>
+        <if test="query.ename != null and query.ename != ''">
+            and ct.ename like "%"#{query.ename}"%"
+        </if>
+        <if test="query.deptName != null and query.deptName != ''">
+            and ct.deptName like "%"#{query.deptName}"%"
+        </if>
+    </select>
+    <select id="checkedUnique" resultType="java.lang.Integer">
+        select id from c_attendance where companyId = #{companyId} and enumber = #{enumber} and workDate = #{workDate} limit 1
+    </select>
+    <select id="getAttendanceInfo" resultType="com.yskc.rs.entity.CustomerAttendanceEntity">
+        select id,workHour,onTime1,offTime1,onTime2,offTime2,onTime3,offTime3,workDate,enumber
+        from c_attendance
+        where companyId = #{companyId}
+        and workDate &lt;= #{monthEnd} and workDate >= #{monthBegin}
+        and enumber in
+        <foreach collection="enumbers" open="(" separator="," close=")" item="enumber">#{enumber}</foreach>
+        order by workDate
+    </select>
+    <select id="getRdAttendanceInfo" resultType="com.yskc.rs.models.projectattendance.BatchProjectHourAttendance">
+        select workHour as baseHours,enumber,workDate from c_attendance
+        where companyId = #{companyId}
+        and workDate &lt;= #{monthEnd} and workDate >= #{monthBegin}
+        and enumber in
+        <foreach collection="enumbers" open="(" separator="," close=")" item="enumber">
+            #{enumber}
+        </foreach>
+    </select>
+    <select id="getLimitOneId" resultType="java.lang.Integer">
+        select id from c_attendance where companyId = #{companyId} limit 1
+    </select>
+</mapper>

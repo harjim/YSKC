@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.PolicySummaryDao">
+    <select id="getInfo" resultType="com.yskc.rs.models.projectSummary.PolicySummaryModel">
+        select id,statute,filingMaterial,additionalDeduction from p_policy_summary where Id=1
+    </select>
+</mapper>

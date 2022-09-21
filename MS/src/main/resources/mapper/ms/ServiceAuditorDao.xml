@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.ServiceAuditorDao">
+
+    <insert id="addOrUpdate">
+        insert into service_apply_auditor (serviceApplyId,techManagerId,techDirectorId,finaManagerId,finaDirectorId,`creatorId`, `createTime`, `lastUpdateTime`, `lastUpdatorId`)
+        value (#{entity.serviceApplyId},#{entity.techManagerId},#{entity.techDirectorId},#{entity.finaManagerId},#{entity.finaDirectorId},
+            #{entity.creatorId},#{entity.createTime},#{entity.lastUpdateTime},#{entity.lastUpdatorId})
+        ON DUPLICATE KEY UPDATE
+                                     techManagerId = #{entity.techManagerId},
+                                     techDirectorId = #{entity.techDirectorId},
+                                     finaManagerId =#{entity.finaManagerId},
+                                     finaDirectorId =#{entity.finaDirectorId},
+         lastUpdateTime = #{entity.lastUpdateTime},
+         lastUpdatorId = #{entity.lastUpdatorId}
+    </insert>
+    <update id="updateAuditor">
+        update service_apply_auditor set techManagerId = #{entity.techManagerId},techDirectorId=#{entity.techDirectorId},finaManagerId=#{entity.finaManagerId},
+                                         finaDirectorId=#{entity.finaDirectorId},lastUpdateTime= #{entity.lastUpdateTime},lastUpdatorId=#{entity.lastUpdatorId}
+        where serviceApplyId = #{entity.serviceApplyId}
+    </update>
+</mapper>

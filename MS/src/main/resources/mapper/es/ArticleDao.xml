@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.es.ArticleDao">
+    <select id="getArtList" parameterType="com.yskc.ms.models.Article.QueryArticleModel" resultType="com.yskc.ms.models.Article.ArticleModel">
+        select a.id, a.createTime, a.title, a.type, a.author, a.source, a.content, a.issueDate,msCreatorId,top from article a
+            <where>
+                <if test="query.title != null and query.title !=''">
+                    and a.title like "%"#{query.title}"%"
+                </if>
+                <if test="query.author != null and query.author !=''">
+                    and a.author like "%"#{query.author}"%"
+                </if>
+                <if test="query.source != null and query.source !=''">
+                    and a.source like "%"#{query.source}"%"
+                </if>
+                <if test="query.type != null">
+                    and a.type = #{query.type}
+                </if>
+            </where>
+    </select>
+</mapper>

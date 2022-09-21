@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.docservice.dao.rs.SoftRegistrationDao">
+    <select id="getListByCompany" resultType="com.yskc.docservice.entity.rs.SoftRegistrationEntity">
+        select registerNo,certificateNo from softRegistration
+        where companyId=#{companyId}
+    </select>
+    <update id="updateSRs">
+        <foreach collection="softRegistrations" item="item" index="index" open="" close="" separator=";">
+            update softRegistration set
+            lastUpdatorId=#{item.lastUpdatorId},
+            lastUpdateTime=#{item.lastUpdateTime},
+            msLastUpdatorId=#{item.msLastUpdatorId},
+            softName=#{item.softName},
+            ownerName=#{item.ownerName},
+            issueDate=#{item.issueDate},
+            certificateNo=#{item.certificateNo},
+            `source`=#{item.source}
+            where registerNo=#{item.registerNo} and companyId=#{companyId}
+        </foreach>
+    </update>
+    <insert id="insertSRs">
+        insert into softRegistration
+        (`creatorId`,
+        `lastUpdatorId`,
+        `createTime`,
+        `lastUpdateTime`,
+        `msCreatorId`,
+        `msLastUpdatorId`,
+        `companyId`,
+        `softName`,
+        `ownerName`,
+        `issueDate`,
+        `registerNo`,
+        `certificateNo`,
+        `source`)
+        VALUES
+        <foreach collection="softRegistrations" item="item" separator=",">
+            (
+            #{item.creatorId},
+            #{item.lastUpdatorId},
+            #{item.createTime},
+            #{item.lastUpdateTime},
+            #{item.msCreatorId},
+            #{item.msLastUpdatorId},
+            #{companyId},
+            #{item.softName},
+            #{item.ownerName},
+            #{item.issueDate},
+            #{item.registerNo},
+            #{item.certificateNo},
+            #{item.source}
+            )
+        </foreach>
+    </insert>
+</mapper>

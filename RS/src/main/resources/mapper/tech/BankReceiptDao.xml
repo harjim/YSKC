@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yskc.rs.dao.tech.BankReceiptDao">
+    <delete id="delRelated">
+        delete from t_investment_bankReceipt
+        where investmentId=#{investmentId}
+        and bankReceiptId in
+        <foreach collection="delIds" item="bankReceiptId" open="(" separator="," close=")">
+                #{bankReceiptId}
+        </foreach>
+    </delete>
+
+    <select id="countInfo" resultType="com.yskc.rs.models.tech.InvestmentInfoModel">
+        select sum(tb.amount) as totalBank,tib.investmentId
+        from t_investment_bankReceipt tib
+        inner join t_bankReceipt tb on tib.bankReceiptId=tb.id
+        where tb.companyId=#{companyId} and tib.investmentId in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        group by tib.investmentId
+    </select>
+    <select id="getByInvestmentId" resultType="com.yskc.rs.models.tech.BankReceiptModel">
+        select tb.id,tb.transfer,tb.transferDate,tb.amount,tb.payee,tb.voucherNo,tb.payDate,tb.voucherPath,tb.bankReceiptPath,tib.investmentId
+        from t_bankReceipt tb
+        inner join t_investment_bankReceipt tib on tib.bankReceiptId=tb.id
+        where tib.investmentId=#{investmentId}
+    </select>
+    <select id="getReceiptInfo" resultType="com.yskc.rs.models.tech.BankReceiptModel">
+        select distinct tb.id,tb.transfer,tb.transferDate,tb.amount,tb.payee,tb.voucherNo,tb.payDate,tb.voucherPath,tb.bankReceiptPath
+        from t_bankReceipt tb
+        left join t_investment_bankReceipt tib on tib.bankReceiptId=tb.id
+        <if test="query.investmentId!=null and query.investmentId>0">
+            and tib.investmentId=#{query.investmentId}
+        </if>
+        where companyId=#{companyId}
+        <if test="query.investmentId!=null and query.investmentId>0">
+           and tib.id is null
+        </if>
+        <if test="query.voucherNo!=null and query.voucherNo!=''">
+            and tb.voucherNo like "%"#{query.voucherNo}"%"
+        </if>
+        <if test="query.payee!=null and query.payee!=''">
+            and tb.payee like "%"#{query.payee}"%"
+        </if>
+    </select>
+    <select id="getRelatedReceipt" resultType="com.yskc.rs.entity.tech.BankReceipt">
+        select tb.* from t_bankReceipt tb
+        inner join t_investment_bankReceipt tib on tb.id=tib.bankReceiptId
+        where tb.id in
+        <foreach collection="bankReceiptIds" item="bankReceiptId" open="(" separator="," close=")">
+            #{bankReceiptId}
+        </foreach>
+        <if test="investmentId!=null and investmentId>0">
+            and tib.investmentId !=#{investmentId}
+        </if>
+    </select>
+</mapper>

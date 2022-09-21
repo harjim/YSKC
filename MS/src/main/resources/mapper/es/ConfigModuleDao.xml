@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.es.ConfigModuleDao">
+    <update id="updateDisabled">
+        update config_module
+        set disabled = #{disabled},msLastUpdatorId = #{userId},lastUpdateTime = #{now}
+        where id = #{id}
+    </update>
+    <select id="getModuleList" resultType="com.yskc.ms.models.newexpert.index.ConfigModuleModel">
+        select id,moduleName,iconPath,imagePath,`description`,`order`,disabled, activeIconPath from config_module
+        <where>
+            <if test="query.moduleName != null and query.moduleName !=''">
+                and moduleName like "%"#{query.moduleName}"%"
+            </if>
+        </where>
+    </select>
+</mapper>

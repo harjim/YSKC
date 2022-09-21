@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.FlowInstanceReportDao">
+    <select id="getAuditInfo" resultType="java.lang.Integer">
+        select count(1)
+        from flowInstance_report fr
+        inner join flowInstance fi on fr.instanceId=fi.id
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id and fic.nodeStatus=0
+        inner join flowInstance_user fu on fu.instanceId=fi.id and fic.curNodeId=fu.nodeId
+        where fu.status is null and fu.userId=#{userId} and fr.companyId=#{companyId} and rsProjectId in
+        (<foreach collection="projectIds" item="projectId" separator=",">#{projectId}</foreach>)
+    </select>
+    <select id="getAuditStatus" resultType="com.yskc.ms.models.projectAudit.AuditStatusModel">
+            select fip.moduleId,fm.modeName,fn.nodeName,fi.flowId,fi.status,fic.nodeStatus,fic.curNodeId,fip.instanceId
+      from flowInstance_report fip
+        inner join flowInstance fi on fi.id = fip.instanceId
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id
+        inner join flowModule fm on fm.id=fip.moduleId
+        inner join flowNode fn on fn.id=fic.curNodeId
+        where fip.rsProjectId=#{rsProjectId}  and fip.moduleId=4
+        limit 1
+    </select>
+    <select id="getInstanceUsers" resultType="com.yskc.ms.entity.ms.FlowInstanceUser">
+        select fu.id,fu.instanceId,fu.nodeId from flowInstance fi
+        inner join flowInstance_report fr on fr.instanceId = fi.id
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id
+        inner join flowInstance_user fu on fu.instanceId=fi.id and fu.nodeId=fic.curNodeId
+        where fu.userId = #{userId} and fi.status = 0
+        and fr.rsProjectId in(<foreach collection="projectIds" separator="," item="projectId">#{projectId}</foreach>)
+    </select>
+    <select id="getProjectAuditStatus" resultType="com.yskc.ms.models.rs.ReportAuditInfoModel">
+        select distinct fr.rsProjectId,fi.status,fu.userId
+        from flowInstance_report fr
+        inner join flowInstance fi on fi.id=fr.instanceId
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id
+        left join flowInstance_user fu on fi.id=fu.instanceId and fic.curNodeId=fu.nodeId and fu.status is null and
+        fu.userId=#{userId}
+        where fr.rsProjectId in (<foreach collection="projectIds" item="projectId" separator=",">#{projectId}</foreach>)
+    </select>
+    <select id="getInstanceInfo" resultType="com.yskc.ms.models.flowInstance.FlowInstanceInfoModel">
+        select rsProjectId,moduleId from flowInstance_report where instanceId=#{instanceId} limit 1
+    </select>
+    <select id="getProjectInstanceUsers" resultType="com.yskc.ms.entity.ms.FlowInstanceUser">
+        select fu.id,fu.instanceId,fu.nodeId,fi.lastSubmiter
+        from flowInstance fi
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id
+        inner join flowInstance_report fir on fir.instanceId = fi.id
+        inner join flowInstance_user fu on fu.instanceId=fi.id and fu.nodeId=fic.curNodeId
+        where fir.rsProjectId in (<foreach collection="projectIds" item="projectId" separator=",">#{projectId}</foreach>)
+        and fu.userId = #{userId} and fi.status = 0
+        and fir.moduleId=#{moduleId}
+    </select>
+    <select id="getProjectInstances" resultType="com.yskc.ms.entity.ms.FlowInstanceCurNode">
+        select fic.instanceId,fic.curNodeId,fi.status
+        from flowInstance fi
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id
+        inner join flowInstance_report fir on fir.instanceId = fi.id
+        where fir.rsProjectId in (<foreach collection="projectIds" item="projectId" separator=",">#{projectId}</foreach>)
+        and fic.nodeStatus = 1
+        and fir.moduleId=#{moduleId}
+    </select>
+    <select id="getProjectAudits" resultType="com.yskc.ms.entity.ms.FlowInstanceReport">
+        select distinct fr.rsProjectId,fr.moduleId
+        from flowInstance_report fr
+        inner join flowInstance fi on fr.instanceId=fi.id
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id and fic.nodeStatus=0
+        inner join flowInstance_user fu on fu.instanceId=fi.id and fic.curNodeId=fu.nodeId and fu.status is null and
+        fu.userId=#{userId}
+        where fr.moduleId=4 and fr.rsProjectId in
+        <foreach collection="projectIds" item="projectId" open="(" separator="," close=")">
+            #{projectId}
+        </foreach>
+    </select>
+    <select id="getProjectInfo" resultType="com.yskc.ms.models.flowInstance.RdInstanceModel">
+        select rsProjectId,instanceId,companyId from flowInstance_report
+        where instanceId in (<foreach collection="instanceIds" item="instanceId" separator=",">#{instanceId}</foreach>)
+    </select>
+</mapper>

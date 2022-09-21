@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.project.RdEmployeePlanDao">
+
+    <insert id="insertOrUpdate">
+        insert into p_rdEmployee_plan (creatorId,lastUpdatorId,createTime,lastUpdateTime,
+        msCreatorId,msLastUpdatorId,companyId,projectId,`month`,enumber,planTime)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.creatorId},#{item.lastUpdatorId},#{item.createTime},#{item.lastUpdateTime},#{item.msCreatorId},#{item.msLastUpdatorId},#{item.companyId},
+            #{item.projectId},#{item.month},#{item.enumber},#{item.planTime})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        lastUpdatorId=values(lastUpdatorId),
+        lastUpdateTime=values(lastUpdateTime),
+        msLastUpdatorId=values(msLastUpdatorId),
+        planTime=values(planTime)
+    </insert>
+    <select id="getList" resultType="com.yskc.rs.models.employeePlan.PlanTimeModel">
+        select im.enumber,e.ename,rde.etype,im.companyId,im.projectId from i_member im
+        inner join employee as e on e.companyId =im.companyId and e.enumber = im.enumber
+        inner join rdEmployee rde on rde.companyId = im.companyId and rde.enumber = im.enumber and rde.year = im.year
+        where im.companyId=#{companyId} and im.projectId=#{query.projectId} and im.year=#{query.year}
+        <if test="query.enumber!=null and query.enumber!=''">
+            and im.enumber like "%"#{query.enumber}"%"
+        </if>
+        <if test="query.ename!=null and query.ename!=''">
+            and e.ename like "%"#{query.ename}"%"
+        </if>
+    </select>
+    <select id="getByEnumbers" resultType="com.yskc.rs.models.employeePlan.RdEmployeePlanModel">
+        select p.id,p.companyId,p.projectId,p.enumber,p.month,p.planTime,e.ename
+        from p_rdEmployee_plan p
+        inner join employee as e on e.enumber = p.enumber and e.companyId =p.companyId
+        where p.companyId=#{companyId} and p.projectId=#{projectId} and p.month&gt;=#{begin} and p.month &lt;=#{end} and
+        p.enumber in
+        <foreach collection="enumbers" item="enumber" open="(" separator="," close=")">
+            #{enumber}
+        </foreach>
+        order by p.enumber
+    </select>
+    <select id="getByMonths" resultType="com.yskc.rs.models.employeePlan.ExportRdEmployeePlanModel">
+        select prp.enumber,e.ename,prp.projectId,prp.planTime,prp.month,re.etype,p.rdTitle,p.pname,p.rdNumber
+        from p_rdEmployee_plan prp
+        inner join rdEmployee re on re.companyId=prp.companyId and re.enumber = prp.enumber and re.year = #{year}
+        inner join employee e on e.companyId = prp.companyId and e.enumber = prp.enumber
+        inner join p_project p on p.id = prp.projectId
+        where prp.companyId = #{companyId} and prp.month in
+        <foreach collection="months" open="(" separator="," close=")" item="m">#{m}</foreach>
+        order by prp.month,prp.enumber
+    </select>
+    <select id="getTotalList" resultType="com.yskc.rs.models.employeePlan.RdEmployeePlanTotalModel">
+        select rde.enumber,e.ename,sum(rep.planTime) total,rep.month,rde.etype from rdEmployee rde
+        inner join p_rdEmployee_plan rep on rde.companyId=rep.companyId and rde.enumber=rep.enumber
+        inner join employee e on e.companyId=rep.companyId and e.enumber=rep.enumber
+        where rde.companyId=#{companyId} and rde.year=#{query.year}
+        <if test="query.begin != null">and rep.month>=#{query.begin}</if>
+        <if test="query.end != null">and rep.month &lt;=#{query.end}</if>
+        <if test="query.enumber!=null and query.enumber!=''">and rde.enumber like "%"#{query.enumber}"%"</if>
+        <if test="query.ename!=null and query.ename!=''">and e.ename like "%"#{query.ename}"%"</if>
+        group by `month`,enumber,ename,etype
+        <if test="query.field == null or query.field == ''">order by `month` desc,enumber asc</if>
+    </select>
+    <select id="getProjectPlanTime" resultType="java.util.Map">
+        select p.rdTitle, prp.planTime,prp.enumber, prp.month
+        from p_rdEmployee_plan prp
+        left join p_project p on p.id = prp.projectId
+            where prp.companyId = #{companyId} and
+        <foreach collection="list" item="l" separator="or">
+            (
+            <if test="l.enumber!=null and l.enumber!=''">
+                prp.enumber = #{l.enumber}
+            </if>
+            <if test="l.month!=null">
+                and prp.month = #{l.month}
+            </if>
+            )
+        </foreach>
+        order by p.rdTitle
+    </select>
+    <select id="getRdPlans" resultType="com.yskc.rs.models.employeePlan.RdEmployeePlanModel">
+        select prp.enumber,prp.projectId,prp.planTime from p_rdEmployee_plan prp
+        inner join rdEmployee rde on rde.companyId=prp.companyId and rde.year=#{year} and rde.enumber=prp.enumber
+        inner join p_project p on p.id=prp.projectId
+        where prp.companyId=#{companyId} and prp.month=#{month}
+        and rde.etype in (<foreach collection="etypes" separator="," item="etype">#{etype}</foreach>)
+        order by p.rdTitle
+    </select>
+
+</mapper>

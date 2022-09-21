@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yskc.rs.dao.tech.NameplateDao">
+    <insert id="insertList">
+        insert into t_nameplate (seq,setPlace,companyId,investmentId,ename,emodal,manufacturer,factoryDate,factoryNo,
+        filePath,creatorId,createTime,lastUpdatorId,lastUpdateTime,msCreatorId,msLastUpdatorId)
+        values
+        <foreach collection="nameplates" item="item" separator=",">
+         (#{item.seq},#{item.setPlace},#{item.companyId},#{item.investmentId},#{item.ename},#{item.emodal},#{item.manufacturer},#{item.factoryDate},
+            #{item.factoryNo},#{item.filePath},#{item.creatorId},#{item.createTime},#{item.lastUpdatorId},#{item.lastUpdateTime},
+            #{item.msCreatorId},#{item.msLastUpdatorId})
+        </foreach>
+    </insert>
+    <delete id="delByInvestmentId">
+        delete from t_nameplate
+         where investmentId in
+        <foreach collection="investmentIds" item="investmentId" open="(" separator="," close=")">
+            #{investmentId}
+        </foreach>
+    </delete>
+
+
+    <select id="getByInvestmentIds" resultType="com.yskc.rs.models.tech.NameplateModel">
+        select id,investmentId,ename,emodal,manufacturer,factoryDate,factoryNo,filePath,seq,setPlace
+        from t_nameplate
+        where investmentId in
+        <foreach collection="ids" item="investmentId" open="(" separator="," close=")">
+            #{investmentId}
+        </foreach>
+    </select>
+</mapper>

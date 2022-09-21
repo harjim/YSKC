@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.project.ProjectStateDao">
+    <select id="getByProject" resultType="com.yskc.rs.entity.project.ProjectStateEntity">
+        select * from p_project_state
+        where projectId=#{projectId}
+    </select>
+</mapper>

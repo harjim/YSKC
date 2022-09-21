@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.ProposalListDao">
+
+    <select id="getList" resultType="com.yskc.rs.models.proposal.ProposalListModel">
+        select pl.id,pl.pname,pl.formula,pl.initiator,pl.deptName,pp.rdTitle,pl.proposalDate,
+        pl.involvedProduct,pl.tBeginDate,pl.tEndDate,pl.beginDate,pl.endDate,pl.createTime,pp.rdTitle
+        from proposal_list pl
+        left join p_project pp on pl.projectId = pp.id
+        where pl.companyId = #{companyId}
+        <if test="null != query.pname and query.pname != ''">
+            and pl.pname like "%"#{query.pname}"%"
+        </if>
+        <if test="null != query.formula">
+            and pl.formula = #{query.formula}
+        </if>
+        <if test="null !=query.initiator and query.initiator !=''">
+            and pl.initiator like "%"#{query.initiator}"%"
+        </if>
+    </select>
+    <select id="getInfo" resultType="com.yskc.rs.models.proposal.ProposalListModel">
+        select pl.id,pl.pname,pl.formula,pl.initiator,pl.deptName,pp.rdTitle,pl.proposalDate,pl.projectId,
+        pl.involvedProduct,pl.tBeginDate,pl.tEndDate,pl.beginDate,pl.endDate,pl.createTime,pp.rdTitle,
+        pl.members,pl.equipments,pl.situation,pl.research,pl.comparison,pl.progressPlan,pl.target,pl.innovation
+        from proposal_list pl
+        left join p_project pp on pl.projectId = pp.id
+        where pl.id=#{id}
+    </select>
+    <select id="getByProjectIds" resultType="com.yskc.rs.models.proposal.ProposalListModel">
+        select id,pname,projectId from proposal_list where projectId in (
+            <foreach collection="ids" item="id" separator=",">
+                #{id}
+            </foreach>
+            )
+    </select>
+    <select id="getByProjectId" resultType="com.yskc.rs.models.proposal.ProposalListModel">
+        select id,pname,projectId from proposal_list where projectId is null OR projectId = #{id}
+        order by lastUpdateTime DESC
+    </select>
+    <update id="edit">
+        update proposal_list set projectId=#{entity.projectId},pname=#{entity.pname},proposalDate=#{entity.proposalDate},
+            formula=#{entity.formula},deptName=#{entity.deptName},beginDate=#{entity.beginDate},endDate=#{entity.endDate},
+            tBeginDate=#{entity.tBeginDate},tEndDate=#{entity.tEndDate},initiator=#{entity.initiator},involvedProduct=#{entity.involvedProduct},
+            members=#{entity.members},equipments=#{entity.equipments},situation=#{entity.situation},research=#{entity.research},
+            comparison=#{entity.comparison},progressPlan=#{entity.progressPlan},target=#{entity.target},lastUpdateTime=#{entity.lastUpdateTime},
+            lastUpdatorId=#{entity.lastUpdatorId},msLastUpdatorId=#{entity.msLastUpdatorId},innovation=#{entity.innovation}
+            where id=#{entity.id}
+    </update>
+    <update id="relevance">
+        update proposal_list set projectId=#{model.projectId},lastUpdateTime=#{date},
+                lastUpdatorId=#{info.userId},msLastUpdatorId=#{info.msUserId}
+        where id in (
+            <foreach collection="model.ids" separator="," item="id">
+                #{id}
+            </foreach>
+        )
+    </update>
+    <update id="cancelRelevance">
+        update proposal_list set projectId=null,lastUpdateTime=#{date},
+        lastUpdatorId=#{info.userId},msLastUpdatorId=#{info.msUserId}
+        where projectId = #{projectId}
+    </update>
+</mapper>

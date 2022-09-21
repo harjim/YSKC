@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.UserDeptDao">
+    <insert id="insertBatch" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `user_dept`
+        (
+        `userId`,
+        `depId`,
+        `dingUserId`,
+        `isAdmin`,
+        `unionid`
+        )
+        VALUES
+        <foreach collection="list" separator="," item="item">
+            (
+            #{item.userId},
+            #{item.depId},
+            #{item.dingUserId},
+            #{item.isAdmin},
+            #{item.unionid}
+            )
+        </foreach>
+    </insert>
+
+    <delete id="deleteAll">
+        truncate table user_dept
+    </delete>
+    <delete id="deleteByUserId">
+        delete from user_dept where userId = #{userId}
+    </delete>
+    <delete id="deleteByUserIds">
+        delete from user_dept where userId in
+        <foreach item="item" index="index" collection="userIds" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and depId in
+        <foreach item="item" index="index" collection="deptIds" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+    <delete id="deleteByUserIdAndDeptIds">
+        delete from user_dept where userId = #{userId}
+        and depId in
+        <foreach item="item" index="index" collection="delIds" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+    <select id="getByUserId" resultType="java.lang.String">
+        select d.fullPath from ys_dept as d
+        left join user_dept as ud on d.id = ud.depId
+        where ud.userId = #{userId}  order by d.fullPath
+    </select>
+    <select id="getByUserIds" resultType="com.yskc.ms.models.user.UserDeptModel">
+        select ud.userId,ud.depId deptId,d.deptName deptName from user_dept as ud
+        left join ys_dept d on d.id = ud.depId
+        where ud.userId in
+        <foreach item="item" index="index" collection="userIds" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        <if test="fullPath != null and fullPath != ''">
+            and d.fullPath like #{fullPath}"%"
+        </if>
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.selectDept">
+            <property name="table" value="d"/>
+            <property name="userDept" value="ud"/>
+        </include>
+        order by ud.id
+    </select>
+    <select id="getUserIdByFullPath" resultType="java.lang.Integer">
+        select distinct ud.userId from user_dept as ud
+        left join ys_dept as d on d.id = ud.depId
+        where (
+        <foreach collection="allFullPath" item="path" separator="or">
+            d.fullPath like #{path}"%"
+        </foreach>
+        )
+    </select>
+    <select id="getUserDeptId" resultType="java.lang.Integer">
+        select depId from user_dept
+        where userId = #{userId} order by depId asc limit 1
+    </select>
+
+    <delete id="deleteDeptUser">
+        DELETE FROM user_dept where
+        userId in
+        <foreach item="item" index="index" collection="userIds" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and depId = #{deptId}
+    </delete>
+    <update id="updateDDUserDept">
+        DELETE FROM user_dept where dingUserId!=''
+        <if test="retainIds != null and retainIds.size>0">
+            and id not in
+            <foreach collection="retainIds" item="id" index="index" open="(" separator="," close=")">
+                #{id}
+            </foreach>;
+        </if>
+        <if test="list != null and list.size>0">
+            INSERT INTO `user_dept` (`userId`,`depId`,`dingUserId`,`isAdmin`,`unionid`)
+            VALUES
+            <foreach collection="list" separator="," item="item">
+                (#{item.userId},#{item.depId},#{item.dingUserId},#{item.isAdmin},#{item.unionid})
+            </foreach>
+        </if>;
+    </update>
+    <update id="updateDDUserAdmin">
+            update `user_dept` set `isAdmin`=1
+            where userId not in
+            <foreach collection="userIds" open="(" separator="," close=")" item="userId">
+                #{userId}
+            </foreach> and <foreach collection="list" open="("  separator="or" close=")" item="item">
+                (userId=#{item.userId} and depId=#{item.depId})
+            </foreach>;
+        update `user_dept` set `isAdmin`=0
+        where userId not in
+        <foreach collection="userIds" open="(" separator="," close=")" item="userId">
+            #{userId}
+        </foreach> and <foreach collection="list" open="(" separator="and" close=")" item="item">
+        (userId!=#{item.userId} or depId!=#{item.depId})
+    </foreach>;
+    </update>
+    <update id="updateByUserIds">
+        update `user_dept` set `isAdmin`=#{isAdmin}
+        where userId in
+        (<foreach collection="userIds" item="userId" separator=",">
+            #{userId}
+        </foreach>) and depId = #{deptId}
+    </update>
+    <select id="getPrincipal" resultType="java.lang.Integer">
+        select userId from `user_dept`
+        where `isAdmin`=1 and depId = #{deptId}
+    </select>
+    <select id="getDDUserDept" resultType="com.yskc.ms.entity.ms.UserDept">
+        SELECT id,userId,depId,dingUserId FROM msdb.user_dept where dingUserId!=''
+    </select>
+    <select id="getDeptManager" resultType="java.lang.Integer">
+        select distinct ud.userId from user_dept ud
+        inner join (select depId,userId from user_dept where userId in
+        <foreach collection="userIds" open="(" separator="," close=")" item="userId">
+            #{userId}
+        </foreach>
+        group by depId,userId) t on t.depId = ud.depId
+        where ud.isAdmin
+    </select>
+    <select id="getUserByDeptId" resultType="com.yskc.ms.models.user.MiniUserModel">
+        select yu.id, yu.realName,yu.userName,ud.depId deptId,yd.deptName
+        from user_dept ud
+        inner join ys_user yu on ud.userId = yu.id
+        inner join ys_dept yd on yd.id = ud.depId
+        where ud.depId = #{deptId}
+    </select>
+</mapper>

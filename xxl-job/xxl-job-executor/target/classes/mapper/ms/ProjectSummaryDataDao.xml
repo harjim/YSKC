@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xxl.job.executor.dao.ms.ProjectSummaryDataDao">
+    <insert id="insertOrUpdate">
+        INSERT INTO project_summary_data
+        (customerId,`year`,cnt,accountType,rdFee,employeeAmount,revenueFcst,rdCount,budget,rdFunds,docFileCount,
+         createTime,updateTime, operationTime,operationUserId,employeeCount,rdEmployeeCount,equipmentCount,
+         rdEquipmentCount,patentApplyCnt,lastRdCnt,nextRdCnt,buildCnt,employeeOpenidCnt,reportCnt,c10000,c10100,c20000,
+        c20100,c20200,c20300,c20500,c20600,c20700,c30000,c40000,c40200,c50000,c69900,costAmount,patentCnt,levelFileCnt,
+        proposalCnt,revenue,achievementCnt,highTechCount,highTechIncome,totalIncome)
+        VALUES
+        <foreach collection="summaries" item="d" separator=",">
+            (#{d.customerId},#{d.year},#{d.cnt},#{d.accountType},#{d.rdFee},#{d.employeeAmount},#{d.revenueFcst},#{d.rdCount},#{d.budget},#{d.rdFunds},#{d.docFileCount},
+            #{d.createTime},#{d.updateTime},#{d.operationTime},#{d.operationUserId},#{d.employeeCount},#{d.rdEmployeeCount},#{d.equipmentCount},
+            #{d.rdEquipmentCount},#{d.patentApplyCnt},#{d.lastRdCnt},#{d.nextRdCnt},#{d.buildCnt},#{d.employeeOpenidCnt},#{d.reportCnt},#{d.c10000},#{d.c10100},#{d.c20000},
+            #{d.c20100},#{d.c20200},#{d.c20300},#{d.c20500},#{d.c20600},#{d.c20700},#{d.c30000},#{d.c40000},#{d.c40200},#{d.c50000},#{d.c69900},#{d.costAmount},#{d.patentCnt},#{d.levelFileCnt},
+            #{d.proposalCnt},#{d.revenue},#{d.achievementCnt},#{d.highTechCount},#{d.highTechIncome},#{d.totalIncome})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        operationTime=values(operationTime),cnt=values(cnt),accountType=values(accountType),rdFee=values(rdFee),
+        employeeAmount=values(employeeAmount),revenueFcst=values(revenueFcst),rdCount=values(rdCount),budget=values(budget),
+        rdFunds=values(rdFunds),docFileCount=values(docFileCount),updateTime=values(updateTime),operationUserId=values(operationUserId),
+        employeeCount=values(employeeCount),rdEmployeeCount=values(rdEmployeeCount),equipmentCount=values(equipmentCount),
+        rdEquipmentCount=values(rdEquipmentCount),patentApplyCnt=values(patentApplyCnt),lastRdCnt=values(lastRdCnt),
+        nextRdCnt=values(nextRdCnt),buildCnt=values(buildCnt),employeeOpenidCnt=values(employeeOpenidCnt),reportCnt=values(reportCnt),
+        c10000=values(c10000),c10100=values(c10100),c20000=values(c20000),c20100=values(c20100),c20200=values(c20200),
+        c20300=values(c20300),c20500=values(c20500),c20600=values(c20600),c20700=values(c20700),c30000=values(c30000),
+        c40000=values(c40000),c40200=values(c40200),c50000=values(c50000),c69900=values(c69900),costAmount=values(costAmount),
+        patentCnt=values(patentCnt),levelFileCnt=values(levelFileCnt),proposalCnt=values(proposalCnt),revenue=values(revenue),
+        achievementCnt=values(achievementCnt),highTechCount=values(highTechCount),highTechIncome=values(highTechIncome),
+        totalIncome=values(totalIncome)
+    </insert>
+    <insert id="insertOrUpdateDistrict">
+        INSERT INTO c_rd_summary_district
+        (deptId,`year`,rdPlanCount,accountType,rdFee,employeeAmount,revenueFcst,rdCount,budget,rdFunds,docFileCount,
+        createTime,lastUpdateTime,rdEmployeeCount,rdEquipmentCount,lastRdCnt,nextRdCnt,
+         reportCnt,c10000,c10100,c20000, c20100,c20200,c20300,c20500,c20600,c20700,c30000,c40000,c40200,c50000,c69900,
+         costAmount,patentCnt,levelFileCnt, proposalCnt,revenue,achievementCnt,highTechCount,highTechIncome,totalIncome,buildCount)
+        VALUES
+        <foreach collection="list" item="d" separator=",">
+            (#{d.deptId},#{d.year},#{d.cnt},#{d.accountType},#{d.rdFee},#{d.employeeAmount},#{d.revenueFcst},#{d.rdCount},
+             #{d.budget},#{d.rdFunds},#{d.docFileCount}, #{now},#{now},#{d.rdEmployeeCount},#{d.rdEquipmentCount},
+             #{d.lastRdCnt},#{d.nextRdCnt},#{d.reportCnt},#{d.c10000},#{d.c10100},
+             #{d.c20000},#{d.c20100},#{d.c20200},#{d.c20300},#{d.c20500},#{d.c20600},#{d.c20700},#{d.c30000},#{d.c40000},
+             #{d.c40200},#{d.c50000},#{d.c69900},#{d.costAmount},#{d.patentCnt},#{d.levelFileCnt}, #{d.proposalCnt},
+             #{d.revenue},#{d.achievementCnt},#{d.highTechCount},#{d.highTechIncome},#{d.totalIncome},#{d.buildCnt})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        lastUpdateTime=values(lastUpdateTime),rdPlanCount=values(rdPlanCount),accountType=values(accountType),rdFee=values(rdFee),
+        employeeAmount=values(employeeAmount),revenueFcst=values(revenueFcst),rdCount=values(rdCount),budget=values(budget),
+        rdFunds=values(rdFunds),docFileCount=values(docFileCount),rdEmployeeCount=values(rdEmployeeCount),rdEquipmentCount=values(rdEquipmentCount),
+        lastRdCnt=values(lastRdCnt),nextRdCnt=values(nextRdCnt),reportCnt=values(reportCnt),c10000=values(c10000),
+        c10100=values(c10100),c20000=values(c20000),c20100=values(c20100),c20200=values(c20200),c20300=values(c20300),
+        c20500=values(c20500),c20600=values(c20600),c20700=values(c20700),c30000=values(c30000),
+        c40000=values(c40000),c40200=values(c40200),c50000=values(c50000),c69900=values(c69900),costAmount=values(costAmount),
+        patentCnt=values(patentCnt),levelFileCnt=values(levelFileCnt),proposalCnt=values(proposalCnt),revenue=values(revenue),
+        achievementCnt=values(achievementCnt),highTechCount=values(highTechCount),highTechIncome=values(highTechIncome),
+        totalIncome=values(totalIncome),buildCount=values(buildCount)
+    </insert>
+    <select id="getCustomerYearRdFunds" resultType="com.xxl.job.executor.models.district.RsSummaryModel">
+        select customerId,`year`,sum(rdFunds) as rdFunds from project_summary_data
+        where
+        <foreach collection="data" separator=" or " item="d">
+            (customerId = #{d.customerId} and `year` = #{d.year})
+        </foreach>
+        group by customerId, `year`
+    </select>
+    <select id="getData" resultType="com.xxl.job.executor.entity.rs.CompanyRdSummary">
+        select psd.year,psd.rdCount,psd.docFileCount,psd.rdEmployeeCount,psd.rdEquipmentCount,psd.rdFunds,
+               c.companyId,psd.buildCnt buildCount from project_summary_data psd
+        inner join customer c on c.id=psd.customerId
+        where psd.updateTime >=#{lastTime}
+    </select>
+    <select id="getPatentApplyCnt" resultType="com.xxl.job.executor.models.projectsummary.PatentApplySummaryModel">
+        select count(pp.id) patentApplyCnt,c.companyId,`year` from patent_plan pp
+        inner join customer c on c.id=pp.customerId
+        where pp.year=#{year} and c.companyId in
+        <foreach collection="companyIds" item="cId" separator="," open="(" close=")">
+            #{cId}
+        </foreach>
+        group by companyId,`year`
+    </select>
+    <select id="getDistrictData" resultType="com.xxl.job.executor.entity.ms.ProjectSummaryData">
+        select yd.branchId deptId,#{year} `year`,sum(cnt)cnt,sum(accountType)accountType,sum(rdFee)rdFee,
+        sum(employeeAmount)employeeAmount,sum(revenueFcst)revenueFcst,sum(rdCount)rdCount,sum(budget)budget,
+        sum(rdFunds)rdFunds,sum(docFileCount)docFileCount,sum(rdEmployeeCount)rdEmployeeCount,sum(rdEquipmentCount)rdEquipmentCount,
+        sum(lastRdCnt)lastRdCnt,sum(nextRdCnt)nextRdCnt,sum(buildCnt)buildCnt, sum(reportCnt)reportCnt,sum(c10000)c10000,
+        sum(c10100)c10100,sum(c20000)c20000,sum(c20100)c20100,sum(c20200)c20200,sum(c20300)c20300,sum(c20500)c20500,
+        sum(c20600)c20600,sum(c20700)c20700,sum(c30000)c30000,sum(c40000)c40000, sum(c40200)c40200,sum(c50000)c50000,
+        sum(c69900)c69900,sum(costAmount)costAmount,sum(patentCnt)patentCnt,sum(levelFileCnt)levelFileCnt,
+        sum(proposalCnt)proposalCnt,sum(revenue)revenue,sum(achievementCnt)achievementCnt,sum(highTechCount)highTechCount,
+        sum(highTechIncome)highTechIncome,sum(totalIncome)totalIncome
+        from project_summary_data psd
+        inner join customer c on c.id=psd.customerId
+        inner join ys_dept yd on yd.id=c.deptId
+        where psd.year=#{year} and yd.branchId in (<foreach collection="branchIds" separator="," item="bId">#{bId}</foreach>)
+        group by deptId,`year`
+    </select>
+</mapper>

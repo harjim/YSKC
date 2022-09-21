@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.InsuranceConfigDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+	<resultMap type="com.yskc.rs.entity.InsuranceConfigEntity"
+		id="insuranceConfigMap">
+		<result property="id" column="id" />
+		<result property="companyId" column="companyId" />
+		<result property="deptId" column="deptId" />
+		<result property="enumber" column="enumber" />
+		<result property="startMonth" column="startMonth" />
+		<result property="endMonth" column="endMonth" />
+		<result property="endowment" column="endowment" />
+		<result property="medical" column="medical" />
+		<result property="unemployment" column="unemployment" />
+		<result property="injury" column="injury" />
+		<result property="maternity" column="maternity" />
+		<result property="house" column="house" />
+		<result property="endowmentOfCom" column="endowmentOfCom" />
+		<result property="medicalOfCom" column="medicalOfCom" />
+		<result property="unemploymentOfCom" column="unemploymentOfCom" />
+		<result property="injuryOfCom" column="injuryOfCom" />
+		<result property="maternityOfCom" column="maternityOfCom" />
+		<result property="houseOfCom" column="houseOfCom" />
+	</resultMap>
+
+	<select id="queryStartDate"
+		resultType="com.yskc.rs.models.InsuranceConfig.InsuranceConfigModel">
+		select * from sys_insuranceConfig
+		where startMonth = #{month}
+		and companyId = #{companyId}
+		and deptId = #{deptId}
+		and enumber =
+		#{enumber}
+		<if test="id != 0">
+			and id != #{id}
+		</if>
+
+	</select>
+
+	<select id="queryContainStartAndEnd"
+		resultType="com.yskc.rs.entity.InsuranceConfigEntity">
+		select * from sys_insuranceConfig
+		where startMonth &lt;=
+		#{startMonth}
+		and endMonth &gt;= #{startMonth}
+		and companyId = #{companyId}
+		and deptId
+		= #{deptId}
+		and enumber = #{enumber}
+		<if test="id != 0">
+			and id != #{id}
+		</if>
+	</select>
+
+	<select id="queryInsuranceConfigByCompanyIdAndDeptIdAndEnumber"
+		resultType="com.yskc.rs.entity.InsuranceConfigEntity">
+		select * from sys_insuranceConfig
+		where companyId =
+		#{companyId}
+		and deptId = #{deptId}
+		and enumber = #{enumber}
+		order by startMonth ASC
+	</select>
+
+	<select
+		id="queryInsuranceConfigByCompanyIdAndDeptIdAndEnumberAndStartMonthAndEndMonth"
+		resultType="com.yskc.rs.entity.InsuranceConfigEntity">
+		select * from sys_insuranceConfig
+		where companyId =
+		#{companyId}
+		and deptId = #{deptId}
+		and enumber = #{enumber}
+		and startMonth &lt;= #{month} and
+		(
+		CASE WHEN endMonth IS NOT NULL
+		THEN endMonth &gt;= #{month}
+		ELSE 1=1
+		END
+		)
+		order by startMonth ASC
+	</select>
+
+	<update id="updateEndMonth">
+		UPDATE sys_insuranceConfig SET
+		companyId=#{model.companyId},
+		deptId=#{model.deptId},
+		enumber=#{model.enumber},
+		startMonth=#{model.startMonth},
+		endMonth=#{model.endMonth},
+		endowment=#{model.endowment},
+		medical=#{model.medical},
+		unemployment=#{model.unemployment},
+		injury=#{model.injury},
+		maternity=#{model.maternity},
+		house=#{model.house},
+		endowmentOfCom=#{model.endowmentOfCom},
+		medicalOfCom=#{model.medicalOfCom},
+		unemploymentOfCom=#{model.unemploymentOfCom},
+		injuryOfCom=#{model.injuryOfCom},
+		maternityOfCom=#{model.maternityOfCom},
+		houseOfCom=#{model.houseOfCom},
+		lastUpdatorId=#{model.lastUpdatorId},
+		lastUpdateTime=#{model.lastUpdateTime},
+		msLastUpdatorId=#{model.msLastUpdatorId}
+		WHERE id=#{model.id}
+	</update>
+</mapper>

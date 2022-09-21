@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.FileDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.yskc.rs.entity.FileEntity" id="fileMap">
+        <result property="id" column="id"/>
+        <result property="creatorId" column="creatorId"/>
+        <result property="createTime" column="createTime"/>
+        <result property="lastUpdatorId" column="lastUpdatorId"/>
+        <result property="lastUpdateTime" column="lastUpdateTime"/>
+        <result property="projectId" column="projectId"/>
+        <result property="companyId" column="companyId"/>
+        <result property="fileName" column="fileName"/>
+        <result property="filePath" column="filePath"/>
+        <result property="type" column="type"/>
+    </resultMap>
+    <delete id="deleteByProjectId">
+        DELETE from p_file where companyId = #{entity.companyId} and projectId = #{entity.projectId};
+    </delete>
+    <select id="selectByProjectId" resultType="com.yskc.rs.entity.FileEntity">
+        select * from p_file where projectId = #{projectId}
+    </select>
+    <select id="queryFilePath" resultType="com.yskc.rs.entity.FileEntity">
+        select * from p_file where companyId = #{companyId} and projectId = #{projectId};
+    </select>
+
+
+</mapper>

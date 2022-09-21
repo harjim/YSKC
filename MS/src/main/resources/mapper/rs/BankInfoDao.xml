@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.rs.BankInfoDao">
+    <select id="getByCompanyId" resultType="com.yskc.ms.models.company.BankInfoModel">
+        select id,`year`,bankName,bankAccount,accountName,creditRating,industry,companyId,filePath from c_bank_info
+        where companyId=#{companyId} order by `year` desc limit 1
+    </select>
+    <select id="getByYear" resultType="com.yskc.ms.entity.rs.BankInfoEntity">
+        select * from c_bank_info where companyId = #{companyId} and `year` = #{year}
+    </select>
+</mapper>

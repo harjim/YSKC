@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.xxl.job.executor.dao.ms.PolicySourceUserDao">
+    <select id="getSubscription" resultType="com.xxl.job.executor.models.policy.SourceUserModel">
+        select ps.sourceId,du.dingUserId,du.userId
+        from policySourceUser ps
+        INNER JOIN d_user du on du.userId = ps.userId
+        where ps.sourceId in
+        <foreach collection="sourceIds" item="sourceId" open="(" separator="," close=")">
+            #{sourceId}
+        </foreach>
+        <if test="userId != null">
+            and du.userId = #{userId}
+        </if>
+    </select>
+</mapper>

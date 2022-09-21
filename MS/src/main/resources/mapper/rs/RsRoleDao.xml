@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.rs.RsRoleDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.yskc.ms.entity.rs.RsRole" id="roleMap">
+        <result property="id" column="id"/>
+        <result property="companyId" column="companyId"/>
+        <result property="roleName" column="roleName"/>
+        <result property="remark" column="remark"/>
+        <result property="creatorId" column="creatorId"/>
+        <result property="createTime" column="createTime"/>
+    </resultMap>
+    <select id="checkRepeatCompanyRole" resultType="int">
+        select count(id) from app_role where companyId = #{companyId} and roleName=#{roleName}
+    </select>
+    <select id="getList" resultType="com.yskc.ms.entity.rs.models.role.RsRoleModel">
+        select ar.id,ar.companyId,ar.roleName,ar.remark,ar.creatorId,ar.createTime,c.companyName,ar.mType,ar.productType
+        <if test="query.companyId != null">
+            ,acr.roleId as selectedRoleId
+        </if>
+        from app_role as ar
+        LEFT JOIN `company` as c on c.id = ar.companyId
+        <if test="query.companyId != null">
+            LEFT JOIN app_company_role acr on acr.companyId=#{query.companyId} and acr.roleId=ar.id
+        </if>
+        where 1=1
+        <if test="query.companyName != null and query.companyName != ''">
+            and c.companyName like "%"#{query.companyName}"%"
+        </if>
+        <if test="query.roleName != null and query.roleName != ''">
+            and ar.roleName like "%"#{query.roleName}"%"
+        </if>
+        <if test="query.companyId != null">
+            and (ar.companyId=#{query.companyId} or ar.companyId=0)
+        </if>
+    </select>
+
+    <select id="getCompany" resultType="com.yskc.ms.models.MiniModel">
+        select id,companyName as title from company where companyName like "%"#{companyName}"%" ORDER BY companyName limit 5
+    </select>
+
+    <select id="getRoleUserId" resultType="java.lang.Integer">
+         select roleId from app_user_role where userId=#{userId} and companyId=#{companyId}
+    </select>
+
+    <select id="getRoles" resultType="com.yskc.ms.entity.rs.models.role.RsRoleModel">
+        select a.id,a.companyId,a.roleName,a.remark,a.creatorId,a.createTime
+        from app_role as a
+        INNER JOIN app_company_role acr on a.id = acr.roleId
+        where acr.companyId=#{companyId}
+        <if test="roleName != null and roleName != ''">
+            and a.roleName like "%"#{roleName}"%"
+        </if>
+        order by a.companyId,a.createTime
+    </select>
+
+    <select id="queryMsUserName" resultType="com.yskc.ms.entity.rs.models.role.RsRoleModel">
+        select msUserId,realName from app_manager_user
+        where msUserId in
+        <foreach item="item" index="index" collection="userIds" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+    <select id="queryCustomer" resultType="com.yskc.ms.entity.rs.models.role.RsRoleModel">
+        select c.companyName,acr.createTime from app_company_role acr inner join company c on acr.companyId=c.id
+        where acr.roleId = #{roleId}
+        <if test="companyName != null and companyName != ''">
+            and c.companyName like "%"#{companyName}"%"
+        </if>
+    </select>
+    <insert id="addCompanyRole">
+        insert into app_company_role (roleId,companyId,creatorId,lastUpdatorId,createTime,lastUpdateTime,msCreatorId,msLastUpdatorId)
+        values (#{roleId},#{companyId},-1,-1,#{createTime},#{createTime},#{userId},#{userId})
+    </insert>
+    <insert id="addBatchCompanyRole">
+        insert into app_company_role
+        (roleId,companyId,creatorId,lastUpdatorId,createTime,lastUpdateTime,msCreatorId,msLastUpdatorId)
+        values
+        <foreach item="roleId" index="index" collection="roleIds" separator=",">
+            (#{roleId},#{companyId},-1,-1,#{createTime},#{createTime},#{userId},#{userId})
+        </foreach>
+    </insert>
+    <delete id="delCompanyRoleByCompanyId">
+        delete from app_company_role where companyId=#{companyId} and roleId in
+        <foreach collection="roleIds" item="roleId" open="(" separator="," close=")">
+            #{roleId}
+        </foreach>
+    </delete>
+    <select id="getRoleName" resultType="com.yskc.ms.entity.rs.models.role.RsRoleModel">
+        select aur.companyId,group_concat(ar.roleName) as roleName from app_role ar
+            inner join app_user_role aur on ar.id = aur.roleId
+        where aur.userId=#{userId} and aur.companyId in
+             <foreach collection="companyIds" item="id" open="(" close=")" separator=",">
+                 #{id}
+             </foreach>
+        GROUP BY aur.companyId
+    </select>
+</mapper>

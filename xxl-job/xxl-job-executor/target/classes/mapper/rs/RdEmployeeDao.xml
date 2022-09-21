@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xxl.job.executor.dao.rs.RdEmployeeDao">
+    <select id="getRdEmployee" resultType="com.xxl.job.executor.models.ProjectInfo.EmployeeNumModel">
+        select rd.companyId,MIN(rd.createTime) beginTime ,MAX(rd.lastUpdateTime) endTime,Count(1) num,rd.year
+        from  rdEmployee rd
+         inner join
+         (select companyId,`year` from rdEmployee
+                        where lastUpdateTime &gt;= #{countTime} and companyId in
+                        <foreach collection="companyIds" item="companyId" open="(" close=")" separator=",">
+                            #{companyId}
+                        </foreach>) rd1 on rd.companyId=rd1.companyId and rd1.year=rd.year
+        group by companyId,year
+    </select>
+    <select id="getRdTitle" resultType="com.xxl.job.executor.models.ProjectInfo.ProjectDataModel">
+        select group_concat(p1.rdTitle,'-',p1.`pname`) rdTitle,MIN(p1.lastUpdateTime) beginTime ,MAX(p1.lastUpdateTime) endTime,p1.beginYear `year`,p1.companyId
+        from p_project p1
+        inner join (select beginYear,companyId from p_project
+        where lastUpdateTime &gt;= #{countTime} and (
+        <foreach collection="models" item="item" separator="or">
+            (beginYear=#{item.year} and companyId=#{item.companyId})
+        </foreach>)
+        group by beginYear,companyId ) p2 on p1.companyId=p2.companyId and p1.beginYear=p2.beginYear
+        group by p1.companyId,p1.beginYear
+    </select>
+</mapper>

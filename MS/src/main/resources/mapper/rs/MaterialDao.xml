@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.rs.MaterialDao">
+
+    <select id="getMaterialPlanData" resultType="com.yskc.ms.models.rs.MaterialPlanModel">
+        <bind name="projectIds" value="'4428,4430,4431,4432,8879,8880,8911'"></bind>
+        <bind name="projectIdStr" value="','+projectId"></bind>
+        <if test="projectIds.contains(projectIdStr)">
+            select pm.used as quantity,dm.mcode,dm.mname,dm.picker as billNo,
+            dm.biller as remark, dm.acqDate as acqDate,dm.unit
+            from p_material pm
+            inner join d_material dm on dm.id=pm.materialDataId
+            where pm.projectId=#{projectId} and pm.rdType in
+            <foreach collection="costTypes" item="rdType" open="(" separator="," close=")">
+                #{rdType}
+            </foreach>
+            <if test="type!=null">
+                and dm.type = #{type}
+            </if>
+            <if test="beginDate!=null">
+                and dm.acqDate &gt;= #{beginDate}
+            </if>
+            <if test="endDate!=null">
+                and dm.acqDate &lt;= #{endDate}
+            </if>
+            order by acqDate
+        </if>
+        <if test="!projectIds.contains(projectIdStr)">
+            select sum(pm.used) as quantity,dm.mcode,dm.mname,max(dm.billNo)as billNo,
+            max(dm.remark) as remark,max(dm.acqDate) as acqDate,dm.unit
+            from p_material pm
+            inner join d_material dm on dm.id=pm.materialDataId
+            where pm.projectId=#{projectId} and pm.rdType in
+            <foreach collection="costTypes" item="rdType" open="(" separator="," close=")">
+                #{rdType}
+            </foreach>
+            <if test="type!=null">
+                and dm.type = #{type}
+            </if>
+            <if test="beginDate!=null">
+                and dm.acqDate &gt;= #{beginDate}
+            </if>
+            <if test="endDate!=null">
+                and dm.acqDate &lt;= #{endDate}
+            </if>
+            group by dm.mcode,dm.mname,dm.unit
+            order by acqDate
+        </if>
+        </select>
+    <select id="getMaterialFeesData" resultType="com.yskc.ms.models.projectAudit.RdFeeMaterialModel">
+        select d.mcode,d.mname,d.acqDate,d.unitPrice,d.quantity,d.unit,d.totalAmount,p.used,p.rdAmount
+        from p_material p
+        INNER JOIN d_material d on d.id = p.materialDataId
+        where p.companyId = #{query.companyId}
+        <if test="query.rdTypes!=null and query.rdTypes.size()>0">
+            and p.rdType in
+            <foreach collection="query.rdTypes" item="rdType" open="(" separator="," close=")">
+                #{rdType}
+            </foreach>
+        </if>
+        and p.projectId = #{query.projectId}
+        <if test="query.month!=null">
+            and d.acqDate &gt;= #{query.month}
+        </if>
+        <if test="monthend!=null">
+            and d.acqDate &lt;= #{monthend}
+        </if>
+    </select>
+    <select id="getRangeMaterials" resultType="com.yskc.ms.models.doc.MaterialTypeModel">
+        select d.type,p.rdType,DATE_FORMAT(acqDate,'%Y-%m') `month` from p_material p
+        inner join d_material d on d.id=p.materialDataId
+        where p.projectId=#{projectId} and d.acqDate &gt;= #{begin} and d.acqDate &lt;=#{end}
+        group by `type`,rdType,`month`
+    </select>
+</mapper>

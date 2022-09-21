@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.ServiceUserDao">
+    <insert id="insertServiceUsers" parameterType="java.util.List">
+        insert into serviceUser (creatorId,lastUpdatorId,createTime,lastUpdateTime,userId,mType,serviceId) values
+        <foreach collection="users" item="user" index="index" separator="," close=";">
+            (#{user.creatorId},#{user.lastUpdatorId},#{user.createTime},#{user.lastUpdateTime},#{user.userId},#{user.mType},#{user.serviceId})
+        </foreach>
+    </insert>
+    <delete id="delByServiceId" parameterType="java.lang.Integer">
+        delete from serviceUser  where serviceId=#{id}
+    </delete>
+    <select id="getUserByServiceIds" resultType="com.yskc.ms.models.servicelog.ServiceUserModel">
+        select su.mType,su.serviceId,u.realName,u.userName,u.id from serviceUser su
+        inner join ys_user u on u.id = su.userId
+        where su.serviceId in
+        <foreach collection="serviceIds" item="serviceId" open="(" separator="," close=")">
+            #{serviceId}
+        </foreach>
+    </select>
+</mapper>

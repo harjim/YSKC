@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.DingUserDao">
+    <insert id="insertBatch" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `d_user`
+        (
+        `userId`,
+        `dingUserId`,
+        `unionid`,
+        `openid`
+        )
+        VALUES
+        <foreach collection="list" separator="," item="item">
+            (
+            #{item.userId},
+            #{item.dingUserId},
+            #{item.unionid},
+            #{item.openid}
+            )
+        </foreach>
+    </insert>
+    <delete id="deleteByUserId">
+        delete from d_user where userId = #{userId}
+    </delete>
+
+
+    <select id="queryDUserAll" resultType="com.yskc.ms.entity.ms.DingUserEntity">
+        select * from d_user
+    </select>
+    <select id="queryDUserByUserId" resultType="com.yskc.ms.models.dingding.DingUser">
+        select * from d_user where userId = #{userId}
+    </select>
+    <select id="getDingUserIds" resultType="java.lang.String">
+        select distinct dingUserId from d_user
+        where userId in
+        <foreach collection="userIds" open="(" separator="," close=")" item="userId">
+            #{userId}
+        </foreach>
+    </select>
+    <insert id="synDDUser">
+        insert into d_user (userId,dingUserId,unionid,openid)
+        select a.id as userId, a.dingUserId,a.unionid,'' as openid from ys_user a left join d_user b on a.id=b.userId where a.dingUserId!='' and b.id is null
+    </insert>
+</mapper>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.docservice.dao.rs.project.AuditRdFeeDao">
+    <select id="getStatusList" resultType="com.yskc.docservice.models.rs.project.AuditRdFeeModel">
+        select par.status,par.month,pp.rdTitle from p_audit_rdFee par
+        inner join p_project pp on pp.id = par.projectId
+        where par.rdType in
+        (<foreach collection="rdTypes" item="rdType" separator=",">
+        #{rdType}
+    </foreach>)
+        and
+        (<foreach collection="list" item="l" separator="OR">
+        (par.projectId = #{l.projectId} and par.month = #{l.month})
+    </foreach> )
+    </select>
+</mapper>

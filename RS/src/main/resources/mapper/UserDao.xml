@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.UserDao">
+    <resultMap id="userSession" type="com.yskc.rs.models.login.UserSession">
+        <id column="id" property="id"/>
+        <result column="status" property="status"/>
+        <result column="companyName" property="companyName"/>
+        <result column="companyLogoPath" property="companyLogoPath"/>
+        <result column="companyId" property="companyId"/>
+        <result column="userName" property="userName"/>
+        <result column="realName" property="realName"/>
+        <result column="avatar" property="avatar"/>
+        <result column="status" property="status"/>
+        <result column="token" property="token"/>
+        <result column="userSource" property="userSource"/>
+        <result column="createTime" property="createTime"/>
+        <result column="updateTime" property="updateTime"/>
+        <result column="expireTime" property="expireTime"/>
+        <collection property="roleIds" ofType="java.lang.Integer">
+            <id column="roleId"/>
+        </collection>
+        <collection property="menuPermModelList" ofType="com.yskc.common.model.RsMenuPermModel">
+            <id column="menuId" property="menuId"/>
+            <result column="url" property="url"/>
+            <result column="perms" property="perms"/>
+            <result column="parentId" property="parentId"/>
+        </collection>
+    </resultMap>
+    <select id="getUserInfo" resultType="com.yskc.rs.entity.User">
+        select * from user where userName=#{userName} limit 1;
+    </select>
+    <select id="getUser" resultType="com.yskc.rs.models.UserInfo">
+         select * from user where id=#{userId} limit 1;
+    </select>
+    <select id="getUserInfoByToken" resultMap="userSession">
+       select u.status, c.companyName, c.id as companyId, u.id,u.userName,u.realName,u.avatar,s.token,s.createTime,s.updateTime,s.expireTime,
+       am.perms,arm.menuId,am.url,aur.roleId,am.parentId,c.logo as companyLogoPath
+       from user as u
+       join sys_session as s on s.userId=u.Id
+       join company as c on c.id=u.companyId
+       left join app_user_role as aur on aur.userId=u.id
+       left join app_role_menu as arm on arm.roleId=aur.roleId
+       left join app_menu as am on arm.menuId=am.id
+       where s.token=#{token};
+    </select>
+
+    <update id="updatePassword">
+        update user set password=#{newPassword} where id=#{userId} and password=#{oldPassword};
+    </update>
+    <select id="queryUserList" resultType="com.yskc.rs.entity.User">
+        select * from user where companyId =#{companyId} and type =1
+        <if test="query.realName!=null and  query.realName!=''">
+            and realName like "%"#{query.realName}"%"
+        </if>
+        <if test="query.userName!=null and query.userName!=''">
+            and userName like "%"#{query.userName}"%"
+        </if>
+        <if test="query.tel!=null and query.tel!=''">
+            and tel like "%"#{query.tel}"%"
+        </if>
+        <if test="query.gender!=null and query.gender>=0">
+            and gender = #{query.gender}
+        </if>
+    </select>
+
+    <select id="getUserInfoByUserId" resultMap="userSession">
+        select * from
+     </select>
+
+    <select id="registerCheckUser" resultType="com.yskc.rs.entity.User">
+        select id from user where userName = #{userName} limit 1
+    </select>
+    <select id="getUsers" resultType="com.yskc.rs.entity.User">
+        select * from user where id in
+        <foreach collection="userIds" item="userId" separator="," open="(" close=")">
+            #{userId}
+        </foreach>
+    </select>
+
+</mapper>

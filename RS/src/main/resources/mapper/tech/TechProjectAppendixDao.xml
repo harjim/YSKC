@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.tech.TechProjectAppendixDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.yskc.rs.entity.tech.ProjectAppendixEntity" id="projectAppendixMap">
+        <result property="id" column="id"/>
+        <result property="creatorId" column="creatorId"/>
+        <result property="createTime" column="createTime"/>
+        <result property="lastUpdatorId" column="lastUpdatorId"/>
+        <result property="lastUpdateTime" column="lastUpdateTime"/>
+        <result property="projectId" column="projectId"/>
+        <result property="companyId" column="companyId"/>
+        <result property="fileName" column="fileName"/>
+        <result property="filePath" column="filePath"/>
+        <result property="downloadTimes" column="downloadTimes"/>
+        <result property="remark" column="remark"/>
+    </resultMap>
+    <update id="updateByType">
+        update t_projectAppendix set fileName = '',filePath = '' where projectId = #{projectId} and type = #{type}
+    </update>
+    <select id="selectByProjectId" resultType="com.yskc.rs.entity.tech.ProjectAppendixEntity">
+        select * from t_projectAppendix where companyId = #{companyId} and projectId = #{projectId}
+    </select>
+    <select id="selectByType" resultType="com.yskc.rs.entity.tech.ProjectAppendixEntity">
+        select * from t_projectAppendix where type = #{type} and projectId = #{projectId}
+    </select>
+    <select id="queryDocument" resultType="com.yskc.rs.models.tech.ProjectAppendixModel">
+        select
+        d.id,
+        d.fileName,
+        d.filePath,
+        d.downloadTimes,
+        d.creatorId,
+        d.createTime,
+        u.userName,
+        d.filePath
+        from t_projectAppendix d
+        left join user u on d.creatorId = u.id
+        where d.companyId = #{companyId} and d.type = 6 and d.projectId = #{projectId}
+        <if test="fileName != null and fileName != ''">
+            and d.fileName like "%"#{fileName}"%"
+        </if>
+    </select>
+
+
+</mapper>

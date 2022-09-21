@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.WorkItemDao">
+    <insert id="addItem">
+        insert into work_record_item
+        (workRecordId,itemType,`begin`,`end`,amount,remark,
+         `creatorId`, `createTime`, `lastUpdateTime`, `lastUpdatorId`)
+         values <foreach collection="list" item="item" separator=",">
+        (#{item.workRecordId},#{item.itemType},#{item.begin},#{item.end},#{item.amount},#{item.remark},
+        #{item.creatorId},#{item.createTime},#{item.lastUpdateTime},#{item.lastUpdatorId})
+    </foreach>
+    </insert>
+    <update id="updateItem">
+        <foreach collection="list" item="item" separator=";">
+            update work_record_item set
+            lastUpdateTime = #{item.lastUpdateTime},
+            lastUpdatorId = #{item.lastUpdatorId},
+            itemType = #{item.itemType},
+            `begin` = #{item.begin},
+            `end` = #{item.end},
+            amount = #{item.amount},
+            remark = #{item.remark}
+            where id = #{item.id}
+        </foreach>
+    </update>
+    <delete id="delItem">
+        delete from work_record_item
+        where  workRecordId = #{recordId}
+          <if test="ids!=null">
+              and (id not in (<foreach collection="ids" separator="," item="item">
+              #{item}
+          </foreach>))
+          </if>
+    </delete>
+    <delete id="delItemByRecord">
+        delete from work_record_item
+        where workRecordId in (<foreach collection="ids" item="item" separator=",">
+        #{item}
+    </foreach>)
+    </delete>
+
+    <select id="getItemList" resultType="com.yskc.ms.models.serviceRecord.WorkItemModel">
+        select id,workRecordId,itemType,`begin`,`end`,amount,remark
+        from work_record_item wri
+        where workRecordId in (<foreach collection="recordIds" item="item" separator=",">
+            #{item}
+        </foreach>)
+    </select>
+</mapper>

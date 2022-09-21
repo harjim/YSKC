@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.ProblemSummaryDao">
+    <insert id="insertList">
+        insert into p_problem_summary (creatorId,lastUpdatorId,createTime,lastUpdateTime,msCreatorId,msLastUpdatorId,situationId,problem,solution)
+        values
+        <foreach collection="problemSummarys" item="item" separator=",">
+            (#{userId},#{userId},#{date},#{date},#{msUserId},#{msUserId},#{situationId},#{item.problem},#{item.solution})
+        </foreach>
+    </insert>
+    <delete id="deleteBySituationId">
+        delete from p_problem_summary where situationId=#{id}
+    </delete>
+    <select id="getBySituationId" resultType="com.yskc.rs.models.projectSummary.ProblemSummaryModel">
+        select id,problem,solution
+        from p_problem_summary
+        where situationId=#{situationId}
+    </select>
+</mapper>

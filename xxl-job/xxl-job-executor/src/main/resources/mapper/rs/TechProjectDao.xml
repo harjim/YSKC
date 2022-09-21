@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xxl.job.executor.dao.rs.TechProjectDao">
+
+    <select id="getLastOperation" resultType="com.xxl.job.executor.models.techproject.TechSummaryModel">
+       select t.*,max(pl1.msLastUpdatorId) as operationUserId from
+       (select max(pl.lastUpdateTime) as operationTime,count(distinct pl.stageListId) as uploadedCount, pl.projectId,p.directionId,p.sourceProjectId
+         from t_project p
+         inner join t_project_list pl on pl.projectId = p.id
+         where pl.lastUpdateTime >=  #{beforeTime}
+         group by p.id) t
+         inner join t_project_list pl1 on pl1.projectId = t.projectId and pl1.lastUpdateTime = t.operationTime
+          group by t.projectId,t.operationTime
+    </select>
+    <select id="getStageCount" resultType="com.xxl.job.executor.models.techproject.StageCountModel">
+        select count(distinct ps.id) as stageCount,count(psl.id) as uploadCount,ps.directionId
+        from t_product_stage ps
+        left join t_product_stage_list psl on ps.id = psl.stageId
+        where ps.directionId in
+        <foreach collection="directionIds" open="(" separator="," close=")" item="id">
+            #{id}
+        </foreach>
+        group by ps.directionId
+    </select>
+</mapper>

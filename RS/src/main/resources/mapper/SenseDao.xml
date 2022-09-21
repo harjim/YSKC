@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.SenseDao">
+    <select id="sensDuplicateChecking" resultType="java.lang.Integer">
+        select id from p_sense where companyId = #{companyId} and type = #{type} and preachDate = #{preachDate}
+        <if test="id != null">
+            and id != #{id}
+        </if>
+    </select>
+    <select id="getSenseByCompanyId" resultType="com.yskc.rs.entity.SenseEntity">
+        select id, `type`, preachDate, rds, filePaths, remark ,lastUpdateTime from p_sense where companyId = #{companyId} ORDER BY type ASC,preachDate DESC
+    </select>
+    <update id="updateSenseById">
+        update p_sense set rds = #{entity.rds}, filePaths = #{entity.filePaths}, remark = #{entity.remark}, preachDate = #{entity.preachDate},
+                           lastUpdatorId = #{entity.lastUpdatorId}, msLastUpdatorId = #{entity.msLastUpdatorId}, lastUpdateTime = #{entity.lastUpdateTime}
+        where id = #{entity.id}
+    </update>
+</mapper>

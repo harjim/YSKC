@@ -1,0 +1,58 @@
+/* .contentWrap .p_header {
+  display: none;
+  border: 1px solid;
+};
+.contentWrap .p_footer {
+  display: none;
+  border: 1px solid;
+}; */
+
+/* @page:right{ 
+  @top-right-corner {
+    margin: 0;
+    border-top: 2px solid #666;
+    content: "My book.....";
+    font-size: 9pt;
+    color: #333;
+  } 
+} */
+@media print {
+  @page {
+    /* margin: 1cm; */
+    size: A4;
+    margin: 0.5cm 1cm 0;
+  };
+  /* @page:right {
+    content: 'testesttest';
+    margin: 30pt 0 10pt 0;
+    font-size: 9pt;
+    color: #333;
+  } */
+  /* .p_fileHeader {
+    display:none;
+  } */
+  /* .contentWrap {
+    margin: 2cm;
+  }; */
+  /* .p_header {
+    display: block;
+    position: fixed;
+    top: 0;
+    width: 680px;
+    height: 35px;
+    background-color: red;
+    border: 1px solid yellow;
+  };
+  .p_footer {
+    display: block;
+    position: fixed;
+    bottom: 0;
+    width: 680px;
+    height: 35px;
+    background-color: yellow;
+    border: 1px solid pink;
+  }; */
+}
+
+
+

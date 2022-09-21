@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.PatentPlanDao">
+    <update id="updatePatentNo">
+        update patent_plan set patentNo=#{patentNo},lastUpdateTime=#{date},lastUpdatorId=#{userId}
+        <if test="null != masterId">
+            ,masterId=#{masterId}
+        </if>
+        where id=#{id}
+    </update>
+    <update id="updateEngineer">
+        update patent_plan set engineerId=#{engineerId},lastUpdateTime=#{now},lastUpdatorId=#{userId}
+        where id in (<foreach collection="ids" separator="," item="id">#{id}</foreach>)
+    </update>
+    <update id="updateMaster">
+        update patent_plan set masterId=#{masterId},lastUpdateTime=#{now},lastUpdatorId=#{userId}
+        where id in
+            <foreach collection="patentIds" open="(" separator="," item="id" close=")">
+                #{id}
+            </foreach>
+    </update>
+    <select id="getCustomers" resultType="com.yskc.ms.models.customer.CustomerSelectModel">
+        select pbd.id,c.companyName,pbd.year,pbd.ownerId,yu.realName as ownerName,c.companyId,yu1.realName as engineer,
+               pbd.engineerId,c.id as customerId
+        from patent_buying_demand pbd
+        inner join customer c on c.id=pbd.customerId
+        left join ys_user yu on pbd.ownerId=yu.id
+        inner join ys_user yu1 on pbd.engineerId=yu1.id
+        where c.companyName like "%"#{companyName}"%" and pbd.type=1
+        order by c.companyName,pbd.year desc
+        limit 10
+    </select>
+    <select id="getTotalNumber" resultType="com.yskc.ms.models.patentPlan.PatentPlanTotalModel">
+        SELECT
+        count(distinct pp.demandId) as demand,
+        sum(CASE when fn.nodeNumber = 0 or fn.nodeNumber = 1 then 1 else 0 end) as technical,
+        sum(CASE when fn.nodeNumber = 3 then 1 else 0 end) as finalized,
+        sum(CASE when fn.nodeNumber = 4 or fn.nodeNumber = 5 then 1 else 0 end) as accepled,
+        sum(CASE when fn.nodeNumber = 6 or fn.nodeNumber = 7 then 1 else 0 end) as authorize
+        FROM patent_plan pp
+        left join ys_user yu on yu.id=pp.ownerId
+        left join ys_user yu2 on yu2.id=pp.engineerId
+        inner join customer c on c.id=pp.customerId
+        left join flowInstance_patent fp on fp.patentPlanId=pp.id
+        left join flowInstance fi on fi.id=fp.instanceId
+        left join flowInstance_curNode fic on fic.instanceId=fi.id
+        left join ys_dept yd on c.deptId=yd.id
+        left join patent_master pm on pm.id = pp.masterId
+        left join patent_plan_info ppi on pp.id = ppi.patentPlanId
+        left join flowNode fn ON fn.id = fic.curNodeId
+        left join patent_demand pd on pd.customerId = c.id and pp.demandId = pd.id
+        left join patent_audit pa on pa.patentPlanId = pp.id
+        WHERE 1=1
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.byInTables">
+            <property name="userCols" value="pp.ownerId,pp.engineerId,pm.userId"/>
+        </include>
+        <if test="query.groupName != null and query.groupName != ''">
+            and c.groupId !=0 and c.groupId in (select companyId from customer where companyType in (1,3) and companyName like "%"#{query.groupName}"%")
+        </if>
+        <if test="query.companyName!=null and query.companyName!=''">
+            and c.companyName like "%"#{query.companyName}"%"
+        </if>
+        <if test="query.patentNo!=null and query.patentNo!=''">
+            and pp.patentNo like "%"#{query.patentNo}"%"
+        </if>
+        <if test="query.patentName!=null and query.patentName!=''">
+            and pp.patentName like "%"#{query.patentName}"%"
+        </if>
+        <if test="query.ownerId!=null and query.ownerId>0">
+            and pp.ownerId=#{query.ownerId}
+        </if>
+        <if test="query.year!=null and query.year>0">
+            and pp.year=#{query.year}
+        </if>
+        <if test="null != query.masterId">
+            and pp.masterId = #{query.masterId}
+        </if>
+        <if test="null != query.engineerId">
+            and pp.engineerId = #{query.engineerId}
+        </if>
+        <if test="null != query.nodeNumber">
+            and fn.nodeNumber = #{query.nodeNumber}
+        </if>
+        <if test="null != query.status">
+            and fi.status =#{query.status}
+        </if>
+        <if test="null != query.deptId">
+            and c.deptId =#{query.deptId}
+        </if>
+        <if test="null != query.id">
+            and pp.id = #{query.id}
+        </if>
+    </select>
+    <select id="getList" resultType="com.yskc.ms.models.patentPlan.PatentPlanModel">
+        select
+        pp.id,pp.customerId,pp.patentNo,pp.patentName,pp.patentType,pp.unitType,pp.planType,pp.masterId,pp.remark,pp.year,pp.projectId,pp.code,pp.linkMan,pp.demandId,
+        pp.linkTel,pp.postalCode,pp.otherItem,pp.address,pp.firstInventor,pp.otherInventor,pp.engineerId,pp.process,pm.masterName,pm.userId,pm.linkTel as masterLinkTel,
+        case when pa.status is null then 5 else pa.status end as status,pp.ownerId,pp.demandDate,pp.submitDate,pp.createTime,fic.curNodeId,pp.confirmType,pp.confirmName,
+        yu.realName as ownerName,yu2.realName as engineer,c.companyName,c.companyId,pp.applicant,c.deptId,yd.deptName,fi.auditUsers,c.groupId,
+        ppi.submittedDate,ppi.acceptNoticeDate,ppi.acceptFeeDate,ppi.authDate,ppi.authFeeDate,ppi.issueDate,pd.demandNo,fn.nodeNumber,fi.id as instanceId,ppi.id as patentPlanInfoId
+        from patent_plan pp
+        left join ys_user yu on yu.id=pp.ownerId
+        left join ys_user yu2 on yu2.id=pp.engineerId
+        inner join customer c on c.id=pp.customerId
+        left join flowInstance_patent fp on fp.patentPlanId=pp.id
+        left join flowInstance fi on fi.id=fp.instanceId
+        left join flowInstance_curNode fic on fic.instanceId=fi.id
+        left join ys_dept yd on c.deptId=yd.id
+        left join patent_master pm on pm.id = pp.masterId
+        left join patent_plan_info ppi on pp.id = ppi.patentPlanId
+        left join flowNode fn ON fn.id = fic.curNodeId
+        left join patent_demand pd on pd.customerId = c.id and pp.demandId = pd.id
+        left join patent_audit pa on pa.patentPlanId = pp.id
+        where 1=1
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.byInTables">
+            <property name="userCols" value="pp.ownerId,pp.engineerId,pm.userId"/>
+        </include>
+        <if test="query.groupName != null and query.groupName != ''">
+            and c.groupId !=0 and c.groupId in (select companyId from customer where companyType in (1,3) and companyName like "%"#{query.groupName}"%")
+        </if>
+        <if test="query.auditUsers!=null and query.auditUsers!=''">
+            and fi.auditUsers like concat("%",#{query.auditUsers},"%")
+        </if>
+        <if test="query.confirmName!=null and query.confirmName!=''">
+            and pp.confirmName like concat("%",#{query.confirmName},"%")
+        </if>
+        <if test="query.companyName!=null and query.companyName!=''">
+            and c.companyName like "%"#{query.companyName}"%"
+        </if>
+        <if test="query.patentNo!=null and query.patentNo!=''">
+            and pp.patentNo like "%"#{query.patentNo}"%"
+        </if>
+        <if test="query.patentName!=null and query.patentName!=''">
+            and pp.patentName like "%"#{query.patentName}"%"
+        </if>
+        <if test="query.ownerId!=null and query.ownerId>0">
+            and pp.ownerId=#{query.ownerId}
+        </if>
+        <if test="query.year!=null and query.year>0">
+            and pp.year=#{query.year}
+        </if>
+        <if test="null != query.masterId">
+            and pp.masterId = #{query.masterId}
+        </if>
+        <if test="null != query.engineerId">
+            and pp.engineerId = #{query.engineerId}
+        </if>
+        <if test="null != query.nodeNumber">
+            and fn.nodeNumber = #{query.nodeNumber}
+        </if>
+        <if test="null != query.status">
+            and fi.status =#{query.status}
+        </if>
+        <if test="null != query.deptId">
+            and c.deptId =#{query.deptId}
+        </if>
+        <if test="null != query.id">
+            and pp.id = #{query.id}
+        </if>
+    </select>
+    <select id="getInfo" resultType="com.yskc.ms.models.patentPlan.PatentPlanModel">
+        select pp.id,pp.year,pp.projectId,c.companyId,pa.status,pp.process
+        from patent_plan pp
+        left join patent_audit pa on pp.id=pa.patentPlanId
+        inner join customer c on c.id=pp.customerId
+        where pp.id=#{patentPlanId}
+    </select>
+    <select id="getById" resultType="com.yskc.ms.entity.ms.PatentPlanEntity">
+        select * from
+        patent_plan where 1=1
+        <if test="patentId!=null and patentId>0">
+            and id=#{patentId}
+        </if>
+        <if test="patentNo!=null and patentNo!=''">
+            and patentNo=#{patentNo}
+        </if>
+    </select>
+    <select id="queryList" resultType="com.yskc.ms.models.patentPlan.PatentPlanModel">
+        select
+        pp.id,pp.customerId,pp.patentNo,pp.patentName,pp.patentType,pp.unitType,pp.planType,pp.year,pp.projectId,pp.code,pp.linkMan,
+        pp.linkTel,pp.postalCode,pp.otherItem,pp.address,pp.firstInventor,pp.otherInventor,pp.engineerId,pp.process,
+        case when pa.status is null then 5 else pa.status end as status,pp.ownerId,
+        yu.realName as ownerName,yu2.realName as engineer,c.companyName,c.companyId
+        from patent_plan pp
+        left join ys_user yu on yu.id=pp.ownerId
+        inner join ys_user yu2 on yu2.id=pp.engineerId
+        inner join customer c on c.id=pp.customerId
+        left join patent_audit pa on pa.patentPlanId=pp.id
+        where c.companyId=#{query.companyId} and pp.year=#{query.year}
+        <if test="query.patentNo!=null and query.patentNo!=''">
+            and pp.patentNo like "%"#{query.patentNo}"%"
+        </if>
+        <if test="query.patentName!=null and query.patentName!=''">
+            and pp.patentName like "%"#{query.patentName}"%"
+        </if>
+    </select>
+    <select id="getPatent" resultType="com.yskc.ms.models.patentPlan.PatentPlanModel">
+        select
+        pp.id,pp.customerId,pp.patentNo,pp.patentName,pp.patentType,pp.unitType,pp.planType,pp.year,pp.projectId,pp.code,pp.linkMan,
+        pp.linkTel,pp.postalCode,pp.otherItem,pp.address,pp.firstInventor,pp.otherInventor,pp.engineerId,pp.process,
+        case when pa.status is null then 5 else pa.status end as status,pp.ownerId,
+        yu.realName as ownerName,yu2.realName as engineer,c.companyName,c.companyId,
+        ppi.submittedDate,ppi.acceptNoticeDate,ppi.acceptFeeDate,ppi.authDate,ppi.authFeeDate,ppi.issueDate,ppi.acceptFee,
+        ppi.authFee,ppi.id as patentPlanInfoId
+        from patent_plan pp
+        left join ys_user yu on yu.id=pp.ownerId
+        inner join ys_user yu2 on yu2.id=pp.engineerId
+        inner join customer c on c.id=pp.customerId
+        left join patent_audit pa on pa.patentPlanId=pp.id
+        left join patent_plan_info ppi on ppi.patentPlanId = pp.id
+        where pp.id=#{patentPlanId}
+    </select>
+    <select id="getNodeNumber" resultType="java.lang.Integer">
+        SELECT fn.nodeNumber FROM `patent_plan` pp
+            INNER JOIN flowInstance_patent fp ON pp.id = fp.patentPlanId
+            INNER JOIN flowInstance fi ON fi.id = fp.instanceId
+            inner join flowInstance_curNode fic on fic.instanceId=fi.id
+            INNER JOIN flowNode fn ON fn.id = fic.curNodeId
+        where pp.id = #{patentId}
+    </select>
+    <update id="updateProcessBatch">
+        update patent_plan set process=2,lastUpdatorId=#{userId},lastUpdateTime=#{now} where
+        id in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </update>
+    <select id="getByInstanceId" resultType="com.yskc.ms.entity.ms.PatentPlanEntity">
+        select pp.* from `patent_plan` pp
+        INNER JOIN flowInstance_patent fp ON pp.id = fp.patentPlanId
+        INNER JOIN flowInstance fi ON fi.id = fp.instanceId
+        where fi.id in
+        <foreach collection="instanceIds" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+    <select id="getPlanList" resultType="com.yskc.ms.models.patentPlan.PatentPlanModel">
+        select
+        pp.id,pp.patentNo,pp.patentName,pp.patentType,pp.unitType,pp.planType,pp.masterId,pp.remark,pp.year,pp.projectId,pp.code,pp.linkMan,pp.demandId,
+        pp.linkTel,pp.postalCode,pp.otherItem,pp.address,pp.firstInventor,pp.otherInventor,pp.engineerId,pp.process,pm.masterName,pm.userId,pm.linkTel as masterLinkTel,
+        pp.ownerId,pp.demandDate,pp.submitDate,pp.createTime,fic.curNodeId,
+        yu.realName as ownerName,yu2.realName as engineer,pp.applicant,fi.auditUsers,
+        ppi.submittedDate,ppi.acceptNoticeDate,ppi.acceptFeeDate,ppi.authDate,ppi.authFeeDate,ppi.issueDate,fn.nodeNumber,fi.id as instanceId,ppi.id as patentPlanInfoId
+        from patent_plan pp
+        left join ys_user yu on yu.id=pp.ownerId
+        left join ys_user yu2 on yu2.id=pp.engineerId
+        left join flowInstance_patent fp on fp.patentPlanId=pp.id
+        left join flowInstance fi on fi.id=fp.instanceId
+        left join flowInstance_curNode fic on fic.instanceId=fi.id
+        left join patent_master pm on pm.id = pp.masterId
+        left join patent_plan_info ppi on pp.id = ppi.patentPlanId
+        left join flowNode fn ON fn.id = fic.curNodeId
+        where 1=1
+        <if test="null != query.demandId">
+            and pp.demandId =#{query.demandId}
+        </if>
+    </select>
+    <select id="getPatentPlanIds" resultType="java.lang.Integer">
+        select distinct pp.id
+        from patent_plan pp
+        inner join customer c on c.id=pp.customerId
+        where c.companyId=#{query.companyId} and pp.year=#{query.year}
+    </select>
+    <select id="getPatentStatList" resultType="com.yskc.ms.models.patentPlan.PatentPlanStatModel">
+        select demandId,count(*) as noOfplan from patent_plan where demandId in
+        <foreach collection="demandIds" item="demandId" separator="," open="(" close=")">#{demandId}</foreach> group by demandId
+    </select>
+</mapper>

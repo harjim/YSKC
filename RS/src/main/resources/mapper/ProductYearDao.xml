@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.ProductYearDao">
+    <insert id="insertOrUpdate">
+        insert into c_product_year
+        (creatorId,lastUpdatorId,createTime,lastUpdateTime,msCreatorId,
+         msLastUpdatorId,companyId,productId,`year`,`output`,outputValue)
+         values
+            <foreach collection="list" item="e" separator=",">
+                (#{userId},#{userId},now(),now(),#{msUserId},#{msUserId},#{e.companyId},
+                #{e.productId},#{e.year},#{e.output},#{e.outputValue})
+            </foreach>
+        ON DUPLICATE KEY UPDATE
+        `output` = values(`output`),
+        outputValue = values(outputValue),
+        lastUpdatorId=#{userId},
+        msLastUpdatorId=#{msUserId},
+        lastUpdateTime=now()
+    </insert>
+    <delete id="deleteYear">
+        delete from c_product_year
+        where productId =#{productId} and companyId =#{companyId}
+        <if test="list!=null">
+            and `year` not in
+            (<foreach collection="list" separator="," item="item">
+                #{item.year}
+            </foreach>)
+        </if>
+    </delete>
+
+    <select id="getYearList" resultType="com.yskc.rs.models.product.ProductYearModel">
+        select id,companyId,productId,`year`,`output`,outputValue from c_product_year
+        where productId =#{productId} and companyId =#{companyId}
+        order by `year` desc
+    </select>
+</mapper>

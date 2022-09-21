@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.docservice.dao.rs.SalaryDao">
+    <select id="getDataByTerm" resultType="com.yskc.docservice.entity.rs.SalaryEntity">
+        select id,enumber,ename,`month` from d_salary
+        where companyId=#{companyId} and
+        (<foreach collection="queryModels" item="item" separator="or">
+        (enumber = #{item.enumber} And month=#{item.month})
+    </foreach>)
+    </select>
+    <update id="updateBatch" parameterType="java.util.List">
+        update d_salary
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="enumber =case" suffix="end,">
+                <foreach collection="salaryEntityList" item="i" index="index">
+                    <if test="i.enumber!=null">
+                        when id=#{i.id} then #{i.enumber}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="ename =case" suffix="end,">
+                <foreach collection="salaryEntityList" item="i" index="index">
+                    <if test="i.ename!=null">
+                        when id=#{i.id} then #{i.ename}
+                    </if>
+                </foreach>
+            </trim>
+
+            <trim prefix="month =case" suffix="end,">
+                <foreach collection="salaryEntityList" item="i" index="index">
+                    <if test="i.month!=null">
+                        when id=#{i.id} then #{i.month}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="workDays =case" suffix="end,">
+                <foreach collection="salaryEntityList" item="i" index="index">
+                    <if test="i.workDays!=null">
+                        when id=#{i.id} then #{i.workDays}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="pay =case" suffix="end,">
+                <foreach collection="salaryEntityList" item="i" index="index">
+                    <if test="i.pay!=null">
+                        when id=#{i.id} then #{i.pay}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="insuranceFund =case" suffix="end,">
+                <foreach collection="salaryEntityList" item="i" index="index">
+                    <if test="i.insuranceFund!=null">
+                        when id=#{i.id} then #{i.insuranceFund}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="creatorId =case" suffix="end,">
+                <foreach collection="salaryEntityList" item="i" index="index">
+                    <if test="i.creatorId!=null">
+                        when id=#{i.id} then #{i.creatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="remark =case" suffix="end,">
+                <foreach collection="salaryEntityList" item="i" index="index">
+                    <if test="i.remark!=null">
+                        when id=#{i.id} then #{i.remark}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="accountTitleId =case" suffix="end,">
+                <foreach collection="salaryEntityList" item="i" index="index">
+                    <if test="i.accountTitleId!=null">
+                        when id=#{i.id} then #{i.accountTitleId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdateTime =case" suffix="end,">
+                <foreach collection="salaryEntityList" item="i" index="index">
+                    <if test="i.lastUpdateTime!=null">
+                        when id=#{i.id} then #{i.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdatorId =case" suffix="end,">
+                <foreach collection="salaryEntityList" item="i" index="index">
+                    <if test="i.lastUpdatorId!=null">
+                        when id=#{i.id} then #{i.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="msLastUpdatorId =case" suffix="end,">
+                <foreach collection="salaryEntityList" item="i" index="index">
+                    <if test="i.msLastUpdatorId!=null">
+                        when id=#{i.id} then #{i.msLastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="workHours =case" suffix="end,">
+                <foreach collection="salaryEntityList" item="i" index="index">
+                    <if test="i.workHours!=null">
+                        when id=#{i.id} then #{i.workHours}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="payDetail =case" suffix="end,">
+                <foreach collection="salaryEntityList" item="i" index="index">
+                    when id=#{i.id} then #{i.payDetail}
+                </foreach>
+            </trim>
+            <trim prefix="deptName =case" suffix="end,">
+                <foreach collection="salaryEntityList" item="i" index="index">
+                    <if test="i.deptName!=null">
+                        when id=#{i.id} then #{i.deptName}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="insuranceDetail =case" suffix="end,">
+                <foreach collection="salaryEntityList" item="i" index="index">
+                    when id=#{i.id} then #{i.insuranceDetail}
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="salaryEntityList" separator="or" item="i" index="index">
+            id=#{i.id}
+        </foreach>
+    </update>
+    <insert id="addBatch" parameterType="java.util.List">
+        INSERT INTO `d_salary`
+        (
+        `enumber`,
+        `ename`,
+        `month`,
+        `workDays`,
+        workHours,
+        `pay`,
+        `insuranceFund`,
+        `companyId`,
+        `creatorId`,
+        `createTime`,
+        `remark`,
+        `accountTitleId`,
+        `lastUpdateTime`,
+        `lastUpdatorId`,
+        `msCreatorId`,
+        `msLastUpdatorId`,
+        payDetail,
+        deptName,
+        insuranceDetail
+        )
+        VALUES
+        <foreach collection="salaryEntitielist" item="item" separator=",">
+            (
+            #{item.enumber},
+            #{item.ename},
+            #{item.month},
+            #{item.workDays},
+            #{item.workHours},
+            #{item.pay},
+            #{item.insuranceFund},
+            #{item.companyId},
+            #{item.creatorId},
+            #{item.createTime},
+            #{item.remark},
+            #{item.accountTitleId},
+            #{item.lastUpdateTime},
+            #{item.lastUpdatorId},
+            #{item.msCreatorId},
+            #{item.msLastUpdatorId},
+            #{item.payDetail},
+            #{item.deptName},
+            #{item.insuranceDetail}
+            )
+        </foreach>
+    </insert>
+</mapper>

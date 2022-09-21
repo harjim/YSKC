@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.rs.InitEquipmentDao">
+    <select id="getList" resultType="com.yskc.ms.models.rs.summary.InitEquipmentModel">
+        select ie.ecode,ie.id,ie.projectId,e.ename,e.emodal,re.etype,
+        ie.effect,e.unitPrice,re.rdDeptId,ie.entryDate,e.deptName,e.workshop,e.productLine,e.processSection,rd.fullName
+        from i_equipment as ie
+        LEFT JOIN rdEquipment as re on ie.companyId = re.companyId and ie.ecode = re.ecode and re.year = #{query.year}
+        LEFT JOIN equipment as e on e.ecode = ie.ecode and e.companyId = ie.companyId
+        LEFT JOIN rdDept as rd on rd.id = re.rdDeptId
+        where ie.companyId = #{query.companyId} and ie.projectId = #{query.projectId} and ie.year=#{query.year}
+    </select>
+    <select id="getEquList" resultType="com.yskc.ms.models.rs.summary.InitEquipmentModel">
+        select e.ename,e.quantity,e.unitPrice,e.usefullife
+        from i_equipment as ie
+                 INNER JOIN equipment as e on e.ecode = ie.ecode and e.companyId = ie.companyId
+        where ie.companyId = #{companyId} and ie.projectId = #{projectId} and ie.year=#{year}
+    </select>
+</mapper>

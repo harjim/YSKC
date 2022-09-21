@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.company.CompanyHolidayDao">
+    <insert id="insertOrUpdate">
+        INSERT INTO c_holiday
+        (creatorId,lastUpdatorId,createTime,lastUpdateTime,msCreatorId,msLastUpdatorId,companyId,`month`,holidays)
+        VALUES
+        <foreach collection="list" separator="," item="l">
+            (#{l.creatorId},#{l.lastUpdatorId},#{l.createTime},#{l.lastUpdateTime},#{l.msCreatorId},
+            #{l.msLastUpdatorId},#{l.companyId},#{l.month},#{l.holidays})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        lastUpdatorId = values(lastUpdatorId),
+        msLastUpdatorId = values(msLastUpdatorId),
+        lastUpdateTime = values(lastUpdateTime),
+        holidays = values(holidays)
+    </insert>
+    <select id="getHolidays" resultType="com.yskc.rs.models.company.CompanyHolidayModel">
+        select id,`month`,holidays from c_holiday where companyId = #{companyId} and `month` >= #{yearBegin} and `month` &lt;=#{yearEnd}
+    </select>
+    <select id="getMonthHoliday" resultType="com.yskc.rs.models.company.CompanyHolidayModel">
+        select id,`month`,holidays from c_holiday where companyId = #{companyId} and `month` = #{month}
+    </select>
+</mapper>

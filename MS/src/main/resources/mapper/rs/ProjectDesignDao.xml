@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.rs.ProjectDesignDao">
+    <select id="queryProjectDesign" resultType="com.yskc.ms.models.rdfunds.DesignFeesModel">
+        SELECT d.designDate,d.dname,d.dFee,pd.rdAmount
+        FROM p_design pd
+        JOIN d_design d ON pd.designDataId = d.id
+        WHERE
+        pd.projectId = #{model.projectId}
+        AND d.designDate &gt;= #{model.month}
+        AND d.designDate &lt;= #{endDate}
+        AND pd.companyId = #{model.companyId}
+    </select>
+</mapper>

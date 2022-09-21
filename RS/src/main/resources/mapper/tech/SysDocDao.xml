@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yskc.rs.dao.SysDocDao">
+    <select id="getMasterName" resultType="string">
+        select e.ename from employee as e
+        inner join p_year_info as pyi on e.enumber = pyi.masterENumber
+        inner join p_project as p on p.beginYear = pyi.year and p.companyId = pyi.companyId
+        where p.beginYear = #{beginYear} and p.companyId = #{companyId}
+        order by p.rdIndex asc
+        limit 1
+    </select>
+
+    <select id="getDeptName" resultType="string">
+        select deptName
+        from rdDept
+        where year = #{year} and companyId = #{companyId} and parentId = -1
+    </select>
+
+    <select id="getReviewerName" resultType="string">
+        select e.ename from employee as e
+        inner join p_reviewCommittee as pr on e.enumber = pr.enumber
+        where pr.year = #{year} and pr.companyId = #{companyId}
+        order by pr.seq,enumber
+        limit 1
+    </select>
+</mapper>

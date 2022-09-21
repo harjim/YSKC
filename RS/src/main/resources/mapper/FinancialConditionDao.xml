@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.FinancialConditionDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.yskc.rs.entity.FinancialConditionEntity" id="financialConditionMap">
+        <result property="id" column="id"/>
+        <result property="creatorId" column="creatorId"/>
+        <result property="createTime" column="createTime"/>
+        <result property="lastUpdatorId" column="lastUpdatorId"/>
+        <result property="lastUpdateTime" column="lastUpdateTime"/>
+        <result property="companyId" column="companyId"/>
+        <result property="year" column="year"/>
+        <result property="businessIncome" column="businessIncome"/>
+        <result property="mainBusinessIncome" column="mainBusinessIncome"/>
+        <result property="netProfit" column="netProfit"/>
+        <result property="grossOfIndustrial" column="grossOfIndustrial"/>
+        <result property="addedOfIndustrial" column="addedOfIndustrial"/>
+        <result property="totalAssets" column="totalAssets"/>
+        <result property="totalFixedAssets" column="totalFixedAssets"/>
+        <result property="netAssets" column="netAssets"/>
+        <result property="fixedAssetsOfInvestment" column="fixedAssetsOfInvestment"/>
+        <result property="netTotalCashFlow" column="netTotalCashFlow"/>
+        <result property="netCashFlowOfOperating" column="netCashFlowOfOperating"/>
+        <result property="assetLiabilityRatio" column="assetLiabilityRatio"/>
+        <result property="totalExpenditureOfRD" column="totalExpenditureOfRD"/>
+        <result property="loanAmountOfGovernment" column="loanAmountOfGovernment"/>
+        <result property="dueLoanOfGovernment" column="dueLoanOfGovernment"/>
+        <result property="totalTax" column="totalTax"/>
+        <result property="corporateIncomeTax" column="corporateIncomeTax"/>
+    </resultMap>
+    <delete id="deleteByYear">
+        delete from c_financialCondition where companyId = #{companyId} and year = #{year}
+    </delete>
+
+    <select id="queryFinancialCondition" resultType="com.yskc.rs.entity.FinancialConditionEntity">
+        SELECT
+        *
+        FROM
+        c_financialCondition
+        where companyId = #{companyId}
+        <if test="year!=null and year!=0">
+            and year =#{year}
+        </if>
+        ORDER BY
+        YEAR desc
+    </select>
+
+    <select id="getDataByTerm" resultType="com.yskc.rs.entity.FinancialConditionEntity">
+        select * from c_financialCondition a where a.companyId=#{companyId} and a.year in
+        <foreach collection="years" open="(" separator="," close=")" item="year">
+            #{year}
+        </foreach>
+        order by year desc
+    </select>
+
+    <update id="updateFinancial">
+         UPDATE c_financialCondition
+            SET lastUpdatorId = #{entity.lastUpdatorId},
+            lastUpdateTime = #{entity.lastUpdateTime},
+            businessIncome = #{entity.businessIncome},
+            mainBusinessIncome = #{entity.mainBusinessIncome},
+            netProfit = #{entity.netProfit},
+            grossOfIndustrial = #{entity.grossOfIndustrial},
+            addedOfIndustrial = #{entity.addedOfIndustrial},
+            totalAssets = #{entity.totalAssets},
+            totalFixedAssets = #{entity.totalFixedAssets},
+            netAssets = #{entity.netAssets},
+            fixedAssetsOfInvestment = #{entity.fixedAssetsOfInvestment},
+            fixedAssetsOfInvestment = #{entity.fixedAssetsOfInvestment},
+            netTotalCashFlow = #{entity.netTotalCashFlow},
+            netCashFlowOfOperating = #{entity.netCashFlowOfOperating},
+            assetLiabilityRatio = #{entity.assetLiabilityRatio},
+            totalExpenditureOfRD = #{entity.totalExpenditureOfRD},
+            loanAmountOfGovernment = #{entity.loanAmountOfGovernment},
+            dueLoanOfGovernment = #{entity.dueLoanOfGovernment},
+            totalTax = #{entity.totalTax},
+            corporateIncomeTax = #{entity.corporateIncomeTax},
+            totalProfit = #{entity.totalProfit}
+            WHERE
+                companyId = #{entity.companyId}
+            AND YEAR = #{entity.year}
+    </update>
+</mapper>

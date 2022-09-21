@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.CheckInstPriceDao">
+    <insert id="insertPriceList">
+        insert into checkInst_price (checkInstId,days,amount,checkType,`creatorId`,
+                                     `createTime`, `lastUpdateTime`, `lastUpdatorId`)
+        values <foreach collection="list" item="item" separator=",">
+                (#{item.checkInstId},#{item.days},#{item.amount},#{item.checkType},#{item.creatorId}, #{item.createTime},
+        #{item.lastUpdateTime}, #{item.lastUpdatorId})
+                </foreach>
+
+    </insert>
+    <update id="updatePriceList">
+        <foreach collection="list" separator=";" item="item">
+            update checkInst_price set checkInstId = #{item.checkInstId},days=#{item.days},amount=#{item.amount},
+            checkType=#{item.checkType},
+            lastUpdateTime=#{item.lastUpdateTime}, lastUpdatorId=#{item.lastUpdatorId}
+        </foreach>
+    </update>
+    <delete id="delPriceList">
+        delete from checkInst_price
+        where (id not in (<foreach collection="ids" item="item" separator=",">
+                #{item}
+                </foreach>))
+    </delete>
+    <delete id="delPriceByInst">
+        delete from checkInst_price
+        where (checkInstId in (<foreach collection="instIds" item="item" separator=",">
+                #{item}
+            </foreach>))
+    </delete>
+
+    <select id="getPriceList" resultType="com.yskc.ms.models.checkInst.CheckPriceModel">
+        select id,checkInstId,days,amount,checkType
+        from checkInst_price
+        where checkInstId in
+        (<foreach collection="instIds" separator="," item="item">
+            #{item}
+        </foreach>)
+        order by days
+    </select>
+</mapper>

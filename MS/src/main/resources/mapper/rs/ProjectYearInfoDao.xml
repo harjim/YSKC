@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.rs.ProjectYearInfoDao">
+    <select id="getInfoByYear" resultType="com.yskc.ms.entity.rs.ProjectYearInfoEntity">
+        select projectId,`year`,case when budget is null then 0.00 else budget end as budget
+        from p_year_info
+        where projectId=#{projectId} and `year` &lt;=#{year}
+    </select>
+</mapper>

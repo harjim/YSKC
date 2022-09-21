@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.OperationLogDao">
+    <select id="getOperationCnt" resultType="com.yskc.ms.entity.ms.OperationLogEntity">
+        select userId,sum(operationCnt)operationCnt from operation_log
+        where userId in (<foreach collection="list" separator="," item="l">#{l.id}</foreach>)
+        <if test="query.beginDate != null">
+            and operationDate >=#{query.beginDate}
+        </if>
+        <if test="query.endDate != null">
+            and operationDate &lt;=#{query.endDate}
+        </if>
+        group by userId
+    </select>
+
+</mapper>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.rs.RsWorkshopDao">
+    <select id="queryWorkshop" resultType="com.yskc.ms.models.project.WorkshopModel">
+        select * from workshop where companyId = #{companyId}
+        <if test="workshopName != null and workshopName != ''">
+            and workshopName like "%"#{workshopName}"%"
+        </if>
+        order by seq ASC
+    </select>
+</mapper>

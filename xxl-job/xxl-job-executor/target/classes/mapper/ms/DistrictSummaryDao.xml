@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xxl.job.executor.dao.ms.DistrictSummaryDao">
+    <insert id="insertOrUpdate">
+        insert into district_summary
+        (`deptId`,`year`,rdFunds,createTime,updateTime)
+        values
+        <foreach collection="list" separator="," item="l">
+            (#{l.deptId},#{l.year},#{l.rdFunds},#{l.createTime},#{l.updateTime})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        rdFunds = values(rdFunds),
+        updateTime = values(updateTime)
+    </insert>
+</mapper>

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.docservice.dao.rs.MaterialDao">
+
+    <insert id="addBatch" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `d_material`
+        (
+        `mcode`,
+        `mname`,
+        `acqDate`,
+        `unitPrice`,
+        `quantity`,
+        `unit`,
+        `companyId`,
+        `creatorId`,
+        `createTime`,
+        `remark`,
+        `remainQuantity`,
+        `auditor`,
+        `billNo`,
+        `biller`,
+        `booker`,
+        `deptId`,
+        `rdDeptId`,
+        `specification`,
+        `warehouse`,
+        `type`,
+        `accNumber`,
+        `picker`,
+        `totalAmount`,
+        `purpose`,
+        `accountTitleId`,
+        `lastUpdateTime`,
+        `lastUpdatorId`,
+        `msCreatorId`,
+        `msLastUpdatorId`,
+        deptName
+        )
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.mcode},
+            #{item.mname},
+            #{item.acqDate},
+            #{item.unitPrice},
+            #{item.quantity},
+            #{item.unit},
+            #{item.companyId},
+            #{item.creatorId},
+            #{item.createTime},
+            #{item.remark},
+            #{item.remainQuantity},
+            #{item.auditor},
+            #{item.billNo},
+            #{item.biller},
+            #{item.booker},
+            #{item.deptId},
+            #{item.rdDeptId},
+            #{item.specification},
+            #{item.warehouse},
+            #{item.type},
+            #{item.accNumber},
+            #{item.picker},
+            #{item.totalAmount},
+            #{item.purpose},
+            #{item.accountTitleId},
+            #{item.lastUpdateTime},
+            #{item.lastUpdatorId},
+            #{item.msCreatorId},
+            #{item.msLastUpdatorId},
+            #{item.deptName}
+            )
+        </foreach>
+    </insert>
+
+    <select id="getByMcodes" resultType="com.yskc.docservice.entity.rs.MaterialEntity">
+        select mcode,billNo,acqDate from d_material m where m.companyId=#{companyId} and m.type = #{type} and m.mcode in
+        <foreach collection="mcodeList" open="(" separator="," close=")" item="mcode">
+            #{mcode}
+        </foreach>
+    </select>
+    <select id="getMaterialPlan" resultType="com.yskc.docservice.models.rs.material.MaterialPlanModel">
+        select sum(pm.used) as quantity,dm.mcode,dm.mname,max(dm.billNo)as billNo,
+        max(dm.remark) as remark,max(dm.picker) as picker,max(dm.biller) as biller,
+        max(dm.acqDate) as acqDate,dm.unit
+        from p_material pm
+        inner join d_material dm on dm.id=pm.materialDataId
+        where pm.projectId=#{projectId} and pm.rdType in
+        <foreach collection="costTypes" item="rdType" open="(" separator="," close=")">
+            #{rdType}
+        </foreach>
+        <if test="type!=null">
+            and dm.type = #{type}
+        </if>
+        <if test="beginDate!=null">
+            and dm.acqDate &gt;= #{beginDate}
+        </if>
+        <if test="endDate!=null">
+            and dm.acqDate &lt;= #{endDate}
+        </if>
+        group by dm.mcode,dm.mname,dm.unit
+        order by acqDate
+    </select>
+</mapper>

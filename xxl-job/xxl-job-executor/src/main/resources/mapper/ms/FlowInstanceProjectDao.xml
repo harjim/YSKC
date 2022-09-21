@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xxl.job.executor.dao.ms.FlowInstanceProjectDao">
+    <insert id="insertOrUpdate">
+        insert into flowInstance_project (`year`,companyId,projectId,instanceId,creatorId,createTime,
+        moduleId,lastUpdateTime,lastUpdatorId)
+        VALUES
+        <foreach collection="list" item="l" separator=",">
+            (#{l.year},#{l.companyId},#{l.projectId},#{l.instanceId},#{l.creatorId},#{l.createTime},#{l.moduleId},
+            #{l.lastUpdateTime},#{l.lastUpdatorId})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        instanceId = values(instanceId),
+        lastUpdatorId = values(lastUpdatorId),
+        lastUpdateTime = values(lastUpdateTime)
+    </insert>
+    <select id="getInstances" resultType="com.xxl.job.executor.models.flowInstance.FlowInstanceProjectModel">
+        select instanceId as id,moduleId,projectId from flowInstance_project
+        where
+        <foreach collection="list" separator=" or " item="l">
+            (companyId = #{l.companyId} and `year` = #{l.year} and moduleId = #{l.moduleId})
+        </foreach>
+    </select>
+    <select id="getCompanies" resultType="com.xxl.job.executor.models.flowInstance.FlowInstanceCompanyModel">
+        select fp.instanceId,fp.year,c.companyName,fp.projectId,fp.lastUpdatorId from flowInstance_project fp
+        inner join customer c on c.companyId = fp.companyId
+        where fp.instanceId in
+        <foreach collection="list" open="(" separator="," close=")" item="l">
+            #{l.id}
+        </foreach>
+    </select>
+</mapper>

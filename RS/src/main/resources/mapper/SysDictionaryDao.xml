@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.SysDictionaryDao">
+    <select id="getDictionaryByType" resultType="com.yskc.rs.models.SysDictionaryModel" >
+         select * from sys_dictionary where type=#{type}
+    </select>
+    <select id="getHighTecIndustryModels" resultType="com.yskc.rs.models.HighTecIndustryModel">
+       select `key` as id,`value` as label,parentKey   as pId,`key` as value from sys_dictionary where type=2
+    </select>
+
+    <select id="getHighTecIndustry" resultType="string">
+        select value from sys_dictionary where type = 2 and `key` in
+        <foreach collection="list" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="getDictionaryByBudgetType" resultType="com.yskc.rs.models.SysDictionaryModel">
+                     SELECT
+                        `key`,
+                        type,
+                        parentKey,
+                    `value`
+                    FROM
+                        sys_dictionary
+                    WHERE
+                        type = 3
+                    OR type = 4
+                    ORDER BY `type`,`order` desc
+
+    </select>
+    <select id="getByKey" resultType="com.yskc.rs.entity.SysDictionaryEntity">
+        select `value`
+        from sys_dictionary
+        where `type`=6 and `key`=#{stageKey}
+    </select>
+</mapper>

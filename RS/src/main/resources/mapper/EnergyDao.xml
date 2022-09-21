@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.EnergyDao">
+    <insert id="addList">
+        INSERT INTO
+        d_energy(remainAmount,`type`,occDate,unitPrice,quantity,companyId,creatorId,createTime,rdDeptId,ename,unit,
+        amount,deptId,accountTitleId,lastUpdateTime,lastUpdatorId,msCreatorId,msLastUpdatorId,accNumber,deptName,totalAmount,remark)
+        VALUES
+        <foreach collection="energys" separator="," item="e">
+            (#{e.remainAmount},#{e.type},#{e.occDate},#{e.unitPrice},#{e.quantity},#{e.companyId},#{e.creatorId},
+            #{e.createTime},#{e.rdDeptId},#{e.ename},#{e.unit},#{e.amount},#{e.deptId},#{e.accountTitleId},
+            #{e.lastUpdateTime},#{e.lastUpdatorId},#{e.msCreatorId},#{e.msLastUpdatorId},#{e.accNumber},#{e.deptName},#{e.totalAmount},#{e.remark})
+        </foreach>
+    </insert>
+    <update id="updateRdDept">
+        update d_energy set rdDeptId = #{setModel.rdDeptId} where id in
+        <foreach collection="setModel.ids" open="(" separator="," close=")" item="id">
+            #{id}
+        </foreach>
+    </update>
+    <update id="updateList">
+        <foreach collection="energyList" item="i">
+            update d_energy set remainAmount=#{i.remainAmount},lastUpdateTime=#{now},
+            lastUpdatorId=#{userId},msLastUpdatorId=#{msUserId} where id = #{i.id};
+        </foreach>
+    </update>
+
+    <select id="queryAll"
+            resultType="com.yskc.rs.models.energy.EnergyModel">
+        select
+        e.id,e.type,e.accNumber,e.ename,e.unitPrice,e.unit,e.quantity,e.remark,e.occDate,
+        e.deptName,e.amount,e.accountTitleId,`at`.fullAccountName,e.totalAmount
+        from d_energy as e
+        LEFT JOIN accountTitle as `at` on `at`.id = e.accountTitleId
+        where e.companyId = #{companyId}
+        <if test="query.type != null and query.type >= 0">
+            and e.type = #{query.type}
+        </if>
+        <if test="query.ename != null and query.ename != ''">
+            and e.ename like "%"#{query.ename}"%"
+        </if>
+        <if test="query.deptName !=null and query.deptName != ''">
+            and e.deptName like "%"#{query.deptName}"%"
+        </if>
+        <if test="query.endMonth != null">
+            and e.occDate <![CDATA[ < ]]> #{query.endMonth}
+        </if>
+        <if test="query.startMonth != null">
+            and e.occDate <![CDATA[ >= ]]> #{query.startMonth}
+        </if>
+    </select>
+
+    <select id="queryForExport"
+            resultType="com.yskc.rs.models.energy.EnergyModel">
+        select
+        e.id,e.type,e.ename,e.unitPrice,e.unit,e.quantity,e.remark,e.occDate
+        from d_energy as e where e.companyId = #{companyId}
+        <if test="type >= 0">
+            and e.type = #{type}
+        </if>
+        <if test="ename != null and ename != ''">
+            and e.ename like "%"#{ename}"%"
+        </if>
+        order by e.occDate DESC
+    </select>
+
+    <select id="queryEnergyByDate"
+            resultType="com.yskc.rs.models.energy.EnergyModel">
+        select * from d_energy where companyId = #{companyId}
+        and occDate &gt;= #{beginDate} and occDate &lt;= #{endDate}
+        <if test="type != null and type != ''">
+            and type like "%"#{type}"%"
+        </if>
+        <if test="ename != null and ename != ''">
+            and ename like "%"#{ename}"%"
+        </if>
+        order by occDate DESC
+    </select>
+
+    <select id="getExportEnergyList" resultType="com.yskc.rs.models.excel.EnergyExcel">
+        select
+        e.type,e.ename,e.unitPrice,e.unit,e.quantity,e.accNumber,e.remark,e.occDate,e.amount,e.deptName,`at`.fullAccountName,
+        e.totalAmount
+        from d_energy as e
+        LEFT JOIN accountTitle as `at` on e.accountTitleId = `at`.id
+        where e.companyId = #{companyId}
+        <if test="query.type != null and query.type >= 0">
+            and e.type = #{query.type}
+        </if>
+        <if test="query.deptName !=null and query.deptName != ''">
+            and e.deptName like "%"#{query.deptName}"%"
+        </if>
+        <if test="query.ename != null and query.ename != ''">
+            and e.ename like "%"#{query.ename}"%"
+        </if>
+        <if test="query.endMonth != null">
+            and e.occDate <![CDATA[ < ]]> #{query.endMonth}
+        </if>
+        <if test="query.startMonth != null">
+            and e.occDate <![CDATA[ >= ]]> #{query.startMonth}
+        </if>
+        order by e.occDate DESC
+    </select>
+    <select id="getByProjectEnergyIds" resultType="com.yskc.rs.entity.EnergyEntity">
+        select
+        e.id, e.remainAmount + pe.rdAmount as remainAmount from d_energy as e
+        LEFT JOIN p_energy as pe on e.id = pe.energyDataId
+        where pe.id in
+        <foreach collection="ids" open="(" separator="," close=")" item="id">
+            #{id}
+        </foreach>
+    </select>
+    <select id="getProjectUsed" resultType="java.lang.Integer">
+        select distinct e.id from p_energy as pe LEFT JOIN d_energy as e on pe.energyDataId = e.id
+        where e.id in
+        <foreach collection="ids" open="(" separator="," close=")" item="id">
+            #{id}
+        </foreach>
+    </select>
+</mapper>

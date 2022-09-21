@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.FlowNodeUserDao">
+    <insert id="insertList">
+        insert into flowNode_user (nodeId,dataId,creatorId,createTime,`type`,`level`,remark) values
+        <foreach collection="insertList" item="item" separator=",">
+            (#{item.nodeId},#{item.dataId},#{item.creatorId},#{item.createTime},#{item.type},#{item.level},#{item.remark})
+        </foreach>
+    </insert>
+    <delete id="delUser">
+        delete from flowNode_user where nodeId=#{nodeId} and userId not in
+        <foreach collection="userIds" item="userId" open="(" separator="," close=")">
+            #{userId}
+        </foreach>
+    </delete>
+    <delete id="delByNodes">
+        delete from flowNode_user where nodeId in
+        <foreach collection="nodeIds" item="nodeId" open="(" close=")" separator=",">
+            #{nodeId}
+        </foreach>
+    </delete>
+    <delete id="delByFlowId">
+        delete from
+        flowNode_user where id in (<foreach collection="nodeUserIds" item="nodeUserId" separator=",">
+        #{nodeUserId}</foreach>)
+    </delete>
+    <select id="getUserPerms" resultType="com.yskc.ms.models.flow.FlowNodeUserModel">
+        select fu.id,fu.nodeId,fu.userId,fn.order from
+        flowNode_user fu
+        inner join flowNode fn on fn.id=fu.nodeId and fn.flowId=#{nodeType}
+        where 1=1
+        <if test="userId!=null and userId>0">
+            and userId=#{userId}
+        </if>
+    </select>
+    <select id="getFlowUser" resultType="com.yskc.ms.models.flow.FlowNodeUserModel">
+        select fu.id,fu.nodeId,fu.userId,yu.realName
+        from flowNode_user fu
+        inner join flowNode fn on fn.id=fu.nodeId
+        inner join ys_user yu on yu.id=fu.userId
+        where fn.flowId=#{flowId}
+    </select>
+    <select id="getUserByNode" resultType="com.yskc.ms.entity.ms.FlowNodeUserEntity">
+        select id,nodeId,dataId,`type` from flowNode_user
+        where nodeId in
+        <foreach collection="nodeIds" item="nodeId" open="(" separator="," close=")">
+            #{nodeId}
+        </foreach>
+    </select>
+    <select id="getNodeUser" resultType="com.yskc.ms.models.flow.FlowNodeUserModel">
+        select id,nodeId,dataId,`type`,userName,`level`,remark
+        from
+        (select fu.id,fu.nodeId,fu.dataId,fu.type,yu.realName as userName,fu.level,fu.remark
+        from flowNode_user fu
+        inner join ys_user yu on fu.dataId=yu.id
+        where `type`=0 and nodeId in
+        <foreach collection="nodeIds" item="nodeId" open="(" separator="," close=")">
+            #{nodeId}
+        </foreach>) as tableA union
+        (select fu1.id,fu1.nodeId,fu1.dataId,fu1.type,ar.roleName as userName,fu1.level,fu1.remark
+        from flowNode_user fu1
+        left join app_role ar on fu1.dataId=ar.id
+        where `type`in (1,2,3,4) and fu1.nodeId in
+        <foreach collection="nodeIds" item="nodeId" open="(" separator="," close=")">
+            #{nodeId}
+        </foreach>)
+
+    </select>
+    <select id="getUserByFlow" resultType="com.yskc.ms.entity.ms.FlowNodeUserEntity">
+         select fu.id from flowNode_user fu
+            inner join flowNode f on fu.nodeId=f.id
+            where f.flowId=#{flowId}
+    </select>
+</mapper>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.ProjectBasicDao">
+    <select id="getInfo" resultType="com.yskc.ms.models.project.ProjectBasicModel">
+        select pb.id,pb.isImplemented,pb.income,pb.incomeTax,pb.totalStaff,pb.researchFee,
+        pb.taxRefiefs,pb.techStaff,pb.financeStaff,pb.manager,pb.startTime,pb.applyStatus,
+        pb.hasPayPatent,pb.other,pt.beginTime,pt.endTime,pb.projectId
+        from project_basic pb
+        inner join project_timeline pt on pb.projectId=pt.projectId
+        where pb.projectId=#{projectId} and pt.itemType=10
+    </select>
+    <select id="getByProject" resultType="com.yskc.ms.entity.ms.ProjectBasicEntity">
+        select * from project_basic
+        where projectId=#{projectId}
+    </select>
+</mapper>

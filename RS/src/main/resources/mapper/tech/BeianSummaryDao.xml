@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yskc.rs.dao.tech.BeianSummaryDao">
+
+    <update id="updateByBeian">
+        update t_beian_summary set
+        totalAmount = #{entity.totalAmount}, totalAmountTax = #{entity.totalAmountTax}, amount = #{entity.amount}, amountTax = #{entity.amountTax},
+        equipment = #{entity.equipment}, equipmentTax = #{entity.equipmentTax}, initWorkCapital = #{entity.initWorkCapital},
+        initWorkCapitalTax = #{entity.initWorkCapitalTax},construction = #{entity.construction}, constructionTax = #{entity.constructionTax}
+        where companyId = #{entity.companyId} and beianId = #{entity.beianId}
+    </update>
+    <select id="getByBeian" resultType="java.lang.Integer">
+        select id
+        from t_beian_summary where beianId = #{beianId} and companyId = #{companyId}
+    </select>
+
+
+</mapper>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.DocFileTrialDao">
+    <insert id="insertList">
+        insert into p_docFile_trial (pdocFileId,trialId,companyId,createTime,creatorId,msCreatorId)
+        values
+        <foreach collection="entities" item="item" separator=",">
+            (#{item.pdocFileId},#{item.trialId},#{item.companyId},#{item.createTime},#{item.creatorId},#{item.msCreatorId})
+        </foreach>
+    </insert>
+
+    <delete id="delDocFileTrial">
+        delete from p_docFile_trial where companyId=#{companyId} and trialId=#{trialId} and pdocFileId=#{docFileId}
+    </delete>
+
+    <select id="queryByTrialId" resultType="com.yskc.rs.entity.DocFileTrialEntity">
+        select * from p_docFile_trial
+        where trialId=#{trialId} and companyId=#{companyId}
+    </select>
+    <select id="getCountByTrialId" resultType="java.lang.Integer">
+        select trialId as id from p_docFile_trial
+        where trialId in (
+            <foreach collection="ids" item="id" separator=",">
+                #{id}
+            </foreach>
+            )
+    </select>
+
+    <delete id="delByDocFileId">
+        delete from p_docFile_trial where pdocFileId=#{docFileId} and companyId=#{companyId}
+    </delete>
+</mapper>

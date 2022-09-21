@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.project.AdjustDao">
+    <insert id="insertOrUpdate">
+        insert into p_adjust (companyId,projectId,rdType,amount,pRdId,msCreatorId,msLastUpdatorId,createTime,lastUpdateTime,`month`)
+        values
+        <foreach collection="adjustEntities" item="item" separator=",">
+            (#{item.companyId},#{item.projectId},#{item.rdType},#{item.amount},
+            #{item.pRdId},#{item.msCreatorId},#{item.msLastUpdatorId},#{item.createTime},#{item.lastUpdateTime},#{item.month})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        amount = values(amount),
+        msLastUpdatorId=values(msLastUpdatorId),
+        lastUpdateTime=values(lastUpdateTime)
+    </insert>
+
+    <select id="getByTypeIds" resultType="com.yskc.rs.entity.project.AdjustEntity">
+        select * from p_adjust
+        where rdType in
+         <foreach collection="rdTypes" open="(" separator="," close=")" item="rdType">
+             #{rdType}
+         </foreach>
+        and pRdId in
+        <foreach collection="materialIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+</mapper>

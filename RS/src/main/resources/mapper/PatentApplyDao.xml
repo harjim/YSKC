@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.PatentApplyDao">
+    <select id="getPojoByPatentNo" resultType="com.yskc.rs.entity.PatentApplyEntity">
+        select * from patent_apply
+        where patentNo=#{patentNo}
+    </select>
+
+    <insert id="insertPatentApplys">
+        insert into patent_apply
+        (`creatorId`,
+        `lastUpdatorId`,
+        `createTime`,
+        `lastUpdateTime`,
+        `msCreatorId`,
+        `msLastUpdatorId`,
+        `patentNo`,
+        `applyName`)
+        VALUES
+        <foreach collection="patentApplys" item="item" separator=",">
+            (
+            #{item.creatorId},
+            #{item.lastUpdatorId},
+            #{item.createTime},
+            #{item.lastUpdateTime},
+            #{item.msCreatorId},
+            #{item.msLastUpdatorId},
+            #{item.patentNo},
+            #{item.applyName}
+            )
+        </foreach>
+    </insert>
+
+    <update id="updatePatentApplys">
+        <foreach collection="patentApplys" item="item" index="index" open="" close="" separator=";">
+            update patent_apply set
+            lastUpdatorId=#{item.lastUpdatorId},
+            lastUpdateTime=#{item.lastUpdateTime},
+            patentNo=#{item.patentNo},
+            applyName=#{item.applyName}
+            where id=#{item.id}
+        </foreach>
+    </update>
+
+    <select id="getListByPatentNos" resultType="com.yskc.rs.entity.PatentApplyEntity">
+        select * from patent_apply
+        where 1=1
+        <if test="patentNos!=null and patentNos.size()>0">
+            and patentNo in
+            <foreach collection="patentNos" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+</mapper>

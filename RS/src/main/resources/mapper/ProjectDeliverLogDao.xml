@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.project.ProjectDeliverLogDao">
+
+    <insert id="addLogs">
+        <foreach collection="list" separator=";" item="l">
+            insert into p_deliver_log
+            (companyId,status,node,deliverId,suggestion,logTime,auditUser)
+            values (#{l.companyId},#{l.status},#{l.node},#{l.deliverId},#{l.suggestion},#{l.logTime},#{l.auditUser})
+        </foreach>
+    </insert>
+    <insert id="addDeliverLog">
+        insert into p_deliver_log
+            (companyId,status,node,deliverId,suggestion,logTime,auditUser)
+        values (#{model.companyId},#{model.status},#{model.node},#{deliverId},#{model.suggestion},now(),#{model.auditUser})
+    </insert>
+</mapper>

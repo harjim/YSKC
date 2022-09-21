@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.rs.ProjectRdEquipmentDao">
+    <update id="updateUsed">
+        UPDATE p_equipment_used
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix=" remainHours =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.remainHours != null">
+                        when id = #{l.id} then #{l.remainHours}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" usedEquData =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.usedEquData != null">
+                        when id = #{l.id} then #{l.usedEquData}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        ,lastUpdatorId=-1,msLastUpdatorId=#{msUserId},lastUpdateTime=#{now}
+        WHERE
+        <foreach collection="list" item="l" separator="or">
+            id = #{l.id}
+        </foreach>
+    </update>
+    <delete id="deleteRdEquipment">
+        delete from p_rdEquipment where projectId=#{projectId}
+        <if test="yearKeys != null">
+            and (
+            <foreach collection="yearKeys" item="yk" separator="or">
+                (`month`>=#{yk.begin} and `month` &lt;= #{yk.end}
+                and ecode in (<foreach collection="yk.keys" separator="," item="ecode">#{ecode}</foreach> ))
+            </foreach>
+            )
+        </if>
+    </delete>
+    <delete id="deleteEquData">
+        delete from p_equipment where id in (<foreach collection="ids" item="id" separator=",">#{id}</foreach>)
+    </delete>
+    <delete id="deleteEquDataUsed">
+        delete from p_equipment_used where id in (<foreach collection="ids" item="id" separator=",">#{id}</foreach>)
+    </delete>
+
+    <select id="queryList" resultType="com.yskc.ms.models.rs.RdEquipmentResultModel">
+        select ie.effect,e.ename,e.emodal,ie.ecode,pr.rdHour as monthHour from
+        i_equipment ie
+        INNER JOIN rdEquipment as re on ie.companyId = re.companyId and ie.ecode = re.ecode and re.year = ie.year
+        INNER join equipment e on ie.ecode=e.ecode and ie.companyId=e.companyId
+        INNER join p_rdEquipment pr on ie.ecode=pr.ecode and ie.companyId=pr.companyId and ie.projectId=pr.projectId
+        where ie.projectId=#{projectId} and ie.companyId=#{companyId} and pr.month=#{month}
+          and re.etype != 40001 and ie.year=#{year}
+    </select>
+    <select id="queryYearList" resultType="com.yskc.ms.models.rs.RdEquipmentResultModel">
+           select ie.effect,e.ename,e.emodal,ie.ecode,sum(pr.rdHour) as yearHour from
+        i_equipment ie
+        INNER JOIN rdEquipment as re on ie.companyId = re.companyId and ie.ecode = re.ecode and re.year = ie.year
+        INNER join equipment e on ie.ecode=e.ecode and ie.companyId=e.companyId
+        INNER join p_rdEquipment pr on ie.ecode=pr.ecode and ie.companyId=pr.companyId and ie.projectId=pr.projectId
+        where ie.projectId=#{projectId} and ie.companyId=#{companyId} and re.etype != 40001 and ie.year=#{year}
+        group by ie.effect,e.ename,e.emodal,ie.ecode
+    </select>
+    <select id="getList" resultType="com.yskc.ms.models.projectAudit.RdEquipmentListModel">
+        select re.id,re.year,re.companyId,re.ecode,re.rdDeptId,rd.deptName,e.emodal,e.ename,
+        e.workshop,e.processSection,e.productLine,re.etype
+        from rdEquipment re
+        inner join equipment e on re.ecode=e.ecode and re.companyId=e.companyId
+        left join rdDept rd on rd.id=re.rdDeptId
+        where re.companyId=#{query.companyId} and re.year=#{query.year}
+    </select>
+    <select id="getTotal" resultType="java.util.Map">
+        select count(CASE WHEN re.etype = 30000 then 1 else null end) as prodCnt,
+         count(CASE WHEN re.etype = 30100 then 2 else null end) as labCnt,
+         count(CASE WHEN re.etype = 40001 then 3 else null end) as softCnt
+        from rdEquipment re
+        inner join equipment e on e.companyId = re.companyId and e.ecode = re.ecode
+        where re.companyId=#{query.companyId} and re.year=#{query.year}
+    </select>
+    <select id="getAttList" resultType="com.yskc.ms.models.rs.summary.ProjectEquipmentModel">
+        select id,ecode,`month`,equData,workHours from p_equipment where projectId=#{projectId}
+        <if test="yearKeys != null">
+            and (
+            <foreach collection="yearKeys" item="yk" separator="or">
+                (`month`>=#{yk.begin} and `month` &lt;= #{yk.end}
+                and ecode in (<foreach collection="yk.keys" separator="," item="ecode">#{ecode}</foreach> ))
+            </foreach>
+            )
+        </if>
+    </select>
+    <select id="getAttUsedList" resultType="com.yskc.ms.models.rs.summary.ProjectEquipmentUsedModel">
+        select id,ecode,`month`,usedEquData,workHours,remainHours from p_equipment_used where companyId=#{companyId}
+        and (<foreach collection="list" item="l" separator="or">(`month`=#{l.month} and ecode=#{l.ecode})</foreach>)
+    </select>
+    <select id="getMonths" resultType="java.util.Date">
+        select `month` from p_rdEquipment where projectId=#{projectId}
+        and (
+        <foreach collection="yearKeys" item="yk" separator="or">
+            (`month`>=#{yk.begin} and `month` &lt;= #{yk.end}
+            and ecode in (<foreach collection="yk.keys" separator="," item="ecode">#{ecode}</foreach> ))
+        </foreach>
+        ) group by `month`
+    </select>
+    <select id="getSummary" resultType="com.yskc.ms.models.rs.summary.ProjectRdEquipmentTotalModel">
+        select
+        sum(case when re.etype = 30000 then pre.rdDepreciation else 0 end) as prod,
+        sum(case when re.etype = 30100 then pre.rdDepreciation else 0 end) as lab,
+        sum(case when re.etype = 40001 then pre.rdDepreciation else 0 end) as assets,
+        sum(case when pre.powerRate is not null then pre.powerRate else 0 end ) as power,
+        pre.`month`
+        from p_rdEquipment pre
+        INNER JOIN rdEquipment as re on pre.companyId = re.companyId and pre.ecode = re.ecode
+        LEFT JOIN equipment e on e.ecode = pre.ecode and e.companyId = pre.companyId
+        where pre.projectId = #{projectId}
+        and pre.month in
+        <foreach collection="months" open="(" separator="," close=")" item="m">
+            #{m}
+        </foreach>
+        and re.year = year(pre.month)
+        group by `month`
+    </select>
+    <select id="getYearEcodes" resultType="com.yskc.ms.models.rs.summary.InitEquipmentModel">
+        select `year`,ecode from i_equipment where id in(<foreach collection="ids" separator="," item="id">#{id}</foreach> )
+    </select>
+    <select id="getCollectionList" resultType="com.yskc.ms.models.rdfunds.EquipmentFeesModel">
+        select e.ename,i.ecode,de.workHours,de.depreciation,pre.rdHour,pre.rdDepreciation,ifnull(de.deptName,e.deptName)deptName,re.etype
+        from i_equipment i
+        INNER JOIN rdEquipment re on re.companyId=i.companyId and re.ecode=i.ecode and re.year=i.year
+        LEFT JOIN d_equipment de on de.ecode = i.ecode and de.companyId = i.companyId and de.month = #{model.month}
+        LEFT JOIN p_rdEquipment pre on pre.ecode = i.ecode and pre.projectId = i.projectId and pre.month = #{model.month}
+        LEFT JOIN equipment e on e.ecode = i.ecode and e.companyId = i.companyId
+        WHERE
+        i.companyId = #{model.companyId} and i.year=#{year}
+        and (i.entryDate is null or i.entryDate&lt;= #{monthLastDay})
+        and i.projectId = #{model.projectId}
+        <if test="model.rdTypes != null and model.rdTypes.size > 0">
+            and re.etype in (
+                <foreach collection="model.rdTypes" item="type" separator=",">
+                    #{type}
+                </foreach>
+            )
+        </if>
+        <if test="null == model.rdTypes">
+            and re.etype != 40001
+        </if>
+    </select>
+    <select id="getEquipmentPowerFees" resultType="com.yskc.ms.models.rdfunds.EquipmentPowerFeesModel">
+        select e.ename,pre.ecode,re.etype,e.usagePower,pre.rdHour,pre.powerUnitPrice,pre.powerUnitPrice,ifnull(de.deptName,e.deptName)deptName
+        from p_rdEquipment pre
+        INNER JOIN rdEquipment re on re.companyId=pre.companyId and re.ecode=pre.ecode and re.year=#{year}
+        INNER JOIN d_equipment de on de.companyId = pre.companyId and de.month = pre.month and de.ecode = pre.ecode
+        LEFT JOIN equipment e ON e.companyId = pre.companyId AND e.ecode = pre.ecode
+        WHERE
+        pre.companyId = #{model.companyId}
+        and pre.month = #{model.month}
+        and pre.projectId = #{model.projectId}
+        <if test="null == model.rdTypes">
+            and re.etype != 40001
+        </if>
+    </select>
+    <select id="getRangeMonths" resultType="java.util.Date">
+        select distinct `month` from p_rdEquipment where projectId=#{projectId}
+        and `month`>=#{begin} and `month` &lt;=#{end}
+    </select>
+</mapper>

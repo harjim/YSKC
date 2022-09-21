@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.QualityScoreDao">
+    <insert id="addScoreList" useGeneratedKeys="true" keyProperty="id">
+        insert into quality_score (creatorId, lastUpdatorId, createTime, lastUpdateTime,
+                                   companyId, rsProjectId, year, month, scoreCount, engineerId,
+                                   totalScore, avgScore, weight, passRate, type, isFinal, monthsId)
+        values <foreach collection="list" item="item" separator=",">
+        (#{item.creatorId},#{item.lastUpdatorId},#{item.createTime},#{item.lastUpdateTime},#{item.companyId}
+        ,#{item.rsProjectId},#{item.year},#{item.month},#{item.scoreCount},#{item.engineerId},#{item.totalScore}
+        ,#{item.avgScore},#{item.weight},#{item.passRate},#{item.type},#{item.isFinal},#{item.monthsId})
+    </foreach>
+    </insert>
+    <update id="editScore">
+        update quality_score set lastUpdateTime=#{qualityScore.lastUpdateTime},isFinal=#{qualityScore.isFinal},
+        avgScore=#{qualityScore.avgScore},totalScore=#{qualityScore.totalScore},passRate=#{qualityScore.passRate},
+        lastUpdatorId=#{qualityScore.lastUpdatorId},`month`=#{qualityScore.month},weight=#{qualityScore.weight}
+        where id=#{qualityScore.id}
+    </update>
+    <update id="editCompletion">
+        update quality_score set lastUpdateTime=#{date},
+            isFinal=#{model.isFinal},lastUpdatorId=#{id}
+        where id in (
+            <foreach collection="model.ids" separator="," item="id">
+                #{id}
+            </foreach>
+            )
+    </update>
+
+    <select id="getCollectList" resultType="com.yskc.ms.models.qualityscore.ScoreCollectModel">
+        select count(qs.id) as `count`,max(c.companyName) as companyName,qs.companyId,qs.year,max(yd1.fullname) as deptName,
+        qs.type,qs.month,yu1.realName as engineers,qs.engineerId,max(qs.lastUpdateTime)lastUpdateTime,
+        max(yd2.fullname) as coverage,max(yu2.realName) as scorer,
+        count(CASE WHEN qsl1.passed = 1 THEN 1 ELSE null END) as onePassNum,
+        count(CASE WHEN qsl2.passed = 1 THEN 2 ELSE null END) as twoPassNum,
+        count(CASE WHEN qs.isFinal = 1 THEN 3 ELSE null END) as finishNum,
+        count(CASE WHEN qs.isFinal = 0 THEN 4 ELSE null END) as unfinishNum,
+        sum(qs.totalWeight) as totalWeight,sum(qs.avgScore) as avgScore,
+        sum((CASE WHEN qs.isFinal = 1 THEN (qs.avgScore*qs.totalWeight*qs.passRate) ELSE 0 END)) as jValue
+        from quality_score qs
+        inner join customer c on c.companyId = qs.companyId
+        <choose>
+            <when test="dataPerm.permType == 0">
+                inner join ys_user as yu1 on yu1.id = #{dataPerm.userId} and qs.engineerId = yu1.id
+            </when>
+            <otherwise>
+                inner join ys_user as yu1 on yu1.id = qs.engineerId
+            </otherwise>
+        </choose>
+        inner join quality_score_log qsl1 on qsl1.qualityId = qs.id and qsl1.scoreCount=1
+        left join quality_score_log qsl2 on qsl2.qualityId = qs.id and qsl2.scoreCount=2
+        inner join ys_user yu2 on yu2.id = qs.creatorId
+        left join ys_dept yd1 on yd1.id = c.deptId
+        left join ys_dept yd2 on yd2.id = yu1.depId
+        <where>
+            <if test="dataPerm.permType == 1">
+                qs.id in
+                (select qs.id from quality_score qs
+                inner join ys_user u on u.id = qs.engineerId
+                inner join user_dept ud on ud.userId = u.id
+                inner join ys_dept d on ud.depId = d.id
+                where
+                <foreach collection="dataPerm.deptPaths" item="path" separator="or" open="(" close=")">
+                    d.fullPath like #{path}"%"
+                </foreach>)
+            </if>
+            <if test="model.companyName != null and model.companyName !=''">
+                <bind name="name" value="'%'+model.companyName+'%'"/>
+                and c.companyName like #{name}
+            </if>
+            <if test="model.deptId !=null">
+                and yd1.id=#{model.deptId}
+            </if>
+            <if test="model.year!=null">
+                and qs.year=#{model.year}
+            </if>
+            <if test="model.type!=null">
+                and qs.type=#{model.type}
+            </if>
+            <if test="model.engineerName!=null and model.engineerName!=''">
+                <bind name="engineerName" value="'%'+model.engineerName+'%'"/>
+                and yu1.realName like#{engineerName}
+            </if>
+            <if test="model.scoreMonth!=null">
+                and qs.month=#{model.scoreMonth}
+            </if>
+            <if test="model.isFinal != null">
+                and qs.isFinal=#{model.isFinal}
+            </if>
+        </where>
+        group by qs. companyId,qs.`year`,qs.type,qs.`month`,qs.engineerId
+    </select>
+    <select id="getTotal" resultType="com.yskc.ms.models.qualityscore.ScoreHeaderModel">
+        select count(CASE WHEN qs.type = 5 THEN 1 ELSE null END) as reportNum,
+        count(CASE WHEN qs.type = 10 THEN 2 ELSE null END) as backupFileNum,
+        count(CASE WHEN qs.type = 6 THEN 3 ELSE null END) as docNum,
+        count(CASE WHEN qs.type = 9 THEN 4 ELSE null END) as innovationNum,
+        count(CASE WHEN qs.type = 8 THEN 5 ELSE null END) as noveltyNum,
+        count(CASE WHEN qs.isFinal = 1 THEN 6 ELSE null END) as finishNum,
+        count(CASE WHEN qs.isFinal = 0 THEN 7 ELSE null END) as unfinishNum,
+        sum(qs.avgScore) as avgScore,sum(qs.totalWeight) as totalWeight,
+        sum((CASE WHEN qs.isFinal = 1 THEN (qs.avgScore*qs.totalWeight*qs.passRate) ELSE 0 END)) as jValue,
+        count(qs.id) as `count`
+        from quality_score qs
+        inner join customer c on c.companyId = qs.companyId
+        <choose>
+            <when test="dataPerm.permType == 0">
+                inner join ys_user as yu1 on yu1.id = #{dataPerm.userId} and qs.engineerId = yu1.id
+            </when>
+            <otherwise>
+                inner join ys_user as yu1 on yu1.id = qs.engineerId
+            </otherwise>
+        </choose>
+        left join ys_dept yd1 on yd1.id = c.deptId
+        <where>
+            <if test="dataPerm.permType == 1">
+                qs.id in
+                (select qs.id from quality_score qs
+                inner join ys_user u on u.id = qs.engineerId
+                inner join user_dept ud on ud.userId = u.id
+                inner join ys_dept d on ud.depId = d.id
+                where
+                <foreach collection="dataPerm.deptPaths" item="path" separator="or" open="(" close=")">
+                    d.fullPath like #{path}"%"
+                </foreach>)
+            </if>
+            <if test="model.companyName != null and model.companyName !=''">
+                <bind name="name" value="'%'+model.companyName+'%'"/>
+                and c.companyName like #{name}
+            </if>
+            <if test="model.deptId !=null">
+                and yd1.id=#{model.deptId}
+            </if>
+            <if test="model.year!=null">
+                and qs.year=#{model.year}
+            </if>
+            <if test="model.type!=null">
+                and qs.type=#{model.type}
+            </if>
+            <if test="model.engineerName!=null and model.engineerName!=''">
+                <bind name="engineerName" value="'%'+model.engineerName+'%'"/>
+                and yu1.realName like#{engineerName}
+            </if>
+            <if test="model.scoreMonth!=null">
+                and qs.month=#{model.scoreMonth}
+            </if>
+            <if test="model.isFinal != null">
+                and qs.isFinal=#{model.isFinal}
+            </if>
+        </where>
+    </select>
+    <select id="getScoreList" resultType="com.yskc.ms.models.qualityscore.ScoreModel">
+        select qs.isFinal as `status`, qsl1.submitTime as oneSubmitDate,qs.id,
+               qsl1.auditTime as oneAuditDate,qsl1.totalScore as oneScore,qsl1.createTime as oneScoreDate,
+               qsl2.submitTime as twoSubmitDate,qsl2.auditTime as twoAuditDate,qsl2.createTime as twoScoreDate,
+               qsl2.totalScore as twoScore,qs.avgScore,qs.totalWeight,qs.passRate,qs.rsProjectId,qsm.months
+        from quality_score qs
+                 <if test="dataPerm.permType == 0">
+                     inner join ys_user as yu1 on yu1.id = #{dataPerm.userId} and qs.engineerId = yu1.id
+                 </if>
+                 inner join quality_score_log qsl1 on qsl1.qualityId = qs.id and qsl1.scoreCount=1
+                 left join quality_score_log qsl2 on qsl2.qualityId = qs.id and qsl2.scoreCount=2
+                 left join quality_score_month qsm on qsm.id = qs.monthsId
+        where qs.companyId = #{model.companyId} and qs.type=#{model.type}
+          and qs.year=#{model.year} and qs.engineerId=#{model.engineerId}
+        and qs.month=#{month}
+          <if test="null != model.isFinal">
+              and qs.isFinal=#{model.isFinal}
+          </if>
+        <if test="dataPerm.permType == 1">
+            and qs.id in
+            (select qs.id from quality_score qs
+            inner join ys_user u on u.id = qs.engineerId
+            inner join user_dept ud on ud.userId = u.id
+            inner join ys_dept d on ud.depId = d.id
+            where
+            <foreach collection="dataPerm.deptPaths" item="path" separator="or" open="(" close=")">
+                d.fullPath like #{path}"%"
+            </foreach>)
+        </if>
+    </select>
+    <select id="getExportList" resultType="com.yskc.ms.models.qualityscore.ExportScoreModel">
+        select yd2.fullname as coverage,yd1.fullname as deptName,c.companyName,qs.year,qs.month,qs.rsProjectId,
+               yu1.realName as engineerName,yu2.realName as scorer,qs.type,qs.isFinal as status,qsl1.submitTime as oneSubmitTime,
+               qsl1.createTime as oneScoreTime,qsm.months,
+               (CASE WHEN qsl1.passed = 1 THEN 1 ELSE 0 END) as onePassNum,
+               qsl1.totalScore as oneScore,qsl2.submitTime as twoSubmitTime,qsl2.createTime as twoScoreTime,
+               (CASE WHEN qsl2.passed = 1 THEN 1 ELSE 0 END) as twoPassNum,
+               qsl2.totalScore as twoScore,qs.avgScore,qs.totalWeight,qs.passRate
+        from quality_score qs
+                 inner join quality_score_log qsl1 on qsl1.qualityId = qs.id and qsl1.scoreCount=1
+                 left join quality_score_log qsl2 on qsl2.qualityId = qs.id and qsl2.scoreCount=2
+                 left join quality_score_month qsm on qsm.id = qs.monthsId
+                 inner join customer c on c.companyId = qs.companyId
+                 <choose>
+                     <when test="dataPerm.permType == 0">
+                         inner join ys_user as yu1 on yu1.id = #{dataPerm.userId} and qs.engineerId = yu1.id
+                     </when>
+                     <otherwise>
+                         inner join ys_user as yu1 on yu1.id = qs.engineerId
+                     </otherwise>
+                 </choose>
+                 inner join ys_user yu2 on yu2.id = qs.creatorId
+                 left join ys_dept yd1 on yd1.id = c.deptId
+                 left join ys_dept yd2 on yd2.id = yu1.depId
+        <where>
+            <if test="dataPerm.permType == 1">
+                and qs.id in
+                (select qs.id from quality_score qs
+                inner join ys_user u on u.id = qs.engineerId
+                inner join user_dept ud on ud.userId = u.id
+                inner join ys_dept d on ud.depId = d.id
+                where
+                <foreach collection="dataPerm.deptPaths" item="path" separator="or" open="(" close=")">
+                    d.fullPath like #{path}"%"
+                </foreach>)
+            </if>
+            <if test="model.companyName != null and model.companyName !=''">
+                <bind name="name" value="'%'+model.companyName+'%'"/>
+                and c.companyName like #{name}
+            </if>
+            <if test="model.deptId !=null">
+                and yd1.id=#{model.deptId}
+            </if>
+            <if test="model.year!=null">
+                and qs.year=#{model.year}
+            </if>
+            <if test="model.type!=null">
+                and qs.type=#{model.type}
+            </if>
+            <if test="model.engineerName!=null and model.engineerName!=''">
+                <bind name="engineerName" value="'%'+model.engineerName+'%'"/>
+                and yu1.realName like#{engineerName}
+            </if>
+            <if test="model.scoreMonth!=null">
+                and qs.month=#{model.scoreMonth}
+            </if>
+            <if test="model.isFinal != null">
+                and qs.isFinal=#{model.isFinal}
+            </if>
+        </where>
+    </select>
+    <select id="getTypeById" resultType="java.lang.Integer">
+        select `type` from quality_score where id=#{id}
+    </select>
+</mapper>

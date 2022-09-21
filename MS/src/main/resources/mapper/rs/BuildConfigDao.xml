@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.rs.BuildConfigDao">
+    <select id="getConfigList" resultType="com.yskc.ms.models.rs.buildconfig.BuildConfigDocModel">
+        select type,madeDept,maker as 'maker',date_format(issueDate,'%Y年%m月%d日') as issueDate,version,description,date_format(validDate,'%Y年%m月%d日') as validDate,approval as 'approval',auditor as 'auditor',rdDeptMaster as 'rdDeptMaster'
+        from build_config
+        where companyId = #{companyId} and year = #{year}
+        order by type
+    </select>
+
+</mapper>

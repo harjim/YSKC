@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.FlowInstanceUserDao">
+    <update id="updateStatus">
+        update flowInstance_user set `status`=#{status},lastUpdatorId=#{userId},lastupdateTime=#{now}
+        where id in (<foreach collection="instanceUserIds" separator="," item="id">#{id}</foreach> )
+    </update>
+    <select id="getByNode" resultType="com.yskc.ms.models.flow.FlowInstanceUserModel">
+        select fu.instanceId,fu.userId,fu.status,fu.nodeId,yu.realName as userName
+        from flowInstance_user fu
+        inner join ys_user yu on fu.userId=yu.id
+        where
+        <foreach collection="curNodeUser" item="item" separator="or">
+        (fu.instanceId=#{item.instanceId} and nodeId=#{item.curNodeId})
+    </foreach>
+    </select>
+    <select id="getByUser" resultType="com.yskc.ms.entity.ms.FlowInstanceUser">
+        select fu.*  from flowInstance_project fp
+        inner join flowInstance fi on fp.instanceId=fi.id
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id
+        inner join flowInstance_user fu on fic.curNodeId=fu.nodeId and fu.instanceId=fi.id and fu.userId=#{userId}
+        where fp.projectId=#{projectId} and fic.curNodeId=#{nodeId} and fp.moduleId=#{mode} and fu.status=false
+    </select>
+    <select id="countNodeUser" resultType="java.lang.Integer">
+        select count(id) from flowInstance_user
+        where instanceId=#{instanceId} and nodeId=#{curNodeId} and `status` is null
+        <if test="userId!=null and userId>0">
+            and userId!=#{userId}
+        </if>
+    </select>
+    <select id="getInstanceUsers" resultType="com.yskc.ms.entity.ms.FlowInstanceUser">
+        select fu.id,fu.instanceId,fu.nodeId from flowInstance fi
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id
+        inner join flowInstance_user fu on fu.instanceId=fi.id and fu.nodeId=fic.curNodeId
+        where fu.userId = #{userId} and fi.status = 0
+         and fi.id in(<foreach collection="instanceIds" separator="," item="id">#{id}</foreach>)
+    </select>
+    <select id="getUnAuditInstanceIds" resultType="com.yskc.ms.entity.ms.FlowInstanceUser">
+        select distinct fu.instanceId,fu.nodeId from flowInstance_user fu
+        inner join flowInstance fi  on fu.instanceId=fi.id
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id and fu.nodeId=fic.curNodeId
+        inner join flowNode fn on fn.id=fic.curNodeId and fn.mode=1
+        where fu.userId!=#{userId} and fu.status is null
+        and fi.id in(<foreach collection="instanceIds" separator="," item="id">#{id}</foreach>)
+    </select>
+    <select id="getByInstance" resultType="com.yskc.ms.entity.ms.FlowInstanceUser">
+        select fu.instanceId,fu.userId from flowInstance_user fu
+        inner join flowInstance_curNode fic on fic.instanceId=fu.instanceId and fu.nodeId = fic.curNodeId and fic.closed=false
+        where fu.instanceId in
+        <foreach collection="instanceIds" item="instanceId" separator="," open="(" close=")">
+            #{instanceId}
+        </foreach>
+        <if test="nodeId!=null and nodeId >0">
+            and fu.nodeId=#{nodeId}
+        </if>
+    </select>
+</mapper>

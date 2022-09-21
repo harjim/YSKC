@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yskc.rs.dao.tech.InvestmentBankReceiptDao">
+
+
+    <insert id="insertList">
+        insert into t_investment_bankReceipt (creatorId,lastUpdatorId,createTime,lastUpdateTime,msCreatorId,
+        msLastUpdatorId,investmentId,bankReceiptId)
+        values
+        <foreach collection="bankReceiptIds" item="bankReceiptId"  separator=",">
+            (#{userId},#{userId},#{date},#{date},#{msUserId},#{msUserId},#{investmentId},#{bankReceiptId})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        lastUpdatorId = values(lastUpdatorId),
+        msLastUpdatorId = values(msLastUpdatorId),
+        lastUpdateTime = values(lastUpdateTime)
+    </insert>
+    <delete id="delByInvestmentId">
+        delete from t_investment_bankReceipt
+        where investmentId=#{id} and bankReceiptId in
+        <foreach collection="receiptIds" item="receiptId" open="(" separator="," close=")">
+            #{receiptId}
+        </foreach>
+    </delete>
+    <delete id="delBankReceipt">
+        delete from t_investment_bankReceipt
+        where investmentId in
+        <foreach collection="investmentIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    <select id="getByInvestment" resultType="java.lang.Integer">
+        select bankReceiptId
+        from t_investment_bankReceipt
+        where investmentId=#{investmentId}
+    </select>
+</mapper>

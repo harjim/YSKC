@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yskc.rs.dao.tech.TechEquipmentDao">
+    <insert id="insertList" keyProperty="id" useGeneratedKeys="true">
+        insert into t_equipment
+        (ename,emodal,usagePower,loadFactor,runRate,workHour,powerUsed,unitPrice,quantity,unit,amount,lastUpdatorId,lastUpdateTime,msLastUpdatorId,creatorId,createTime,msCreatorId,beianId,companyId)
+        values
+        <foreach collection="entities" item="item" separator=",">
+            (#{item.ename},#{item.emodal},#{item.usagePower},#{item.loadFactor},#{item.runRate},#{item.workHour},#{item.powerUsed},#{item.unitPrice},#{item.quantity},#{item.unit},#{item.amount},#{item.lastUpdatorId},
+            #{item.lastUpdateTime},#{item.msLastUpdatorId},#{item.creatorId},#{item.createTime},#{item.msCreatorId},#{item.beianId},#{item.companyId})
+        </foreach>
+    </insert>
+    <update id="updateList">
+        <foreach collection="entities" item="item" separator=";">
+            update t_equipment set
+            ename=#{item.ename},emodal=#{item.emodal},usagePower=#{item.usagePower},loadFactor=#{item.loadFactor},runRate=#{item.runRate},workHour=#{item.workHour},powerUsed=#{item.powerUsed},unitPrice=#{item.unitPrice},quantity=#{item.quantity},unit=#{item.unit},amount=#{item.amount},lastUpdatorId=#{item.lastUpdatorId},lastUpdateTime=#{item.lastUpdateTime},msLastUpdatorId=#{item.msLastUpdatorId}
+            where id=#{item.id}
+        </foreach>
+    </update>
+
+    <select id="getList" resultType="com.yskc.rs.models.tech.TechEquipmentModel">
+        select id,ename,emodal,usagePower,loadFactor,runRate,workHour,powerUsed,unitPrice,quantity,unit,amount
+        from t_equipment
+        where companyId=#{companyId} and beianId=#{query.beianId}
+        <if test="query.ename!=null and query.ename!=''">
+            and ename like "%"#{query.ename}"%"
+        </if>
+        <if test="query.emodal!=null and query.emodal!=''">
+            and emodal like "%"#{query.emodal}"%"
+        </if>
+    </select>
+    <select id="getEquipments" resultType="com.yskc.rs.models.tech.TechEquipmentModel">
+        select id,ename,emodal,usagePower,loadFactor,runRate,workHour,powerUsed,unitPrice,quantity,unit,amount
+        from t_equipment
+        where beianId=#{beianId}
+    </select>
+    <select id="getTotal" resultType="com.yskc.rs.models.tech.TechEquipmentModel">
+        select count(id) as id,sum(quantity) as quantity,sum(powerUsed) as powerUsed
+        from t_equipment where companyId=#{companyId} and beianId=#{beianId}
+        group by beianId
+    </select>
+
+    <update id="updateBeianTable">
+        UPDATE t_beian b, (SELECT beianId, COUNT(beianId) beianId_sum, SUM(quantity) quantity_sum, SUM(powerUsed) powerUsed_sum FROM t_equipment GROUP BY beianId) e
+        SET b.equipmentCnt=e.beianId_sum,b.equipmentQuantity=e.quantity_sum,b.powerUsed=e.powerUsed_sum,b.energyUsed=e.powerUsed_sum*1.229
+        WHERE b.id = e.beianId
+    </update>
+</mapper>

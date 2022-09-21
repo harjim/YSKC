@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.DocFileDao">
+
+
+    <select id="queryDocFile" resultType="com.yskc.rs.models.docFile.DocFileModel">
+        select d.id,d.docName,d.required,d.multiple,d.enabled,d.remark,ds.seq as `order`,d.needEdit
+        from  docFileStage ds
+        inner join docFile d on ds.docFileId=d.id
+        where d.enabled = true and ds.stageKey=#{stage}
+        order by ds.seq
+    </select>
+    <select id="queryTplByIds" resultType="com.yskc.rs.models.docFile.DocFileTemplateModel">
+        select t.id,t.docFileId,t.templateName,t.docTemplateName from docFileTemplate t
+        where t.enabled and t.docFileId in
+        <foreach collection="ids" open="(" separator="," close=")" item="id">
+            #{id}
+        </foreach>
+        ORDER BY t.defaultTemplate DESC
+    </select>
+    <select id="getDocList" resultType="java.lang.Integer">
+        select d.id
+        from docFile d
+        inner join docFileStage ds on ds.docFileId=d.id
+        where !multiple and ds.stageKey=#{stageKey}
+    </select>
+    <select id="getNRDocList" resultType="java.lang.Integer">
+        select id from docFile where owner = 1 OR needEdit = 0;
+    </select>
+</mapper>

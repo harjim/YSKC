@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.SituationSummaryDao">
+    <select id="querySituation" resultType="com.yskc.rs.models.projectSummary.SituationSummaryModel">
+    select id,year,annualReview,teamEffort,scheduleReview,valueRealization,improvementPoints,rdDepts,rdContent,achievements
+    from p_situation_summary
+    where `year`=#{year} and companyId=#{companyId}
+    </select>
+    
+    <insert id="insertOrUpdate" useGeneratedKeys="true" keyProperty="id">
+        insert into p_situation_summary
+        (id,creatorId,lastUpdatorId,createTime,lastUpdateTime,msCreatorId,msLastUpdatorId,
+         companyId,year,annualReview,teamEffort,scheduleReview,
+         valueRealization,improvementPoints,rdDepts,rdContent,achievements)
+        values
+        (#{id},#{creatorId},#{lastUpdatorId},#{createTime},#{lastUpdateTime},#{msCreatorId},#{msLastUpdatorId},
+         #{companyId},#{year},#{annualReview},#{teamEffort},#{scheduleReview},
+         #{valueRealization},#{improvementPoints},#{rdDepts},#{rdContent},#{achievements})
+        on duplicate key update
+            lastUpdatorId = values(lastUpdatorId),
+            lastUpdateTime = values(lastUpdateTime),
+            msLastUpdatorId = values(msLastUpdatorId),
+            annualReview = values(annualReview),
+            teamEffort = values(teamEffort),
+            scheduleReview = values(scheduleReview),
+            valueRealization = values(valueRealization),
+            improvementPoints = values(improvementPoints),
+            rdDepts = values(rdDepts),
+            rdContent = values(rdContent),
+            achievements = values(achievements)
+    </insert>
+</mapper>

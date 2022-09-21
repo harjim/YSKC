@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.data.DataEquipmentDao">
+
+    <select id="getDataEquipmentList" resultType="com.yskc.rs.models.data.DataEquipmentModel">
+        select de.id, de.workHours, de.month, e.ename, e.ecode, ifnull(re.etype,e.etype) etype, e.emodal,
+        e.depreciationRate,de.depreciation,`at`.fullAccountName,de.accountTitleId,de.deptName
+        from d_equipment as de
+        LEFT JOIN rdEquipment re on re.companyId=de.companyId and re.ecode=de.ecode and re.year=#{queryModel.year}
+        LEFT JOIN equipment as e on e.ecode = de.ecode and e.companyId = de.companyId
+        LEFT JOIN accountTitle as `at` on `at`.id = de.accountTitleId
+        where de.companyId=#{companyId}
+        <if test="queryModel.month != null">
+            and de.month=#{queryModel.month}
+        </if>
+        <if test="queryModel.endMonth != null">
+            and de.month <![CDATA[ <= ]]> #{queryModel.endMonth}
+        </if>
+        <if test="queryModel.startMonth != null">
+            and de.month <![CDATA[ >= ]]> #{queryModel.startMonth}
+        </if>
+        <if test="queryModel.ename != null and queryModel.ename != ''">
+            and e.ename like "%"#{queryModel.ename}"%"
+        </if>
+        <if test="queryModel.ecode != null and queryModel.ecode != ''">
+            and e.ecode like "%"#{queryModel.ecode}"%"
+        </if>
+        <if test="queryModel.etype != null and queryModel.etype > 0">
+            and (re.etype = #{queryModel.etype} or (re.etype is null and e.etype = #{queryModel.etype}))
+        </if>
+        <if test="queryModel.deptName !=null and queryModel.deptName != ''">
+            and de.deptName like "%"#{queryModel.deptName}"%"
+        </if>
+    </select>
+
+    <select id="checkEcodeByMonth" resultType="java.lang.Integer">
+        select count(1)
+        from d_equipment
+        where companyId = #{companyId}
+          and `month` = #{month}
+          and ecode = #{ecode}
+    </select>
+    <select id="checkExistProject" resultType="java.lang.Integer">
+        select p.rdIndex
+        from p_project as p
+                 LEFT JOIN p_rdEquipment as pe on p.id = pe.projectId
+        where pe.companyId = #{companyId}
+          and pe.ecode = #{ecode}
+          and pe.`month` = #{month}
+    </select>
+    <select id="getProjectUsed" resultType="java.lang.Integer">
+        select DISTINCT de.id
+        from p_rdEquipment as pe
+        LEFT JOIN d_equipment as de
+        on pe.ecode = de.ecode and pe.month = de.month and pe.companyId = de.companyId
+        where de.companyId = #{companyId}
+        and de.id in
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </select>
+    <update id="updateFinishByIds">
+        update d_equipment set remainEquData='0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0' where id in
+        <foreach item="item" index="index" collection="ids" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+    <update id="updateBatch">
+        update d_equipment set remainEquData =
+        <foreach collection="dataEquipmentList" item="item" index="index"
+                 separator=" " open="case id" close="end">
+            when #{item.id} then
+            #{item.remainEquData}
+        </foreach>
+        where id in
+        <foreach collection="dataEquipmentList" item="item" index="index"
+                 separator="," open="(" close=")">
+            #{item.id}
+        </foreach>
+    </update>
+    <update id="updateWorkHours">
+        update d_equipment
+        set workHours       = #{de.workHours},
+            depreciation    = #{de.depreciation},
+            accountTitleId  = #{de.accountTitleId},
+            lastUpdateTime  = #{now},
+            lastUpdatorId   = #{userId},
+            msLastUpdatorId = #{msUserId},
+            deptName        = #{de.deptName}
+        where id = #{de.id}
+    </update>
+    <update id="updateWorkHoursBatch">
+        update d_equipment set workHours = CASE id
+        <foreach collection="modifyModels" item="model">
+            WHEN #{model.id} THEN #{model.workHours}
+        </foreach>
+        END
+        where id in
+        <foreach collection="modifyModels" open="(" separator="," close=")" item="model">
+            #{model.id}
+        </foreach>
+    </update>
+    <update id="updateEtype">
+        update equipment set
+        etype = #{modify.etype},
+        lastUpdatorId = #{userId},
+        lastUpdateTime = #{now},
+        msLastUpdatorId =#{msUserId}
+        where companyId = #{companyId}
+        and ecode in (select distinct ecode from d_equipment where id in
+        <foreach collection="modify.ids" open="(" separator="," close=")" item="id">
+            #{id}
+        </foreach>
+        )
+    </update>
+
+    <insert id="insertOrUpdate">
+        INSERT INTO d_equipment
+        (ecode,ename,`month`,equData,companyId,creatorId,createTime,remainEquData,workHours,depreciation,
+        accountTitleId,lastUpdateTime,lastUpdatorId,msCreatorId,msLastUpdatorId,deptName)
+        VALUES
+        <foreach collection="dataEquipmentList" item="de" separator=",">
+            (#{de.ecode},#{de.ename},#{de.month},#{de.equData},#{de.companyId},#{de.creatorId},#{de.createTime},
+            #{de.remainEquData},#{de.workHours},#{de.depreciation},#{de.accountTitleId},#{de.lastUpdateTime},
+            #{de.lastUpdatorId},#{de.msCreatorId},#{de.msLastUpdatorId},#{de.deptName})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        ename = values(ename),
+        workHours = values(workHours),
+        depreciation = values(depreciation),
+        accountTitleId = values(accountTitleId),
+        lastUpdateTime=values(lastUpdateTime),
+        deptName = values(deptName),
+        msLastUpdatorId =values(msLastUpdatorId),
+        lastUpdatorId =values(lastUpdatorId)
+    </insert>
+
+    <select id="exportDataEquipment" resultType="com.yskc.rs.models.excel.DataEquipmentExcel">
+        select de.id, de.workHours, de.month, e.ename, e.ecode, ifnull(re.etype,e.etype) etype, e.emodal, e.depreciationRate,de.depreciation,
+        de.deptName,`at`.fullAccountName,de.accountTitleId
+        from d_equipment as de
+        LEFT JOIN rdEquipment re on re.companyId=de.companyId and re.ecode=de.ecode and re.year=#{queryModel.year}
+        LEFT JOIN equipment as e on e.ecode = de.ecode and e.companyId = de.companyId
+        LEFT JOIN accountTitle as `at` on `at`.id = de.accountTitleId
+        where de.companyId=#{companyId}
+        <if test="queryModel.month != null">
+            and de.month=#{queryModel.month}
+        </if>
+        <if test="queryModel.endMonth != null">
+            and de.month <![CDATA[ <= ]]> #{queryModel.endMonth}
+        </if>
+        <if test="queryModel.startMonth != null">
+            and de.month <![CDATA[ >= ]]> #{queryModel.startMonth}
+        </if>
+        <if test="queryModel.ename != null and queryModel.ename != ''">
+            and e.ename like "%"#{queryModel.ename}"%"
+        </if>
+        <if test="queryModel.ecode != null and queryModel.ecode != ''">
+            and e.ecode like "%"#{queryModel.ecode}"%"
+        </if>
+        <if test="queryModel.etype != null and queryModel.etype > 0">
+            and (re.etype = #{queryModel.etype} or (re.etype is null and e.etype = #{queryModel.etype}))
+        </if>
+        <if test="queryModel.deptName !=null and queryModel.deptName != ''">
+            and de.deptName like "%"#{queryModel.deptName}"%"
+        </if>
+        order by de.`month` DESC, de.ecode
+    </select>
+    <select id="getByEcodes" resultType="com.yskc.rs.models.data.DataEquipmentInfoModel">
+        select workHours, ecode,id <if test="hasDepreciation">,depreciation</if>
+        from d_equipment
+        where companyId = #{companyId} and `month` = #{month}
+        and ecode in(<foreach collection="ecodes" item="ecode" separator="," >#{ecode}</foreach>)
+    </select>
+</mapper>

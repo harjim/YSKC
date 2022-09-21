@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.rs.ProjectAuditDao">
+<!--    <select id="getByProject" resultType="com.yskc.ms.models.projectAudit.AuditListModel">-->
+<!--         SELECT pa.id,pa.sourceProjectId projectId,pa.companyId,pa.year,pa.moduleId,pa.nodeId,-->
+<!--         pa.pass,pal3.suggestion,pal3.createTime,pa.msLastUpdatorId-->
+<!--        FROM p_audit pa-->
+<!--        INNER JOIN (-->
+<!--        SELECT pal1.id,pal1.auditId,pal1.suggestion,pal1.createTime FROM p_audit_log pal1 INNER JOIN (-->
+<!--        SELECT MAX(createTime) createTime,auditId FROM p_audit_log  GROUP BY auditId-->
+<!--        ) pal2 ON pal1.auditId=pal2.auditId AND pal1.createTime=pal2.createTime ) pal3 ON pa.id=pal3.auditId-->
+<!--        where sourceProjectId=#{projectId}-->
+<!--    </select>-->
+    <select id="getAuditInfo" resultType="com.yskc.ms.entity.rs.ProjectAuditEntity">
+        select * from p_audit
+        where sourceProjectId=#{projectId} and moduleId=#{mode}
+    </select>
+    <select id="getAuditStatus" resultType="com.yskc.ms.entity.rs.ProjectAuditEntity">
+        select moduleId,sourceProjectId,status
+        from p_audit where sourceProjectId=#{projectId}
+    </select>
+</mapper>

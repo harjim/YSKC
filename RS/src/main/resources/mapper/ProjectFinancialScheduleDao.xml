@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.project.ProjectFinaScheduleDao">
+    <insert id="insertOrUpdate">
+        insert into p_fina_schedule (projectId,companyId,`month`,workHours,testHour,trialHour,creatorId,
+         lastUpdatorId,createTime,lastUpdateTime,msCreatorId,msLastUpdatorId,deptName)
+         VALUES
+         <foreach collection="list" item="l" separator=",">
+             (#{l.projectId},#{l.companyId},#{l.month},#{l.workHours},#{l.testHour},#{l.trialHour},#{l.creatorId},
+             #{l.lastUpdatorId},#{l.createTime},#{l.lastUpdateTime},#{l.msCreatorId},#{l.msLastUpdatorId},#{l.deptName})
+         </foreach>
+        ON DUPLICATE KEY UPDATE
+        msLastUpdatorId=values(msLastUpdatorId),
+        lastUpdateTime=values(lastUpdateTime),
+        lastUpdatorId=values(lastUpdatorId),
+        workHours=values(workHours),
+        trialHour=values(trialHour),
+        testHour=values(testHour),
+        deptName=values(deptName)
+    </insert>
+    <update id="updateEntity">
+        update p_fina_schedule set msLastUpdatorId=#{e.msLastUpdatorId},lastUpdateTime=#{e.lastUpdateTime},
+        lastUpdatorId=#{e.lastUpdatorId},workHours=#{e.workHours},trialHour=#{e.trialHour},testHour=#{e.testHour},
+        deptName=#{e.deptName} where id=#{e.id}
+    </update>
+    <select id="getList" resultType="com.yskc.rs.models.projectfinaschedule.ProjectFinaScheduleModel">
+        select pf.id,pf.projectId,pf.deptName,pf.workHours,pf.testHour,pf.trialHour,pf.month,p.rdTitle,
+               p.rdNumber eas,p.pname
+        from p_fina_schedule pf
+        inner join p_project p on p.id=pf.projectId
+        where pf.companyId=#{companyId}
+        <if test="query.projectId != null">
+           and pf.projectId=#{query.projectId}
+        </if>
+        <if test="query.month != null">
+            and pf.month=#{query.month}
+        </if>
+        <if test="query.month == null">
+            and pf.month >=#{query.begin} and pf.month &lt;=#{query.end}
+        </if>
+        <if test="query.deptName != null and queryModel.ecode != ''">
+            and pf.deptName like "%"#{query.deptName}"%"
+        </if>
+    </select>
+
+    <select id="getData" resultType="com.yskc.rs.models.projectfinaschedule.ProjectFinaScheduleModel">
+        select pf.id,pf.projectId,pf.deptName,pf.workHours,pf.testHour,pf.trialHour,pf.month,p.rdTitle,
+        p.rdNumber eas,p.pname
+        from p_fina_schedule pf
+        inner join p_project p on p.id=pf.projectId
+        where pf.companyId=#{companyId}
+        <if test="query.projectId != null">
+            and pf.projectId=#{query.projectId}
+        </if>
+        <if test="query.month != null">
+            and pf.month=#{query.month}
+        </if>
+        <if test="query.month == null">
+            and pf.month >=#{query.begin} and pf.month &lt;=#{query.end}
+        </if>
+        <if test="query.deptName != null and queryModel.ecode != ''">
+            and pf.deptName like "%"#{query.deptName}"%"
+        </if>
+        order by p.rdTitle,pf.month
+    </select>
+    <select id="getExistIds" resultType="java.lang.Integer">
+        select id from p_fina_schedule
+        where companyId=#{companyId} and (<foreach collection="list" item="l" separator="or">
+        (projectId=#{l.projectId} and `month`=#{l.month})
+    </foreach>)
+    </select>
+    <select id="getByMonth" resultType="com.yskc.rs.models.projectfinaschedule.ProjectFinaScheduleModel">
+        select projectId,workHours,testHour,trialHour,deptName from p_fina_schedule
+        where companyId=#{companyId} and `month`=#{month}
+    </select>
+    <select id="getSameDataId" resultType="java.lang.Integer">
+        select id from p_fina_schedule where companyId=#{companyId} and projectId=#{projectId}
+        and `month`=#{month} and deptName=#{deptName} limit 1
+    </select>
+</mapper>

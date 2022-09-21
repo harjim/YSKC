@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.rs.RsProjectListDao">
+    <select id="getByProject" resultType="com.yskc.ms.entity.rs.RsProjectListEntity">
+        select * from t_project_list
+        where projectId=#{projectId}
+    </select>
+    <select id="getListByStage" resultType="com.yskc.ms.entity.rs.RsProjectListEntity">
+        select * from t_project_list
+        where stageListId in
+        <foreach collection="stageListIds" item="stageListId" open="(" close=")" separator=",">
+            #{stageListId}
+        </foreach>
+    </select>
+</mapper>

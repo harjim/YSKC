@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.project.ProjectAttendanceUsedDao">
+    <insert id="insertBatch">
+        INSERT INTO p_attendance_used
+        (companyId,enumber,workHour,remainHours,timeRange,workDate,createTime,
+        creatorId,lastUpdateTime,lastUpdatorId,msCreatorId,msLastUpdatorId)
+        VALUES
+        <foreach collection="list" separator="," item="l">
+            (#{l.companyId},#{l.enumber},#{l.workHour},#{l.remainHours},#{l.timeRange},#{l.workDate},#{l.createTime},
+            #{l.creatorId},#{l.lastUpdateTime},#{l.lastUpdatorId},#{l.msCreatorId},#{l.msLastUpdatorId})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        timeRange=values(timeRange),
+        remainHours=values(remainHours),
+        workHour=values(workHour),
+        msLastUpdatorId=values(msLastUpdatorId),
+        lastUpdatorId=values(lastUpdatorId),
+        lastUpdateTime=values(lastUpdateTime)
+    </insert>
+    <update id="updateBatch">
+        UPDATE p_attendance_used
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix=" remainHours =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.remainHours != null">
+                        when id = #{l.id} then #{l.remainHours}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" timeRange =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.timeRange != null">
+                        when id = #{l.id} then #{l.timeRange}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" lastUpdatorId =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.lastUpdatorId != null">
+                        when id = #{l.id} then #{l.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" lastUpdateTime =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.lastUpdateTime != null">
+                        when id = #{l.id} then #{l.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" msLastUpdatorId =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.msLastUpdatorId != null">
+                        when id = #{l.id} then #{l.msLastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        WHERE
+        <foreach collection="list" item="l" separator="or">
+            id = #{l.id}
+        </foreach>
+    </update>
+    <select id="getByEnumbers" resultType="com.yskc.rs.entity.project.ProjectAttendanceUsed">
+        select id,remainHours,workHour,timeRange,enumber,workDate
+        from p_attendance_used
+        where companyId = #{companyId}
+        and workDate &lt;= #{monthEnd} and workDate >= #{monthBegin}
+        and enumber in
+        <foreach collection="enumbers" item="enumber" open="(" separator="," close=")">
+            #{enumber}
+        </foreach>
+        order by workDate
+    </select>
+    <select id="getRdAttendanceUsed" resultType="com.yskc.rs.models.projectattendance.BatchProjectHourAttendance">
+        select remainHours,enumber,workDate
+        from p_attendance_used
+        where companyId = #{companyId} and workDate &lt;= #{monthEnd} and workDate >= #{monthBegin}
+        and enumber in
+        <foreach collection="enumbers" item="enumber" open="(" separator="," close=")">
+            #{enumber}
+        </foreach>
+    </select>
+</mapper>

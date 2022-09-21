@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.rs.DocProcessTemplateDao">
+
+    <delete id="delProcessTemplateByProcessId">
+     DELETE
+        FROM
+            docProcessTemplate
+        WHERE
+            processId = #{processId}
+    </delete>
+
+
+    <insert id="addProcessTemplateBatch">
+        INSERT INTO `docProcessTemplate`
+        (`processId`,`seq`,`templateId`,`optional`,`enabled`)
+        VALUES
+        <foreach collection="entityList" item="item" separator=",">
+            (#{item.processId},#{item.seq},#{item.templateId},#{item.optional},#{item.enabled})
+        </foreach>
+    </insert>
+</mapper>

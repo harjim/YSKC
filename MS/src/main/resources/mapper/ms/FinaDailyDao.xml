@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yskc.ms.dao.ms.FinaDailyDao">
+
+    <select id="getList" resultType="com.yskc.ms.models.finaDaily.FinaDailyModel">
+        SELECT fd.id id, companyName, customerId, yu.realName owner, yu.id ownerId,
+               deptName, fd.deptId deptId, workDate, itemType, fd.content content, filepath,
+               fif.status status, yu2.realName creator, auditUsers, fd.createTime createTime,
+               fd.lastUpdateTime lastUpdateTime, instanceId
+        FROM finaDaily fd
+            LEFT JOIN flowInstance_form fif ON fd.id = fif.formId and fif.moduleId = #{moduleId}
+        LEFT JOIN flowInstance fi ON fif.instanceId = fi.id
+            LEFT JOIN customer c ON c.id = fd.customerId
+            LEFT JOIN ys_user yu ON fd.ownerId = yu.id
+            LEFT JOIN ys_user yu2 ON fd.creatorId = yu2.id
+            LEFT JOIN ys_dept yd ON fd.deptId = yd.id
+        <where>
+            <if test="query.companyName != null and query.companyName != ''">
+                and companyName LIKE CONCAT('%', #{query.companyName}, '%')
+            </if>
+            <if test="query.itemType != null and query.itemType != ''">
+                and itemType = #{query.itemType}
+            </if>
+            <if test="query.creatorId != null">
+                and yu2.id = #{query.creatorId}
+            </if>
+            <if test="query.auditUsers != null and query.auditUsers != ''">
+                and auditUsers LIKE CONCAT('%', #{query.auditUsers}, '%')
+            </if>
+            <if test="query.status != null and query.status != ''">
+                and
+                <choose>
+                    <when test="query.status == 5"> (fif.status = 5 or ISNULL(fif.status))</when>
+                    <otherwise>fif.status = #{query.status}</otherwise>
+                </choose>
+            </if>
+            <if test="query.ownerId != null and query.ownerId != ''">
+                and yu.id = #{query.ownerId}
+            </if>
+            <if test="query.deptId != null and query.deptId != ''">
+                and fd.deptId = #{query.deptId}
+            </if>
+            <include refid="com.yskc.ms.dao.ms.BaseDataDao.byCreator">
+                <property name="tableAlias" value="fd"/>
+                <property name="perm" value="#{perm}"/>
+            </include>
+        </where>
+    </select>
+</mapper>

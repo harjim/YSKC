@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xxl.job.executor.dao.ms.UserDao">
+    <update id="updateRsLastOperationTime">
+        update ys_user
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="rsLastOperationTime =case" suffix="end,">
+                <foreach collection="list" item="i" index="index">
+                    <if test="i.rsLastOperationTime!=null">
+                        when id=#{i.id} then #{i.rsLastOperationTime}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="list" separator="or" item="i" index="index">
+            id=#{i.id}
+        </foreach>
+    </update>
+    <select id="getByUserIds" resultType="com.xxl.job.executor.models.flowInstance.AuditUserModel">
+        select id as userId,dingUserId,realName from ys_user
+        where id in
+        <foreach collection="userIds" open="(" separator="," close=")" item="id">#{id}</foreach>
+    </select>
+</mapper>

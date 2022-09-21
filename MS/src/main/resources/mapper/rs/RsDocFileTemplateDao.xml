@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.rs.RsDocFileTemplateDao">
+    <select id="getData" resultType="com.yskc.ms.models.rs.RsDocFileTemplateModel">
+        select d.id,d.docFileId as docFileId,t.templateName as templateName
+        from docFileTemplate d
+        left join docFileTemplate t on d.id = t.docFileId and t.defaultTemplate = true
+        where
+            d.id=#{docTemplateFileId}
+    </select>
+
+    <select id="getDataList" resultType="com.yskc.ms.models.rs.RsDocFileTemplateModel">
+        select d.id as id,d.docFileId as docFileId,t.templateName as templateName,
+        d.createTime, d.lastUpdateTime
+        from docFileTemplate d
+        left join docFileTemplate t on d.id = t.docFileId and t.defaultTemplate = true
+        where
+        d.defaultTemplate = false and
+        d.docFileId in
+        <foreach item="id" collection="docFileIds" separator="," open="(" close=")" index="">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="getDocFileList" resultType="com.yskc.ms.models.rs.RsDocFilesModel">
+        select d.id,d.docName,t.templateName as templateName,
+        d.enabled,d.owner,d.required,d.multiple,t.id AS defaultTemplateId,d.needEdit,d.uniqueness
+        from docFile d
+        left join docFileTemplate t on d.id = t.docFileId and t.defaultTemplate = true
+        where t.templateName is not null and d.id not in (3,4,8,22)
+        <if test="docName != null and docName != ''">
+            and d.docName like "%"#{docName}"%"
+        </if>
+    </select>
+
+    <delete id="delTemplate">
+        delete from docFileTemplate where id=#{templateId}
+    </delete>
+    <select id="findDocFileId" resultType="com.yskc.ms.entity.rs.RsDocFileTemplateEntity">
+        select id,creatorId,lastUpdatorId,createTime,lastUpdateTime,
+        msCreatorId,msLastUpdatorId,docFileId,templateName,
+        defaultTemplate,docTemplateName,enabled
+        from docFileTemplate where
+        docFileId = #{docFileId}
+    </select>
+    <update id="updateDefault" parameterType="com.yskc.ms.models.rs.RsDocFileTemplateModel">
+        update docFileTemplate a SET a.defaultTemplate = false,
+        a.msLastUpdatorId = #{model.msLastUpdatorId},
+        a.lastUpdateTime = #{model.lastUpdateTime}
+        where a.docFileId = #{model.id}
+        AND a.defaultTemplate = true
+    </update>
+    <update id="updateDefaultTemplate" parameterType="com.yskc.ms.models.rs.RsDocFileTemplateModel">
+        update docFileTemplate a SET a.defaultTemplate = true,
+        a.msLastUpdatorId = #{model.msLastUpdatorId},
+        a.lastUpdateTime = #{model.lastUpdateTime}
+        where a.id = #{model.defaultTemplateId}
+    </update>
+
+
+</mapper>

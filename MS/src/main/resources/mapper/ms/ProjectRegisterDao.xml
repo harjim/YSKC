@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.ProjectRegisterDao">
+
+    <select id="getData" resultType="com.yskc.ms.models.projectRegister.ProjectRegisterDataModel">
+       select pj.id,c.companyAddress,c.companyName,pj.deptId,pj.owerId,
+        yd.fullname as deptName,yu.realName,ptl.stageKey,pj.year,pd.productName
+        from project pj
+        inner join product pd on pj.productId=pd.id and pd.productType=0 and pd.shouldRegister=true
+        inner join customer c on pj.customerId=c.id
+        inner join ys_dept yd on pj.deptId=yd.id
+        inner join ys_user yu on pj.owerId=yu.id
+        left join project_tech_log ptl on pj.lastLogId=ptl.id and pj.id=ptl.projectId
+        where 1=1
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.project">
+            <property name="dataPerm" value="${dataPerm}"/>
+            <property name="tableAlias" value="pj"/>
+            <property name="userTable" value="project_member"/>
+            <property name="colId" value="projectId"/>
+        </include>
+        <if test="query.companyName!=null and query.companyName!=''">
+            and c.companyName like "%"#{query.companyName}"%"
+        </if>
+        <if test="query.fullPath != null and query.fullPath != ''">
+            and yd.fullPath like #{query.fullPath}"%"
+        </if>
+        <if test="query.tIds != null and query.tIds.length>0">
+            and pj.id in (select projectId from project_member where mType=1 and memberId in
+            <foreach collection="query.tIds" open="(" separator="," close=")" item="tId">
+                #{tId}
+            </foreach>)
+        </if>
+        <if test="query.year != null and query.year != ''">
+            and pj.year=#{query.year}
+        </if>
+        <if test="query.stageKey!=null and query.stageKey!=''">
+            and ptl.stageKey=#{query.stageKey}
+        </if>
+        <if test="query.owerId!=null and query.owerId>0">
+            and pj.owerId=#{query.owerId}
+        </if>
+        <if test="query.productName!=null and query.productName!=''">
+            and pd.productName like "%"#{query.productName}"%"
+        </if>
+    </select>
+
+    <select id="getByProjectIds" resultType="com.yskc.ms.models.projectRegister.ProjectRegisterModel">
+        select id,projectId,registerName,beginDate,endDate,amount,changeContent,
+        investAmount,finishDate,originalPlace,remark,filePath,registerFile,registerNo
+         from project_register
+        where projectId in
+        <foreach collection="projectIds" item="projectId" open="(" close=")" separator=",">
+            #{projectId}
+        </foreach>
+        order by beginDate desc
+    </select>
+</mapper>

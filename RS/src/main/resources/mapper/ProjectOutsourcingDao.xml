@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.project.ProjectOutsourcingDao">
+    <insert id="insertOrUpdate">
+        INSERT INTO p_outsourcing
+        (companyId,projectId,`month`,`type`,rdFunds,creatorId,lastUpdatorId,
+         createTime,lastUpdateTime,msCreatorId,msLastUpdatorId)
+         VALUES
+        <foreach collection="list" item="l" separator=",">
+            (#{l.companyId},#{l.projectId},#{l.month},#{l.type},#{l.rdFunds},#{l.creatorId},#{l.lastUpdatorId},
+            #{l.createTime},#{l.lastUpdateTime},#{l.msCreatorId},#{l.msLastUpdatorId})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        rdFunds=values(rdFunds),
+        lastUpdatorId=values(lastUpdatorId),
+        lastUpdateTime=values(lastUpdateTime),
+        msLastUpdatorId=values(msLastUpdatorId)
+    </insert>
+    <select id="getMonthFunds" resultType="com.yskc.rs.models.outsourcing.BaseOutsourcingModel">
+        select id,projectId,`month`,rdFunds from p_outsourcing
+        where companyId=#{companyId} and `month` >=#{beginMonth} and `month` &lt;=#{endMonth}
+          <if test="type != null">
+              and `type`=#{type}
+          </if>
+    </select>
+    <select id="getExistIds" resultType="java.lang.Integer">
+        select id from p_outsourcing
+        <foreach collection="list" item="l" separator=" or ">
+            (projectId=#{l.projectId} and `month`=#{month} and `type`=#{l.type})
+        </foreach>
+    </select>
+    <select id="getProjectOutsourcing" resultType="com.yskc.rs.entity.project.ProjectOutsourcing">
+        select po.projectId,sum(po.rdFunds) rdFunds,po.type from p_outsourcing po
+        inner join p_project p on p.id=po.projectId
+        where po.companyId=#{companyId} and po.month >=#{begin} and po.month &lt;=#{end} and p.formula>10 group by projectId,type
+    </select>
+    <select id="getYearOutsourcing" resultType="com.yskc.rs.entity.project.ProjectOutsourcing">
+        select sum(po.rdFunds) rdFunds,po.type from p_outsourcing po
+        inner join p_project p on p.id=po.projectId
+        where po.companyId=#{companyId} and po.month >=#{begin} and po.month &lt;=#{end} and p.formula>10 group by po.type
+    </select>
+    <select id="getMonthOutsourcing" resultType="com.yskc.rs.models.outsourcing.OutsourcingSummaryModel">
+        select p.parentId,po.projectId,po.month,po.type,po.rdFunds from p_outsourcing po
+        inner join p_project p on p.id=po.projectId
+        where po.companyId=#{companyId} and po.month >=#{begin} and po.month &lt;=#{end} and p.formula>10
+    </select>
+    <select id="countOutsourcing" resultType="java.lang.Integer">
+        select count(id) from p_outsourcing
+        where projectId in (<foreach collection="projectIds" separator="," item="pId">#{pId}</foreach>)
+    </select>
+</mapper>

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xxl.job.executor.dao.ms.FlowInstanceDao">
+
+    <insert id="addBatch" useGeneratedKeys="true" keyProperty="id" parameterType="java.util.List">
+        insert into flowInstance (creatorId,lastUpdatorId,createTime,lastUpdateTime,curNodeId,flowId,status,nodeStatus,
+        moduleId,deptId,lastSubmiter)
+        values
+        <foreach collection="list" separator="," item="l">
+            (#{l.creatorId},#{l.lastUpdatorId},#{l.createTime},#{l.lastUpdateTime},#{l.curNodeId},#{l.flowId},#{l.status},
+            #{l.nodeStatus},#{l.moduleId},#{l.deptId},#{l.lastSubmiter})
+        </foreach>
+    </insert>
+    <update id="updateInstances">
+        update flowInstance
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="status =case" suffix="end,">
+                <foreach collection="list" item="i" index="index">
+                    <if test="i.status!=null">
+                        when id=#{i.id} then #{i.status}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="nodeStatus =case" suffix="end,">
+                <foreach collection="list" item="i" index="index">
+                    <if test="i.nodeStatus!=null">
+                        when id=#{i.id} then #{i.nodeStatus}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="curNodeId =case" suffix="end,">
+                <foreach collection="list" item="i" index="index">
+                    <if test="i.curNodeId!=null">
+                        when id=#{i.id} then #{i.curNodeId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="flowId =case" suffix="end,">
+                <foreach collection="list" item="i" index="index">
+                    <if test="i.flowId!=null">
+                        when id=#{i.id} then #{i.flowId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="moduleId =case" suffix="end,">
+                <foreach collection="list" item="i" index="index">
+                    <if test="i.moduleId!=null">
+                        when id=#{i.id} then #{i.moduleId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdateTime =case" suffix="end,">
+                <foreach collection="list" item="i" index="index">
+                    when id=#{i.id} then
+                    <if test="i.lastUpdateTime!=null">#{i.lastUpdateTime}</if>
+                    <if test="i.lastUpdateTime==null">lastUpdateTime</if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdatorId =case" suffix="end,">
+                <foreach collection="list" item="i" index="index">
+                    <if test="i.lastUpdatorId!=null">
+                        when id=#{i.id} then #{i.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="deptId =case" suffix="end,">
+                <foreach collection="list" item="i" index="index">
+                    <if test="i.deptId!=null">
+                        when id=#{i.id} then #{i.deptId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastSubmiter =case" suffix="end,">
+                <foreach collection="list" item="i" index="index">
+                    <if test="i.lastSubmiter!=null">
+                        when id=#{i.id} then #{i.lastSubmiter}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="list" separator="or" item="i" index="index">
+            id=#{i.id}
+        </foreach>
+
+    </update>
+    <select id="getLastInstance" resultType="com.xxl.job.executor.models.flowInstance.FlowInstanceModel">
+        select fi.id ,fi.curNodeId,fi.status,fm.modeName,fn.type,fn.nextNode,fi.flowId,fn.nodeName,fi.deptId,
+        fi.moduleId,fm.type as moduleType,fi.nodeStatus
+        from flowInstance fi
+        inner join flowModule fm on fm.moduleId = fi.moduleId
+        inner join flowNode fn on fn.id = fi.curNodeId
+        where (fi.status = 0 or (fi.status != 3 and fi.nodeStatus = 3))
+        <if test="lastTime != null">
+            and fi.lastUpdateTime >= #{lastTime}
+        </if>
+    </select>
+    <select id="getNextFlowNode" resultType="com.xxl.job.executor.models.flow.FlowBranchModel">
+        select fn.flowId as nextFlowId,fn.nextNode,fb.flowId from flowNode fn
+        inner join flowBranch fb on fb.nodeId = fn.id
+        where fn.nextNode is not null and fb.flowId in
+        <foreach collection="flowIds" open="(" separator="," close=")" item="flowId">#{flowId}</foreach>
+    </select>
+    <select id="getNextBranchNode" resultType="com.xxl.job.executor.models.flow.FlowBranchModel">
+        (select fb.nodeId,fn.id as nextNode,fn.flowId as nextFlowId from flowNode fn
+        inner join
+        (select flowId,nodeId from flowBranch where flowId is not null and seq = 0 and nodeId in
+        <foreach collection="nodeIds" open="(" separator="," close=")" item="nodeId">#{nodeId}</foreach>) fb
+        on fb.flowId = fb.flowId
+        where fn.prevNode is null) union
+        (select fn.flowId as nextFlowId,fn.nextNode,fb.nodeId from flowNode fn
+        inner join (select nodeId from flowBranch where flowId is null and seq = 0 and nodeId in
+        <foreach collection="nodeIds" open="(" separator="," close=")" item="nodeId">#{nodeId}</foreach>) as fb
+        on fb.nodeId = fn.id)
+    </select>
+</mapper>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.rs.RsProjectStepDao">
+
+
+    <select id="getStepByProductId" resultType="com.yskc.ms.entity.rs.RsProjectStepEntity">
+        select * from t_step
+        where
+      productId=#{productId} and id=#{parentId}
+    </select>
+
+    <select id="getListByParentId" resultType="com.yskc.ms.entity.rs.RsProjectStepEntity">
+        select * from t_step
+        where parentId=#{parentId}
+    </select>
+
+    <select id="queryStepTree" resultType="com.yskc.ms.models.project.StepTreeModel">
+        select id as `key`,parentId,stepName,stepType,seq
+        from t_step
+        where productId=#{productId}
+    </select>
+
+    <delete id="delStepsByProductId">
+        delete from t_step where productId=#{productId}
+    </delete>
+
+    <insert id="addStepList">
+        insert into t_step (creatorId,lastUpdatorId,createTime,lastUpdateTime,
+        msCreatorId,msLastUpdatorId,parentId,stepName,stepType,seq,productId) values
+        <foreach collection="rsProjectStepEntities" separator="," item="item">
+            (#{item.creatorId},#{item.lastUpdatorId},#{item.createTime},
+            #{item.lastUpdateTime},#{item.msCreatorId},#{item.msLastUpdatorId},
+            #{item.parentId},#{item.stepName},#{item.stepType},
+            #{item.seq},#{item.productId})
+        </foreach>
+    </insert>
+
+    <update id="updateList" parameterType="java.util.List">
+        update t_step
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="parentId =case" suffix="end,">
+                <foreach collection="rsProjectStepEntities" item="i" index="index">
+                    <if test="i.parentId!=null">
+                        when id=#{i.id} then #{i.parentId}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="rsProjectStepEntities" separator="or" item="i" index="index">
+            id=#{i.id}
+        </foreach>
+    </update>
+</mapper>

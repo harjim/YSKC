@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.docservice.dao.rs.project.ProjectAttendanceDao">
+    <select id="getUseless"
+            resultType="com.yskc.docservice.models.rs.projectattendance.BatchProjectAttendance">
+        select pa.id,pa.offTime1,pa.offTime2,pa.offTime3,pa.onTime1,pa.onTime2,pa.onTime3,pa.workHour,pau.timeRange,
+        pau.remainHours,pau.workHour as usedWorkHour,pau.id as usedId,pa.enumber,pa.workDate
+        from p_attendance pa
+        inner join p_attendance_used pau on pau.enumber = pa.enumber and pau.companyId = pa.companyId and pau.workDate =
+        pa.workDate
+        where
+        pa.projectId = #{projectId} and !pa.owner
+        and pa.enumber in
+        <foreach collection="enumbers" open="(" separator="," close=")" item="enumber">
+            #{enumber}
+        </foreach>
+        and pa.workDate >= #{monthBegin} and pa.workDate &lt;= #{monthEnd}
+    </select>
+    <select id="getUsedData" resultType="com.yskc.docservice.models.rs.BatchProjectHourAttendance">
+        select pa.id,pau.enumber,pau.workDate,pa.workHour,pau.remainHours,pa.projectId from p_attendance_used pau
+        left join p_attendance pa on pau.companyId=pa.companyId and pau.enumber=pa.enumber and pau.workDate=pa.workDate
+        where pau.companyId=#{companyId} and pau.enumber in
+        (<foreach collection="enumbers" separator="," item="enumber">#{enumber}</foreach>)
+        and pau.workDate>=#{begin} and pau.workDate&lt;=#{end}
+    </select>
+    <select id="countOwner" resultType="java.lang.Integer">
+        select count(1) from p_attendance where companyId=#{companyId} and workDate>=#{start} and workDate &lt;=#{end} and `owner`
+    </select>
+    <select id="getByIds" resultType="com.yskc.docservice.entity.rs.project.ProjectAttendance">
+        select id,enumber,workHour,onTime1,offTime1,onTime2,offTime2,onTime3,offTime3
+        from p_attendance where id in
+        <foreach collection="ids" open="(" separator="," close=")" item="id">
+            #{id}
+        </foreach>
+        and owner = false
+    </select>
+    <insert id="insertBatch">
+        INSERT INTO p_attendance
+        (enumber,projectId,companyId,creatorId,createTime,lastUpdateTime,lastUpdatorId,msCreatorId,
+        msLastUpdatorId,workHour, workDate,onTime1,offTime1,onTime2,offTime2,onTime3,offTime3)
+        VALUES
+        <foreach collection="list" separator="," item="l">
+            (#{l.enumber},#{l.projectId},#{l.companyId},#{l.creatorId},#{l.createTime},#{l.lastUpdateTime},
+            #{l.lastUpdatorId},#{l.msCreatorId}, #{l.msLastUpdatorId},#{l.workHour}, #{l.workDate},#{l.onTime1},
+            #{l.offTime1},#{l.onTime2},#{l.offTime2},#{l.onTime3},#{l.offTime3})
+        </foreach>
+    </insert>
+    <update id="updateBatch">
+        UPDATE p_attendance
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix=" workHour =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.workHour != null">
+                        when id = #{l.id} then #{l.workHour}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" onTime1 =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    when id = #{l.id} then #{l.onTime1}
+                </foreach>
+            </trim>
+            <trim prefix=" onTime2 =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    when id = #{l.id} then #{l.onTime2}
+                </foreach>
+            </trim>
+            <trim prefix=" onTime3 =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    when id = #{l.id} then #{l.onTime3}
+                </foreach>
+            </trim>
+            <trim prefix=" offTime1 =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    when id = #{l.id} then #{l.offTime1}
+                </foreach>
+            </trim>
+            <trim prefix=" offTime2 =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    when id = #{l.id} then #{l.offTime2}
+                </foreach>
+            </trim>
+            <trim prefix=" offTime3 =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    when id = #{l.id} then #{l.offTime3}
+                </foreach>
+            </trim>
+            <trim prefix=" lastUpdatorId =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.lastUpdatorId != null">
+                        when id = #{l.id} then #{l.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" lastUpdateTime =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.lastUpdateTime != null">
+                        when id = #{l.id} then #{l.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" msLastUpdatorId =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.msLastUpdatorId != null">
+                        when id = #{l.id} then #{l.msLastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        WHERE
+        <foreach collection="list" item="l" separator="or">
+            id = #{l.id}
+        </foreach>
+    </update>
+</mapper>

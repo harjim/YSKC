@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.rs.TrialProdDao">
+    <select id="queryDocFileTrial" resultType="com.yskc.ms.models.rs.StageTrialModel">
+        SELECT pt.id,(CASE WHEN pt.startTime IS NOT NULL AND pt.endTime IS NOT NULL THEN TIMESTAMPDIFF(MINUTE ,pt.startTime,pt.endTime) ELSE 0 END) AS `minute`,
+        pt.trialDate,pt.startTime,pt.endTime,pt.unit,pt.deptName,pt.rdYield,pt.planYield,pt.trialProduct
+        FROM p_yield_config pt
+        inner join p_docFile_trial pdt on pt.id=pdt.trialId
+        where pt.companyId=#{companyId} and pt.projectId=#{projectId} and pdt.pdocFileId=#{docFileId}
+        order by pt.trialDate
+    </select>
+    <select id="getTrialByMonth" resultType="com.yskc.ms.models.rs.StageTrialModel">
+        SELECT id,(CASE WHEN startTime IS NOT NULL AND endTime IS NOT NULL THEN TIMESTAMPDIFF(MINUTE ,startTime,endTime) ELSE 0 END) AS `minute`,
+        trialDate,startTime,endTime,unit,deptName,rdYield,planYield,trialProduct
+        FROM p_yield_config
+        where companyId=#{companyId} and projectId=#{projectId} and month=#{month} and selected = 1
+        order by trialDate
+    </select>
+    <!-- 试验试制工时按项目查询 姚娟 and YEAR(pt.trialDate)=#{year} -->
+    <select id="getTrialByProject" resultType="com.yskc.ms.models.rs.StageTrialModel">
+        SELECT pt.id,(CASE WHEN pt.startTime IS NOT NULL AND pt.endTime IS NOT NULL THEN TIMESTAMPDIFF(MINUTE ,pt.startTime,pt.endTime) ELSE 0 END) AS `minute`,
+               pt.trialDate,pt.startTime,pt.endTime,pt.unit,pt.deptName,pt.rdYield,pt.planYield
+        FROM p_yield_config pt
+        where  pt.projectId=#{projectId} and pt.companyId=#{companyId}
+        order by pt.trialDate
+    </select>
+</mapper>
+

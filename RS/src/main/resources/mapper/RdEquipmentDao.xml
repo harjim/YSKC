@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.RdEquipmentDao">
+    <insert id="addBatch">
+        insert into rdEquipment(creatorId,lastUpdatorId,createTime,lastUpdateTime,
+        msCreatorId,msLastUpdatorId,`year`,companyId,ecode,rdDeptId,etype)
+        values
+        <foreach collection="rdEquipments" item="re" separator=",">
+            (#{re.creatorId},#{re.lastUpdatorId},#{re.createTime},#{re.lastUpdateTime},
+            #{re.msCreatorId},#{re.msLastUpdatorId},#{re.year},#{re.companyId},#{re.ecode},#{re.rdDeptId},#{re.etype})
+        </foreach>
+    </insert>
+    <update id="updateEtype">
+        update rdEquipment set
+        etype = #{modify.etype},
+        lastUpdatorId = #{userId},
+        lastUpdateTime = #{now},
+        msLastUpdatorId =#{msUserId}
+        where id in(<foreach collection="modify.ids" separator="," item="id">#{id}</foreach>)
+    </update>
+    <update id="updateRdDept">
+        update rdEquipment set
+        rdDeptId = #{modify.rdDeptId},
+        lastUpdatorId = #{userId},
+        msLastUpdatorId = #{msUserId},
+        lastUpdateTime = #{now}
+        where id in
+        <foreach collection="modify.ids" open="(" separator="," close=")" item="id">
+            #{id}
+        </foreach>
+    </update>
+    <update id="updateList">
+        <foreach collection="updateModels" item="item" separator=";">
+            update rdEquipment set etype=#{item.etype},rdDeptId=#{item.rdDeptId},lastUpdatorId=#{userId},
+            lastUpdateTime=#{date},msLastUpdatorId=#{msUserId} where id=#{item.id}
+        </foreach>
+    </update>
+
+    <select id="getList" resultType="com.yskc.rs.models.rdequipment.RdEquipmentModel">
+        select re.id,re.ecode,e.deptName,re.rdDeptId,d.fullname deptFullName,e.deptId,
+        e.ename,e.emodal,e.unitPrice,e.unit,e.quantity,e.usefullife,e.purchaseDate,e.depreciationDate,e.invalidated,
+        e.depreciationRate,e.usagePower,re.etype,e.kinds,e.workshop,e.productLine,e.processSection,rd.fullName rdFullName
+        from rdEquipment as re
+        left join equipment as e on e.companyId = re.companyId and e.ecode = re.ecode
+        left join rdDept as rd on rd.id = re.rdDeptId
+        left join dept d on e.deptId = d.id
+        where re.companyId = #{companyId} and re.year = #{query.year}
+        <if test="query.ecode != null and query.ecode != ''">
+            and re.ecode like "%"#{query.ecode}"%"
+        </if>
+        <if test="query.ename != null and query.ename != ''">
+            and e.ename like "%"#{query.ename}"%"
+        </if>
+        <if test="query.rdDeptPath != null and query.rdDeptPath != ''">
+            and rd.identity like #{query.rdDeptPath}"%"
+        </if>
+        <if test="query.depreciationDate != null">
+            and e.depreciationDate >= #{query.beginDepreciationDate}
+            and e.depreciationDate &lt;= #{query.endDepreciationDate}
+        </if>
+        <if test="query.purchaseDate != null ">
+            and e.purchaseDate >= #{query.beginPurchaseDate}
+            and e.purchaseDate &lt;= #{query.endPurchaseDate}
+        </if>
+        <if test="query.emodal != null and query.emodal!= ''">
+            and e.emodal like "%"#{query.emodal}"%"
+        </if>
+        <if test="query.kinds !=null and query.kinds!=''">
+            and e.kinds like "%"#{query.kinds}"%"
+        </if>
+        <if test="query.etype!= null and query.etype >= 0">
+            and re.etype = #{query.etype}
+        </if>
+    </select>
+    <select id="getEquipmentList" resultType="com.yskc.rs.models.equipment.EquipmentModel">
+        SELECT e.id, e.ecode, e.ename, e.emodal, e.unitPrice, e.unit, e.quantity, e.usefullife,e.deptId,d.fullname,
+        e.remark,e.deptName, e.purchaseDate, e.depreciationDate, e.depreciationRate,e.invalidated,
+        e.usagePower, e.etype, e.kinds,e.workshop,e.productLine,e.processSection
+        from equipment as e
+        left join dept d on e.deptId = d.id
+        left join rdEquipment as re on re.ecode = e.ecode and re.companyId = e.companyId and re.year = #{query.year}
+        where
+        e.companyId = #{companyId} and re.id is NULL
+        and (e.invalidated is null or e.invalidated > #{firstDay})
+        <if test="query.ecode != null and query.ecode != ''">
+            and e.ecode like "%"#{query.ecode}"%"
+        </if>
+        <if test="query.ename != null and query.ename != ''">
+            and e.ename like "%"#{query.ename}"%"
+        </if>
+        <if test="query.emodal != null and query.emodal!= ''">
+            and e.emodal like "%"#{query.emodal}"%"
+        </if>
+        <if test="query.kinds !=null and query.kinds!=''">
+            and e.kinds like "%"#{query.kinds}"%"
+        </if>
+        <if test="query.depreciationDate != null">
+            AND e.depreciationDate &gt;= #{query.beginDepreciationDate}
+            AND e.depreciationDate &lt;= #{query.endDepreciationDate}
+        </if>
+        <if test="query.purchaseDate != null">
+            AND e.purchaseDate &gt;= #{query.beginPurchaseDate}
+            AND e.purchaseDate &lt;= #{query.endPurchaseDate}
+        </if>
+        <if test="query.etype!= null and query.etype >= 0">
+            and e.etype = #{query.etype}
+        </if>
+        <if test="query.remark!= null">
+            and e.remark like "%"#{query.remark}"%"
+        </if>
+    </select>
+    <select id="getByEcodes" resultType="com.yskc.rs.models.rdequipment.RdEquipmentModel">
+        select rde.id, rde.ecode,rde.etype
+        from rdEquipment rde
+        where rde.companyId = #{companyId} and rde.`year` = #{year}
+        and rde.ecode in
+        <foreach collection="ecodes" open="(" separator="," close=")" item="ecode">
+            #{ecode}
+        </foreach>
+    </select>
+
+    <select id="deriveRdEquipment" resultType="com.yskc.rs.models.excel.EquipmentExcel">
+        select re.id,re.ecode,e.deptName,rd.fullName as rdDeptName,d.fullname,
+        e.ename,e.emodal,e.unitPrice,e.unit,e.quantity,e.usefullife,e.purchaseDate,e.depreciationDate,
+        e.depreciationRate,e.usagePower,re.etype,e.kinds,e.workshop,e.productLine,e.processSection
+        from rdEquipment as re
+        left join equipment as e on e.companyId = re.companyId and e.ecode = re.ecode
+        left join dept d on e.deptId = d.id
+        left join rdDept as rd on rd.id = re.rdDeptId
+        where re.companyId = #{companyId} and re.year = #{query.year}
+        <if test="query.ecode != null and query.ecode != ''">
+            and re.ecode like "%"#{query.ecode}"%"
+        </if>
+        <if test="query.ename != null and query.ename != ''">
+            and e.ename like "%"#{query.ename}"%"
+        </if>
+        <if test="query.rdDeptPath != null and query.rdDeptPath != ''">
+            and rd.identity like #{query.rdDeptPath}"%"
+        </if>
+        <if test="query.depreciationDate != null">
+            and e.depreciationDate >= #{query.beginDepreciationDate}
+            and e.depreciationDate &lt;= #{query.endDepreciationDate}
+        </if>
+        <if test="query.purchaseDate != null ">
+            and e.purchaseDate >= #{query.beginPurchaseDate}
+            and e.purchaseDate &lt;= #{query.endPurchaseDate}
+        </if>
+        <if test="query.emodal != null and query.emodal!= ''">
+            and e.emodal like "%"#{query.emodal}"%"
+        </if>
+        <if test="query.kinds !=null and query.kinds!=''">
+            and e.kinds like "%"#{query.kinds}"%"
+        </if>
+        <if test="query.etype!= null and query.etype >= 0">
+            and re.etype = #{query.etype}
+        </if>
+        order by re.ecode
+    </select>
+    <select id="getDocEquipmentList" resultType="com.yskc.rs.models.projectequipment.DocEquipmentModel">
+        select e.ecode,e.ename,re.etype,e.deptName,re.rdDeptId
+        from equipment as e
+        left join rdEquipment as re on re.ecode = e.ecode and re.companyId = e.companyId and re.year = #{query.year}
+        left join rdDept as rd on rd.id = re.rdDeptId
+        left join p_rdEquipment as pe on e.ecode = pe.ecode
+        where pe.projectId = #{query.projectId}
+        and e.companyId = #{companyId}
+        <if test="query.ecode != null and query.ecode != ''">
+            and e.ecode like "%"#{query.ecode}"%"
+        </if>
+        <if test="query.ename != null and query.ename != ''">
+            and e.ename like "%"#{query.ename}"%"
+        </if>
+
+        <if test="query.etype != null and query.etype > 0 ">
+            and re.etype = #{query.etype}
+        </if>
+        <if test="query.rdDeptPath!=null and query.rdDeptPath != ''">
+            and rd.identity like #{query.rdDeptPath}"%"
+        </if>
+        <if test="query.deptName !=null and query.deptName != ''">
+            and e.deptName like "%"#{query.deptName}"%"
+        </if>
+        group by e.ecode,rd.id
+    </select>
+    <select id="getUsedIds" resultType="java.lang.Integer">
+        select distinct rde.id from i_equipment ie
+        INNER join rdEquipment rde on rde.companyId = ie.companyId and rde.ecode = ie.ecode and rde.year=ie.year
+        where ie.companyId=#{companyId}
+        and rde.id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        and ie.year=#{year}
+    </select>
+    <select id="getRdTitles" resultType="com.yskc.rs.models.rdequipment.FullYearProjectModel">
+        select ie.ecode `key`,group_concat(p.rdTitle order by p.rdTitle) rdTitle
+        <if test="needTerm != null and needTerm">
+            ,min(p.beginDate) beginDate,max(p.endDate)endDate
+        </if> from p_project p
+        inner join i_equipment ie on ie.companyId=p.companyId and ie.projectId=p.id
+        where p.companyId=#{companyId} and p.beginYear&lt;=#{year} and p.endYear>=#{year} and ie.year=#{year}
+        and ie.ecode in(<foreach collection="ecodes" separator="," item="ecode">#{ecode}</foreach> )
+        group by ecode
+    </select>
+    <select id="getInfoList" resultType="com.yskc.rs.models.rdequipment.RdEquipmentInfoModel">
+        select re.ecode,rd.deptName rdDeptName,e.ename,re.etype
+        from rdEquipment as re
+        left join equipment as e on e.companyId = re.companyId and e.ecode = re.ecode
+        left join rdDept as rd on rd.id = re.rdDeptId
+        where re.companyId = #{companyId} and re.year = #{query.year}
+        <if test="query.ecode != null and query.ecode != ''">
+            and re.ecode like "%"#{query.ecode}"%"
+        </if>
+        <if test="query.ename != null and query.ename != ''">
+            and e.ename like "%"#{query.ename}"%"
+        </if>
+    </select>
+    <select id="countNum" resultType="java.lang.Integer">
+        select count(distinct ecode) from i_equipment
+        where companyId=#{companyId} and `year`=#{year}
+    </select>
+
+    <insert id="saveRdEquipmentLists" parameterType="java.util.List">
+        insert into rdEquipment
+        (creatorId,lastUpdatorId,createTime,lastUpdateTime,year,companyId,msCreatorId,msLastUpdatorId,ecode,rdDeptId,etype)
+        values
+        <foreach collection="RdEquipmentEntitys" item="equipment" index="index" separator="," close=";">
+            (#{equipment.creatorId},#{equipment.lastUpdatorId},#{equipment.createTime},#{equipment.lastUpdateTime},
+             #{equipment.year}, #{equipment.companyId},#{equipment.msCreatorId},#{equipment.msLastUpdatorId},
+             #{equipment.ecode},#{equipment.rdDeptId},#{equipment.etype})
+        </foreach>
+
+    </insert>
+
+
+</mapper>

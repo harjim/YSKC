@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xxl.job.executor.dao.ms.ProjectSummaryDao">
+
+    <insert id="insertOrUpdate">
+        INSERT INTO project_summary
+        (projectId,customerId,`year`,cnt,rdCount,budget,rdFunds,docFileCount,createTime,updateTime,
+        operationTime,operationUserId,employeeCount,rdEmployeeCount,equipmentCount,rdEquipmentCount)
+        VALUES
+        <foreach collection="data" item="d" separator=",">
+            (#{d.projectId},#{d.customerId},#{d.year},#{d.cnt},#{d.rdCount},#{d.budget},#{d.rdFunds},#{d.docFileCount},
+            #{d.createTime},#{d.updateTime},#{d.operationTime},#{d.operationUserId},#{d.employeeCount},
+            #{d.rdEmployeeCount},#{d.equipmentCount},#{d.rdEquipmentCount})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        operationTime = values(operationTime),
+        operationUserId = values(operationUserId),
+        updateTime =values(updateTime),
+        cnt = values(cnt),
+        rdCount = values(rdCount),
+        budget = values(budget),
+        rdFunds = values(rdFunds),
+        docFileCount = values(docFileCount),
+        employeeCount = values(employeeCount),
+        rdEmployeeCount = values(rdEmployeeCount),
+        equipmentCount = values(equipmentCount),
+        rdEquipmentCount = values(rdEquipmentCount)
+    </insert>
+<!--    <select id="getCustomerYearRdFunds" resultType="com.xxl.job.executor.models.district.RsSummaryModel">-->
+<!--        select customerId,`year`,sum(rdFunds) as rdFunds from project_summary-->
+<!--        where-->
+<!--        <foreach collection="data" separator=" or " item="d">-->
+<!--            (customerId = #{d.customerId} and `year` = #{d.year})-->
+<!--        </foreach>-->
+<!--        group by customerId, `year`-->
+<!--    </select>-->
+</mapper>

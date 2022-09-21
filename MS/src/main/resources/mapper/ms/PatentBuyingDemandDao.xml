@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.PatentBuyingDemandDao">
+    <update id="updateEngineer">
+        update patent_buying_demand set engineerId=#{engineerId},lastUpdateTime=#{now},lastUpdatorId=#{userId}
+        where id in (<foreach collection="ids" separator="," item="id">#{id}</foreach>)
+    </update>
+    <select id="getBuyDemandList" resultType="com.yskc.ms.models.patent.PatentBuyingDemandModel">
+        select pbd.status,pbd.filePath,pbd.remark,pbd.inventionNum,pbd.utilityNum,pbd.appearanceDesignNum,
+        pbd.inventorInfo,pbd.ownerId,pbd.submitTime,c.companyName,yu.realName,pbd.customerId,pbd.id,pbd.createTime,`year`,
+        pbd.engineerId,yu1.realName as engineer
+        from patent_buying_demand pbd
+        inner join customer c on c.id=pbd.customerId
+        inner join ys_user yu on yu.id=pbd.ownerId
+        inner join ys_user yu1 on yu1.id=pbd.engineerId
+        where `type`=0
+        <if test="dataPerm.permType == 0">
+            AND (pbd.ownerId = #{dataPerm.userId} or pbd.engineerId = #{dataPerm.userId})
+        </if>
+        <if test="dataPerm.permType == 1">
+            AND (pbd.ownerId in (select ud.userId from user_dept ud inner join ys_dept d on d.id = ud.depId where
+            <foreach collection="dataPerm.deptPaths" item="path" separator="or">
+                d.fullPath like #{path}"%"
+            </foreach>) or pbd.engineerId in (select ud.userId from user_dept ud inner join ys_dept d on d.id = ud.depId where
+            <foreach collection="dataPerm.deptPaths" item="path" separator="or">
+                d.fullPath like #{path}"%"
+            </foreach>))
+        </if>
+        <if test="query.companyName!=null and query.companyName!=''">
+            and c.companyName like "%"#{query.companyName}"%"
+        </if>
+        <if test="query.status!=null">
+            and pbd.status=#{query.status}
+        </if>
+        <if test="query.ownerId!=null">
+            and pbd.ownerId=#{query.ownerId}
+        </if>
+    </select>
+    <select id="countRepeat" resultType="java.lang.Integer">
+        select count(id) from patent_buying_demand
+        where customerId=#{customerId} and `year`=#{year} and type=#{type}
+        <if test="id != null">and id !=#{id}</if>
+    </select>
+    <select id="getList" resultType="com.yskc.ms.models.patent.PatentBuyingDemandModel">
+        select pbd.status,pbd.filePath,pbd.remark,pbd.inventionNum,pbd.utilityNum,pbd.appearanceDesignNum,
+        pbd.inventorInfo,pbd.ownerId,pbd.submitTime,c.companyName,yu.realName,pbd.customerId,pbd.id,pbd.createTime,`type`,`year`,
+        pbd.engineerId,yu1.realName as engineer,c.groupId
+        from patent_buying_demand pbd
+        inner join customer c on c.id=pbd.customerId
+        inner join ys_user yu on yu.id=pbd.ownerId
+        inner join ys_user yu1 on yu1.id=pbd.engineerId
+        where 1=1
+        <if test="dataPerm.permType == 0">
+            AND (pbd.ownerId = #{dataPerm.userId} or pbd.engineerId = #{dataPerm.userId})
+        </if>
+        <if test="dataPerm.permType == 1">
+            AND (pbd.ownerId in (select ud.userId from user_dept ud inner join ys_dept d on d.id = ud.depId where
+            <foreach collection="dataPerm.deptPaths" item="path" separator="or">
+                d.fullPath like #{path}"%"
+            </foreach>) or pbd.engineerId in (select ud.userId from user_dept ud inner join ys_dept d on d.id = ud.depId where
+            <foreach collection="dataPerm.deptPaths" item="path" separator="or">
+                d.fullPath like #{path}"%"
+            </foreach>))
+        </if>
+        <if test="query.groupName != null and query.groupName != ''">
+            and c.groupId !=0 and c.groupId in (select companyId from customer where companyType in (1,3) and companyName like "%"#{query.groupName}"%")
+        </if>
+        <if test="query.companyName!=null and query.companyName!=''">
+            and c.companyName like "%"#{query.companyName}"%"
+        </if>
+        <if test="query.status!=null">
+            and pbd.status=#{query.status}
+        </if>
+        <if test="query.ownerId!=null">
+            and pbd.ownerId=#{query.ownerId}
+        </if>
+    </select>
+    <select id="getDemandCompanyYear" resultType="com.yskc.ms.models.patent.PatentBuyingDemandModel">
+        select pbd.year,c.companyName from patent_buying_demand pbd
+        inner join customer c on c.id = pbd.customerId
+        where pbd.id = #{id}
+    </select>
+</mapper>

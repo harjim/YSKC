@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.docservice.dao.rs.company.CompanyDao">
+
+    <select id="getCompanyMember" resultType="com.yskc.docservice.models.rs.company.CompanyMember">
+        select c.id as companyId, c.companyName, c.logo as companyLogoPath,cg.companyType,cg.groupId,cg.fullPath
+        from company c
+        left join company_group cg on c.id=cg.companyId
+        where c.id = #{companyId}
+    </select>
+    <select id="getCompanyName" resultType="java.lang.String">
+        select companyName from company where id = #{companyId}
+    </select>
+</mapper>

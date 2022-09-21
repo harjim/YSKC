@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xxl.job.executor.dao.ms.PushAuditDao">
+    <insert id="addBatch">
+        insert into pushAudit (instanceId,nodeId,msg,createTime,`status`,sendUserIds)
+        VALUES
+        <foreach collection="list" separator="," item="l">
+            (#{l.instanceId},#{l.nodeId},#{l.msg},#{l.createTime},#{l.status},#{l.sendUserIds})
+        </foreach>
+    </insert>
+    <select id="getExist" resultType="com.xxl.job.executor.entity.ms.PushAuditEntity">
+        select instanceId,nodeId,status from pushAudit where
+        <foreach collection="list" item="l" separator=" or ">
+            (instanceId = #{l.id} and nodeId = #{l.curNodeId})
+        </foreach>
+    </select>
+    <select id="getLastTime" resultType="java.util.Date">
+        select max(createTime) from pushAudit
+    </select>
+</mapper>

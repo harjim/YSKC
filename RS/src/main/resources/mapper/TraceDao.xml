@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.TraceDao">
+    <insert id="insertTrace">
+        INSERT INTO `p_material_trace`
+        (
+        createTime,
+        lastUpdateTime,
+        creatorId,
+        msCreatorId,
+        lastUpdatorId,
+        msLastUpdatorId,
+        pId,
+        normalOutputRate,
+        rdOutputRate,
+        rdOutPut,
+        rdOutputAmount,
+        rdLossRate,
+        rdLoss,
+        rdLossAmount,
+        scrapRate,
+        scrap,
+        scrapAmount,
+        scrapNo,
+        sampleRevenue,
+        scrapPrice,
+        specialIncome,
+        specialIncomeNo
+        )
+        VALUES
+        <foreach collection="insertModels" item="item" separator=",">
+            (
+            #{item.createTime},
+            #{item.lastUpdateTime},
+            #{item.creatorId},
+            #{item.msCreatorId},
+            #{item.lastUpdatorId},
+            #{item.msLastUpdatorId},
+            #{item.pId},
+            #{item.normalOutputRate},
+            #{item.rdOutputRate},
+            #{item.rdOutPut},
+            #{item.rdOutputAmount},
+            #{item.rdLossRate},
+            #{item.rdLoss},
+            #{item.rdLossAmount},
+            #{item.scrapRate},
+            #{item.scrap},
+            #{item.scrapAmount},
+            #{item.scrapNo},
+            #{item.sampleRevenue},
+            #{item.scrapPrice},
+            #{item.specialIncome},
+            #{item.specialIncomeNo}
+            )
+        </foreach>
+    </insert>
+
+    <update id="updateTrace">
+        update p_material_trace
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="lastUpdateTime =case" suffix="end,">
+                <foreach collection="updateModels" item="i" index="index">
+                    <if test="i.lastUpdateTime!=null">
+                        when id=#{i.id} then #{i.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdatorId =case" suffix="end,">
+                <foreach collection="updateModels" item="i" index="index">
+                    <if test="i.lastUpdatorId!=null">
+                        when id=#{i.id} then #{i.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="msLastUpdatorId =case" suffix="end,">
+                <foreach collection="updateModels" item="i" index="index">
+                    <if test="i.msLastUpdatorId!=null">
+                        when id=#{i.id} then #{i.msLastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="normalOutputRate =case" suffix="end,">
+                <foreach collection="updateModels" item="i" index="index">
+                    <if test="i.normalOutputRate!=null">
+                        when id=#{i.id} then #{i.normalOutputRate}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="rdOutputRate =case" suffix="end,">
+                <foreach collection="updateModels" item="i" index="index">
+                    <if test="i.rdOutputRate!=null">
+                        when id=#{i.id} then #{i.rdOutputRate}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="rdOutPut =case" suffix="end,">
+                <foreach collection="updateModels" item="i" index="index">
+                    <if test="i.rdOutPut!=null">
+                        when id=#{i.id} then #{i.rdOutPut}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="rdOutputAmount =case" suffix="end,">
+                <foreach collection="updateModels" item="i" index="index">
+                    <if test="i.rdOutputAmount!=null">
+                        when id=#{i.id} then #{i.rdOutputAmount}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="rdLossRate =case" suffix="end,">
+                <foreach collection="updateModels" item="i" index="index">
+                    <if test="i.rdLossRate!=null">
+                        when id=#{i.id} then #{i.rdLossRate}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="rdLoss =case" suffix="end,">
+                <foreach collection="updateModels" item="i" index="index">
+                    <if test="i.rdLoss!=null">
+                        when id=#{i.id} then #{i.rdLoss}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="rdLossAmount =case" suffix="end,">
+                <foreach collection="updateModels" item="i" index="index">
+                    <if test="i.rdLossAmount!=null">
+                        when id=#{i.id} then #{i.rdLossAmount}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="scrapRate =case" suffix="end,">
+                <foreach collection="updateModels" item="i" index="index">
+                    <if test="i.scrapRate!=null">
+                        when id=#{i.id} then #{i.scrapRate}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="scrap =case" suffix="end,">
+                <foreach collection="updateModels" item="i" index="index">
+                    <if test="i.scrap!=null">
+                        when id=#{i.id} then #{i.scrap}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="scrapAmount =case" suffix="end,">
+                <foreach collection="updateModels" item="i" index="index">
+                    <if test="i.scrapAmount!=null">
+                        when id=#{i.id} then #{i.scrapAmount}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="scrapNo =case" suffix="end,">
+                <foreach collection="updateModels" item="i" index="index">
+                    <if test="i.scrapNo!=null">
+                        when id=#{i.id} then #{i.scrapNo}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="sampleRevenue =case" suffix="end,">
+                <foreach collection="updateModels" item="i" index="index">
+                    <if test="i.sampleRevenue!=null">
+                        when id=#{i.id} then #{i.sampleRevenue}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="scrapPrice =case" suffix="end,">
+                <foreach collection="updateModels" item="i" index="index">
+                    <if test="i.scrapPrice!=null">
+                        when id=#{i.id} then #{i.scrapPrice}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="specialIncome =case" suffix="end,">
+                <foreach collection="updateModels" item="i" index="index">
+                    <if test="i.specialIncome!=null">
+                        when id=#{i.id} then #{i.specialIncome}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="specialIncomeNo =case" suffix="end,">
+                <foreach collection="updateModels" item="i" index="index">
+                    <if test="i.specialIncomeNo!=null">
+                        when id=#{i.id} then #{i.specialIncomeNo}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="updateModels" separator="or" item="i" index="index">
+            id=#{i.id}
+        </foreach>
+    </update>
+    <delete id="deleteByPid">
+        delete from p_material_trace where pId = #{pId}
+    </delete>
+    <delete id="deleteByPids">
+        delete from p_material_trace where
+        <foreach collection="ids" separator="or" item="i" index="index">
+            pId=#{i}
+        </foreach>
+    </delete>
+</mapper>

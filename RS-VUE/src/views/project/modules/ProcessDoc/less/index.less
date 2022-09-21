@@ -1,0 +1,213 @@
+
+:fullscreen {
+  z-index: 100;
+}
+:-webkit-full-screen{
+  z-index: 100;
+}
+:-moz-full-screen {
+  z-index: 100;
+}
+:-ms-fullscreen {
+  z-index: 100;
+}
+#fullBox {
+  font-family: -apple-system,BlinkMacSystemFont,Segoe UI,PingFang SC,Hiragino Sans GB,Microsoft YaHei,Helvetica Neue,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol;
+  & /deep/ .ant-spin-nested-loading{
+    height: 100%;
+  }
+  & /deep/ .ant-spin-container {
+    height: 100%;
+  }
+  .setting_box {
+    display: flex;
+    flex-direction: row;
+    justify-items: center;
+    padding: 5px 0;
+    .btn_box {
+      button {
+        margin-right: 10px;
+      }
+    }
+    .doc_status {
+      display: flex;
+      flex-direction: row;
+      justify-items: center;
+      font-size: 14px;
+      font-weight: 700;
+      & div {
+        padding: 0 5px;
+        margin: 0 5px;
+        text-align: center;
+        line-height: 32px;
+      }
+      .number {
+        color:  #1890ff;
+        padding: 0 5px;
+      }
+      .noCommit {
+        color: #606266;
+      }
+      .commited {
+        color: #9AFF9A;
+      }
+      .underwayed {
+        color: #1890ff;
+      }
+      .audited {
+        color: #548B54;
+      }
+      .rejected {
+        color: #FF4500;
+      }
+    }
+  }
+  .wrap_box {
+    display: flex;
+    flex-direction: row;
+    height: calc(100% - 42px);
+    .menu_tree {
+      width: 290px;
+      min-width: 150px;
+      height: 100%;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 10px 10px 0 0;
+    }
+    .middle {
+      cursor: col-resize;
+      position: relative;
+      background-color: #F0F2F5;
+      border-radius: 3px;
+      width: 6px;
+      min-width: 6px;
+      text-align: center;
+      background-size: cover;
+      background-position: center;
+      font-size: 0.32rem;
+      color: #444;
+    
+      .icon {
+        position: absolute;
+        top: 50%;
+        margin-top: -50px;
+        border-radius: 5px;
+        height: 50px;
+        width: 100%;
+        line-height: 50px;
+        background-color: #d6d6d6;
+      }
+    
+      &:hover {
+        color: white;
+        background-color: #d6d6d6;
+        .icon {
+          background-color: #1890FF;
+        }
+      }
+    }
+    .right_content {
+      flex: 1;
+      height: 100%;
+      box-sizing: border-box;
+      padding: 10px 0 0 10px;
+      min-width: 850px;
+      overflow: auto;
+      .content_box {
+        height: 100%;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        .content_title {
+          position: relative;
+          display: flex;
+          flex-direction: row;
+          justify-content: space-between;
+          height: 45px;
+          width: 100%;
+          margin-bottom: 10px;
+          line-height: 45px;
+          border-bottom: 1px solid #c6c6c6;
+          .audit_box {
+            font-size: 14px;
+            font-weight: 700;
+            .file_status {
+              padding-right: 10px;
+            }
+          }
+          .title {
+            font-size: 22px;
+            font-weight: 500;
+            text-align: center;
+          }
+          .screen_icon {
+            button {
+              margin-right: 5px;
+            }
+          }
+        }
+        .content {
+          width: 100%;
+          height: calc(100% - 55px);
+          display: flex;
+          flex-direction: row;
+          .right_box {
+            display: flex;
+            flex-direction: row;
+            flex: 1;
+            .expendRight {
+              // color:#1890ff;
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              align-items: center;
+              width: 14px;
+              border-radius: 3px;
+              background-color: #F0F2F5;
+              &:hover {
+                cursor: pointer;
+                background-color: #E3E3E3;
+              }
+            }
+            .audit_log {
+              width: 0px;
+              padding: 0;
+              overflow-y: hidden;
+              overflow-x: hidden;
+              transition: all 0.4s;
+            }
+          }
+          .left_box {
+            width: calc( 100% - 13px );
+            overflow-y: auto;
+            .preview_width {
+              width: 100%;
+              // width: calc( 100% - 13px );
+              min-width: 800px;
+              overflow-y: auto;
+            }
+          }
+        }
+        
+      }
+      & /deep/ .ant-spin-nested-loading{
+        height: 100%;
+      }
+      & /deep/ .ant-spin-container {
+        height: 100%;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        place-items: center;
+      }
+    }
+  }
+}
+
+
+
+
+

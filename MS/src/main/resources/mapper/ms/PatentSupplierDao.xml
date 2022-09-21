@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yskc.ms.dao.ms.PatentSupplierDao">
+
+    <select id="getSupplierList" resultType="com.yskc.ms.models.patentSupplier.SupplierInfoModel">
+        SELECT id, createTime, supplier, accountName, accountNumber, linkman, linkTel, remark
+        FROM patent_supplier
+        <where>
+            <if test="model.supplier != null and model.supplier != ''">
+                and supplier like concat('%',#{model.supplier},'%')
+            </if>
+            <if test="model.accountName != null and model.accountName != ''">
+                and accountName like concat('%',#{model.accountName},'%')
+            </if>
+            <if test="model.accountNumber != null and model.accountNumber != ''">
+                and accountNumber like concat('%',#{model.accountNumber},'%')
+            </if>
+            <if test="model.linkman != null and model.linkman != ''">
+                and linkman like concat('%',#{model.linkman},'%')
+            </if>
+            <if test="model.linkTel != null and model.linkTel != ''">
+                and linkTel like concat('%',#{model.linkTel},'%')
+            </if>
+        </where>
+    </select>
+    <select id="checkSupplier" resultType="com.yskc.ms.models.patentSupplier.SupplierInfoModel">
+        SELECT id, createTime, supplier, accountName, accountNumber, linkman, linkTel, remark
+        FROM patent_supplier
+        WHERE supplier = #{supplier}
+    </select>
+</mapper>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.DailyReportDetailDao">
+    <select id="getDayList" resultType="java.util.Map">
+        select dr.id,dr.workDate,yu.realName,c.companyName,dr.done,dr.commit,dr.reject,
+        <foreach collection="types" item="t" separator=",">
+            ${t.alias}.done ${t.col}Done,${t.alias}.commit ${t.col}Commit,${t.alias}.reject ${t.col}Reject
+        </foreach>
+        from daily_report dr
+        inner join ys_user yu on yu.id = dr.userId
+        inner join customer c on c.companyId=dr.companyId
+        <foreach collection="types" item="t" separator=" ">
+            left join daily_report_detail ${t.alias} on ${t.alias}.userId=dr.userId and ${t.alias}.workDate=dr.workDate
+            and ${t.alias}.companyId=dr.companyId and ${t.alias}.moduleId=#{t.moduleId}
+        </foreach>
+        where 1=1
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.byUser">
+            <property name="tableAlias" value="yu"/>
+            <property name="perm" value="#{perm}"/>
+        </include>
+        <if test="query.userIds != null and query.userIds.size() > 0">
+            and dr.userId in (<foreach collection="query.userIds" separator="," item="uId">#{uId}</foreach>)
+        </if>
+        <if test="query.deptId != null and query.deptId > 0">
+            and dr.userId in (select ud.userId from user_dept ud inner join ys_dept yd on yd.id=ud.depId
+                where yd.fullPath like CONCAT('%/', #{query.deptId,jdbcType=VARCHAR}, '/%') )
+        </if>
+        <if test="query.companyName != null and query.companyName.length > 0">
+            and c.companyName like "%"#{query.companyName}"%"
+        </if>
+        <if test="query.workDate != null">
+            and dr.workDate=#{query.workDate}
+        </if>
+    </select>
+</mapper>

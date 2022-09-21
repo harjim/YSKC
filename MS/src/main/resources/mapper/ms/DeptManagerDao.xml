@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.DeptManagerDao">
+
+    <insert id="insertBatch">
+        INSERT INTO
+        ys_dept_manager(depId,dingUserId,unionid)
+        VALUES
+        <foreach collection="deptManagers" item="d" separator=",">
+            (#{d.depId},#{d.dingUserId},#{d.unionid})
+        </foreach>
+    </insert>
+
+    <select id="getDeptManagerByDeptId" resultType="com.yskc.ms.entity.ms.DeptManager">
+        select  * from ys_dept_manager where depId = #{deptId}
+    </select>
+
+    <delete id="deleteByDeptId">
+        delete  from ys_dept_manager where depId = #{deptId}
+    </delete>
+</mapper>

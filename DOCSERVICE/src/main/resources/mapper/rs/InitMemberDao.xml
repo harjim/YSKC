@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.docservice.dao.rs.init.InitMemberDao">
+    <delete id="delMasterByProject">
+        delete from i_member
+        where year=#{year} and
+        <foreach collection="dels" item="l" separator="or">
+        (projectId=#{l.id} and enumber=#{l.masterENumber})
+        </foreach>
+    </delete>
+    <insert id="addbatch">
+        INSERT INTO
+        i_member(projectId,enumber,companyId,creatorId,createTime,lastUpdateTime,
+        lastUpdatorId,msCreatorId,msLastUpdatorId,role,isMaster,entryDate,`year`)
+        VALUES
+        <foreach collection="initMemberList" separator="," item="im">
+            (#{im.projectId},#{im.enumber},#{im.companyId},#{im.creatorId},#{im.createTime},#{im.lastUpdateTime},
+            #{im.lastUpdatorId},#{im.msCreatorId},#{im.msLastUpdatorId},#{im.role},#{im.isMaster},#{im.entryDate},#{im.year})
+        </foreach>
+    </insert>
+    <update id="cleanMasters">
+        update i_member set isMaster=false,lastUpdateTime=#{date},lastUpdatorId=#{userId},msLastUpdatorId=#{msUserId}
+        where `year`=#{year} and isMaster and  projectId in (<foreach collection="projectIds" item="projectId" separator=",">#{projectId}</foreach>)
+    </update>
+    <update id="updateBatch">
+        update i_member
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="lastUpdateTime =case" suffix="end,">
+                <foreach collection="list" item="l" index="index">
+                    <if test="l.lastUpdateTime!=null">
+                        when id=#{l.id} then #{l.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="lastUpdatorId =case" suffix="end,">
+                <foreach collection="list" item="l" index="index">
+                    <if test="l.lastUpdatorId!=null">
+                        when id=#{l.id} then #{l.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="msLastUpdatorId =case" suffix="end,">
+                <foreach collection="list" item="l" index="index">
+                    <if test="l.msLastUpdatorId!=null">
+                        when id=#{l.id} then #{l.msLastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="role =case" suffix="end,">
+                <foreach collection="list" item="l" index="index">
+                    <if test="l.role!=null">
+                        when id=#{l.id} then #{l.role}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="entryDate =case" suffix="end,">
+                <foreach collection="list" item="l" index="index">
+                    <if test="l.entryDate!=null">
+                        when id=#{l.id} then #{l.entryDate}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="list" item="l" separator="or">
+            id = #{l.id}
+        </foreach>
+    </update>
+	 <select id="getByEnumbers" resultType="com.yskc.docservice.entity.rs.init.InitMemberEntity">
+	        select enumber,id
+	        from i_member
+	        where companyId = #{companyId} and projectId = #{projectId}
+	        <if test="year!=null and year>0">
+	            and `year`=#{year}
+	        </if>
+	        and enumber in
+	        <foreach collection="enumbers" open="(" separator="," close=")" item="enumber">
+	            #{enumber}
+	        </foreach>
+	    </select>
+    <select id="getMasterByYear" resultType="com.yskc.docservice.entity.rs.init.InitMemberEntity">
+        select * from i_member where isMaster and projectId=#{projectId} and `year`=#{year}
+    </select>
+    <select id="getStaffInfoList" resultType="com.yskc.docservice.models.rs.initmember.InitMemberListModel">
+        select e.ename,im.role,re.position,rd.deptName,im.id,e.gender,
+        re.etype,c.companyName,e.birthday,e.specialities
+        from i_member im
+        left join employee e on e.enumber=im.enumber and e.companyId=im.companyId
+        left join rdEmployee re on re.enumber=im.enumber and im.companyId=re.companyId and re.year=im.year
+        left join rdDept rd on re.rdDeptId=rd.id
+        left join company c on c.id = im.companyId
+        inner join p_project p on p.id = im.projectId
+        where im.companyId = #{companyId} and im.projectId = #{projectId} and im.year=#{year} and (im.entryDate = p.beginDate OR im.entryDate is null)
+        <if test="memberIds!=null and memberIds.size()>0">
+            and im.id in
+            <foreach collection="memberIds" item="memberId" open="(" separator="," close=")">
+                #{memberId}
+            </foreach>
+        </if>
+        order by im.isMaster desc,re.etype, im.enumber desc
+        <!--        select em.ename,-->
+        <!--        case em.gender-->
+        <!--        when 2 then '男'-->
+        <!--        when 1 then '女'-->
+        <!--        else ''-->
+        <!--        end gender,-->
+        <!--        case em.eduLevel-->
+        <!--        when 0 then '无'-->
+        <!--        when 1 then '高中及以下'-->
+        <!--        when 2 then '中专'-->
+        <!--        when 3 then '大专'-->
+        <!--        when 4 then '本科'-->
+        <!--        when 5 then '硕士'-->
+        <!--        when 6 then '博士'-->
+        <!--        when 7 then '初中' end eduLevel,-->
+        <!--        em.specialities,em.title,-->
+        <!--        em.edate,em.deptName,im.role,em.position-->
+        <!--        from employee em-->
+        <!--        left join i_member im on em.enumber=im.enumber-->
+        <!--        where em.companyId = #{companyId} and im.projectId in-->
+        <!--        <foreach collection="projectIds" item="projectId" open="(" close=")" separator=",">-->
+        <!--            #{projectId}-->
+        <!--        </foreach>-->
+        -- order by im.isMaster,im.enumber desc
+    </select>
+    <select id="getMemberEname" resultType="com.yskc.docservice.models.rs.initmember.InitMemberModel">
+        select e.ename
+        from i_member as i
+                 LEFT JOIN employee AS e on i.enumber=e.enumber and e.companyId = i.companyId
+        where i.projectId = #{projectId} and i.year=#{year}
+        order by isMaster DESC limit 20
+    </select>
+
+    <select id="getMemberEnames" resultType="com.yskc.docservice.models.rs.initmember.InitMemberModel">
+        select e.ename from i_member as i
+        LEFT JOIN employee AS e on i.enumber=e.enumber and e.companyId = i.companyId
+        where i.year=#{year} and i.projectId in
+        <foreach collection="projectIds" item="projectId" open="(" close=")" separator=",">
+            #{projectId}
+        </foreach>
+        order by isMaster DESC limit 20
+    </select>
+</mapper>

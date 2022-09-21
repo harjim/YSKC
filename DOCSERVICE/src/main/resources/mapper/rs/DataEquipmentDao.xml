@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.docservice.dao.rs.DataEquipmentDao">
+
+    <update id="updateBatch">
+        update d_equipment set remainEquData =
+        <foreach collection="dataEquipmentList" item="item" index="index"
+                 separator=" " open="case id" close="end">
+            when #{item.id} then
+            #{item.remainEquData}
+        </foreach>
+        where id in
+        <foreach collection="dataEquipmentList" item="item" index="index"
+                 separator="," open="(" close=")">
+            #{item.id}
+        </foreach>
+    </update>
+    <insert id="insertOrUpdate">
+        INSERT INTO d_equipment
+        (ecode,ename,`month`,equData,companyId,creatorId,createTime,remainEquData,workHours,depreciation,
+        accountTitleId,lastUpdateTime,lastUpdatorId,msCreatorId,msLastUpdatorId,deptName)
+        VALUES
+        <foreach collection="dataEquipmentList" item="de" separator=",">
+            (#{de.ecode},#{de.ename},#{de.month},#{de.equData},#{de.companyId},#{de.creatorId},#{de.createTime},
+            #{de.remainEquData},#{de.workHours},#{de.depreciation},#{de.accountTitleId},#{de.lastUpdateTime},
+            #{de.lastUpdatorId},#{de.msCreatorId},#{de.msLastUpdatorId},#{de.deptName})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        ename = values(ename),
+        workHours = values(workHours),
+        depreciation = values(depreciation),
+        accountTitleId = values(accountTitleId),
+        lastUpdateTime=values(lastUpdateTime),
+        deptName = values(deptName),
+        msLastUpdatorId =values(msLastUpdatorId),
+        lastUpdatorId =values(lastUpdatorId)
+    </insert>
+</mapper>

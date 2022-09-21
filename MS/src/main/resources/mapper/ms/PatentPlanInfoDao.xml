@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.PatentPlanInfoDao">
+    <select id="selectByPatentId" resultType="com.yskc.ms.entity.ms.PatentPlanInfoEntity">
+        select id,submittedDate,acceptNoticeDate,acceptFeeDate,acceptFee,authFeeDate,authFee,issueDate,patentPlanId,authDate
+        from patent_plan_info
+        where patentPlanId = #{patentPlanId}
+    </select>
+</mapper>

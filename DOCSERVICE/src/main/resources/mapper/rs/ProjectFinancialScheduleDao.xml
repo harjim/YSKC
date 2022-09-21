@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.docservice.dao.rs.project.ProjectFinaScheduleDao">
+    <insert id="insertOrUpdate">
+        insert into p_fina_schedule (projectId,companyId,`month`,workHours,testHour,trialHour,creatorId,
+         lastUpdatorId,createTime,lastUpdateTime,msCreatorId,msLastUpdatorId,deptName)
+         VALUES
+         <foreach collection="list" item="l" separator=",">
+             (#{l.projectId},#{l.companyId},#{l.month},#{l.workHours},#{l.testHour},#{l.trialHour},#{l.creatorId},
+             #{l.lastUpdatorId},#{l.createTime},#{l.lastUpdateTime},#{l.msCreatorId},#{l.msLastUpdatorId},#{l.deptName})
+         </foreach>
+        ON DUPLICATE KEY UPDATE
+        msLastUpdatorId=values(msLastUpdatorId),
+        lastUpdateTime=values(lastUpdateTime),
+        lastUpdatorId=values(lastUpdatorId),
+        workHours=values(workHours),
+        trialHour=values(trialHour),
+        testHour=values(testHour),
+        deptName=values(deptName)
+    </insert>
+    <select id="getExistIds" resultType="java.lang.Integer">
+        select id from p_fina_schedule
+        where companyId=#{companyId} and (<foreach collection="list" item="l" separator="or">
+        (projectId=#{l.projectId} and `month`=#{l.month})
+    </foreach>)
+    </select>
+</mapper>

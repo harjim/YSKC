@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.xxl.job.executor.dao.rs.ProjectAttendanceDao">
+    <select id="getMonthHour" resultType="com.xxl.job.executor.models.attendance.TotalAttendanceModel">
+        select pre.companyId,pre.enumber,pre.planTime,pa.rdHour from
+        (select companyId,enumber,sum(planTime) as planTime from p_rdEmployee_plan
+        where
+        <foreach collection="list" item="l" separator=" or ">
+            (companyId = #{l.companyId} and `month` = #{l.month})
+        </foreach>
+        group by companyId,enumber) pre
+        left join
+        (select companyId,enumber,sum(workHour) as rdHour from p_attendance
+        where
+        <foreach collection="list" item="l" separator=" or ">
+            (companyId = #{l.companyId} and workDate >= #{l.begin} and workDate &lt;=#{l.end})
+        </foreach>
+        group by companyId,enumber) pa
+        on pa.companyId = pre.companyId and pa.enumber = pre.enumber
+        where pa.rdHour is null or pre.planTime > pa.rdHour
+    </select>
+</mapper>

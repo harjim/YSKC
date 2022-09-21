@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.FlowInstanceFormDao">
+
+    <insert id="addOrUpdate" keyProperty="id" useGeneratedKeys="true">
+        insert into flowInstance_form (formId,moduleId,status,`creatorId`, `createTime`, `lastUpdateTime`, `lastUpdatorId`)
+        value (#{item.formId},#{item.moduleId},#{item.status},#{item.creatorId},#{item.createTime},
+            #{item.lastUpdateTime},#{item.lastUpdatorId})
+        ON DUPLICATE KEY UPDATE
+         lastUpdateTime = #{item.lastUpdateTime},
+         lastUpdatorId = #{item.lastUpdatorId},
+         status = #{item.status}
+    </insert>
+    <select id="getStatus" resultType="com.yskc.ms.entity.ms.FlowInstanceFormEntity">
+        select status,formId
+        from flowInstance_form
+        where formId in (<foreach collection="formIds" separator="," item="item">
+            #{item}
+        </foreach>)
+          and moduleId = #{moduleId}
+    </select>
+    <select id="getStatusByForm" resultType="java.lang.Integer">
+        select status
+        from flowInstance_form
+        where formId = #{formId}
+        and moduleId = #{moduleId}
+    </select>
+    <select id="getInstanceInfo" resultType="com.yskc.ms.models.flowInstance.FlowInstanceInfoModel">
+        select formId,moduleId from flowInstance_form where instanceId=#{id} limit 1
+    </select>
+    <select id="getHasPermission" resultType="com.yskc.ms.entity.ms.FlowInstanceFormEntity">
+        select ff.formId id from flowInstance_form ff
+        inner join flowInstance f on ff.instanceId = f.id and f.status=0
+        inner join flowInstance_curNode fn on fn.instanceId = f.id
+        inner join flowInstance_user fu on fn.instanceId=fu.instanceId and fn.curNodeId=fu.nodeId
+        where ff.formId in (<foreach collection="serviceIds" item="item" separator=",">
+            #{item}
+        </foreach>)
+        and ff.moduleId = #{moduleId} and fu.userId = #{userId} and fu.status is null
+    </select>
+</mapper>

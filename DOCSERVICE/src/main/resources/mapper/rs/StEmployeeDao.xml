@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.docservice.dao.rs.StEmployeeDao">
+    <insert id="addStEmployees">
+        insert into stEmployee (`creatorId`,`lastUpdatorId`,`createTime`,`lastUpdateTime`,`msCreatorId`,`msLastUpdatorId`,
+                                `year`,companyId,enumber)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.creatorId},#{item.lastUpdatorId},#{item.createTime},#{item.lastUpdateTime},#{item.msCreatorId},
+             #{item.msLastUpdatorId},#{item.year},#{item.companyId},#{item.enumber})
+        </foreach>
+    </insert>
+
+    <select id="getByenumbers" resultType="java.lang.String">
+        select enumber from stEmployee where companyId =#{companyId}
+        and `year` =#{year} and enumber in
+        (<foreach collection="enumbers" item="item" separator=",">
+            #{item}
+        </foreach>)
+    </select>
+</mapper>

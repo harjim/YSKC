@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.rs.RsProjectDao">
+    <select id="getProjectsByYear" resultType="com.yskc.ms.entity.rs.models.ProjectListModel">
+        select p.rdNumber, p.id, p.pname, p.rdDeptId, p.deptId,p.deptName,yd.fullname,p.beginDate,p.endDate,case when pyi.budget is null then 0.00 else budget end as budget,p.rdIndex,
+        p.masterENumber,p.tecIndustry,p.projectSource,p.formula,p.result,p.targets,
+        p.beginYear,p.endYear,p.trialProd,p.tBeginDate,p.tEndDate,p.rdNumber,p.workshop,p.productLine,p.processSection,
+        p.parentId,p.hasChild,p.rdTitle,p.involvedProduct,e.ename,case when par.status is null then 5 else par.status end as status,rd.deptName as rdDeptName
+        from p_project as p
+        left join p_audit_report par on par.projectId=p.id and par.moduleId=4
+        left join rdDept rd on p.rdDeptId=rd.id
+        left join i_member im on im.companyId=p.companyId and im.projectId=p.id and im.year=#{year} and isMaster
+        left join p_year_info pyi on pyi.projectId = p.id and pyi.year = #{year}
+        LEFT JOIN employee e on e.companyId = p.companyId and e.enumber = im.enumber
+        left join dept yd on p.deptId = yd.id
+        where  p.companyId = #{companyId} and hasChild = false and p.beginYear &lt;= #{year} and p.endYear >= #{year}
+        order by rdTitle
+    </select>
+
+    <select id="getProjectIdsByYear" resultType="com.yskc.ms.models.rs.RdFundsModel">
+        SELECT id,pname,rdTitle,beginDate,endDate
+        FROM p_project
+		WHERE companyId = #{companyId} AND hasChild = false
+		AND beginYear &lt;= #{year} AND endYear >= #{year} order by beginYear, rdIndex
+    </select>
+
+    <select id="getProjectApprovalList" resultType="com.yskc.ms.models.projectApproval.ProjectApprovalModel">
+        SELECT c.companyName,p.pname,p.rdTitle,p.beginYear as year,p.beginDate,p.endDate,p.createTime,p.id
+        FROM p_project p
+        INNER JOIN company c ON p.companyId=c.id
+        WHERE 1=1
+        <if test="query.pname!=null and query.pname!=''">
+            and p.pname like "%"#{query.pname}"%"
+        </if>
+        <if test="query.companyName!=null and query.companyName!=''">
+            and c.companyName like "%"#{query.companyName}"%"
+        </if>
+        <if test="query.year!=null">
+            and p.beginYear&lt;=#{query.year} and p.endYear &gt;= #{query.year}
+        </if>
+    </select>
+    <select id="getProjectList" resultType="com.yskc.ms.models.rs.RsProjectBaseModel">
+        select p.id, p.companyId,p.rdTitle,p.pname,p.beginDate,p.endDate,p.estimateExpense,pbs.status
+        from p_project p
+        LEFT JOIN p_budget_status pbs on p.id = pbs.projectId
+        where p.companyId = #{companyId} and p.hasChild = false and p.beginYear &lt;=#{year} and p.endYear >= #{year}
+        order by p.beginYear,p.rdIndex
+    </select>
+    <select id="getCheckProject" resultType="com.yskc.ms.models.rs.RsProjectBaseModel">
+        SELECT p.id,p.pname,p.rdTitle,p.createTime,c.companyName FROM p_project p inner join company c on p.companyId=c.id
+        <where>
+            <if test="ids != null and ids.length>0">
+                and p.id in
+                <foreach collection="ids" open="(" separator="," close=")" item="id">
+                    #{id}
+                </foreach>
+            </if>
+        </where>
+    </select>
+    <select id="getCheckReport" resultType="com.yskc.ms.models.rs.ReportCheckModel">
+        SELECT pd.id as docId,p.pname,p.rdTitle,p.createTime,c.companyName,pdd.simCode,p.companyId,p.beginYear as `year`,pd.projectId
+        FROM p_project p inner join company c on p.companyId=c.id
+        inner join p_docFile pd on p.id=pd.projectId
+        inner join p_docFile_data pdd on pd.id = pdd.pdocFileId
+        where pd.docFileId=27 and pdd.simCode is not null and pd.deleted=0
+        <if test="ids != null and ids.length>0">
+            and pd.id in
+            <foreach collection="ids" open="(" separator="," close=")" item="id">
+                #{id}
+            </foreach>
+        </if>
+    </select>
+    <select id="getAllProject" resultType="com.yskc.ms.models.rs.RsProjectListModel">
+        select p.id, p.pname, p.rdDeptId, p.deptName,p.beginDate,p.endDate,p.estimateExpense,p.rdIndex,
+        p.masterENumber, e.ename,p.tecIndustry,p.projectSource,p.formula,p.result,p.targets,
+        p.beginYear,p.endYear,p.trialProd,p.tBeginDate,p.tEndDate,p.rdNumber,p.workshop,p.productLine,p.processSection,p.parentId,p.hasChild,p.rdTitle
+        from p_project as p
+        LEFT JOIN employee as e on e.enumber = p.masterENumber and e.companyId=#{companyId}
+        where p.beginYear &lt;= #{year} and p.endYear &gt;= #{year} and p.companyId = #{companyId}
+        order by p.rdTitle ASC
+    </select>
+    <select id="getChildsById" resultType="com.yskc.ms.entity.rs.ProjectEntity">
+        select * from p_project where parentId=#{parentId}
+    </select>
+    <select id="getProjects" resultType="com.yskc.ms.models.rs.ReportProjectModel">
+        select id as projectId,pname,rdTitle
+        from p_project
+        where beginYear &lt;= #{year} and endYear &gt;= #{year} and companyId = #{companyId} and formula=10
+        order by rdTitle ASC
+    </select>
+    <select id="getProByCustomerId" resultType="com.yskc.ms.models.rs.ReportProjectModel">
+        select id as projectId,p.rdTitle,p.pname
+        from p_project p
+        where p.companyId = #{companyId} and p.hasChild = false and p.beginYear &lt;=#{year} and p.endYear >= #{year}
+        order by p.beginYear,rdTitle
+    </select>
+    <select id="getCompanyId" resultType="java.lang.Integer">
+        select companyId from p_project where id=#{id}
+    </select>
+    <select id="getMemberEquipmentCnt" resultType="com.yskc.ms.models.projectApproval.ProjectApprovalModel">
+        select p.id,count(distinct im.enumber) memberCnt,count(distinct ie.ecode) equipmentCnt from p_project p
+        left join i_member im on im.companyId=p.companyId and im.projectId=p.id
+        left join i_equipment ie on ie.companyId=p.companyId and ie.projectId=p.id
+        where p.id in (<foreach collection="list" item="l" separator=",">#{l.id}</foreach>)
+        group by p.id
+    </select>
+    <select id="getProjectEquipmentList" resultType="com.yskc.ms.models.rs.summary.InitEquipmentModel">
+        select ie.ecode,ie.id,ie.projectId,e.ename,e.emodal,re.etype,ie.year,
+        ie.effect,e.unitPrice,rd.deptName rdDeptName,ie.entryDate,e.deptName,e.workshop,e.productLine,e.processSection
+        from i_equipment as ie
+        INNER JOIN rdEquipment as re on ie.companyId = re.companyId and ie.ecode = re.ecode and re.year = ie.year
+        INNER JOIN equipment as e on e.ecode = ie.ecode and e.companyId = ie.companyId
+        LEFT JOIN rdDept as rd on rd.id = re.rdDeptId
+        where ie.projectId = #{query.projectId}
+        <if test="query.ecode != null and query.ecode != '' ">
+            and e.ecode like "%"#{query.ecode}"%"
+        </if>
+        <if test="query.ename != null and query.ename != '' ">
+            and e.ename like "%"#{query.ename}"%"
+        </if>
+        <if test="query.deptName !=null and query.deptName != ''">
+            and rd.year=#{query.year} and rd.deptName like "%"#{query.deptName}"%"
+        </if>
+        <if test="query.effect !=null and query.effect != ''">
+            and ie.effect like "%"#{query.effect}"%"
+        </if>
+    </select>
+    <select id="getInfos" resultType="com.yskc.ms.entity.rs.ProjectEntity">
+        select id,companyId,beginYear,endYear,rdTitle,pname from p_project
+        where id in (<foreach collection="projectIds" separator="," item="id">#{id}</foreach>)
+    </select>
+    <select id="getReportByProject" resultType="com.yskc.ms.entity.rs.SysDocumentEntity">
+        select fileName,filePath,projectId
+        from sys_document
+        where projectId=#{projectId} and listId=3
+    </select>
+    <select id="getProjectInfo" resultType="com.yskc.ms.entity.rs.models.ProjectListModel">
+         select p.rdNumber, p.id, p.pname, p.rdDeptId, p.deptName,p.beginDate,p.endDate,p.estimateExpense,p.rdIndex,
+        p.masterENumber,p.tecIndustry,p.projectSource,p.formula,p.result,p.targets,
+        p.beginYear,p.endYear,p.trialProd,p.tBeginDate,p.tEndDate,p.rdNumber,p.workshop,p.productLine,p.processSection,
+        p.parentId,p.hasChild,p.rdTitle,p.involvedProduct,e.ename,case when par.status is null then 5 else par.status end as status,rd.deptName as rdDeptName
+        from p_project as p
+        LEFT JOIN employee e on e.enumber = p.masterENumber and e.companyId = p.companyId
+        left join p_audit_report par on par.projectId=p.id and par.moduleId=4
+        left join rdDept rd on p.rdDeptId=rd.id
+        where  p.id=#{projectId} and hasChild = false
+    </select>
+    <select id="getWorkshopSections" resultType="com.yskc.ms.entity.rs.models.ProjectListModel">
+        select p.id,p.workshop,p.processSection,p.productLine,p.deptName,p.deptId,p.beginDate,p.endDate,d.fullname,p.deptId from p_project p
+        left join dept d on p.deptId = d.id
+        where p.id in (<foreach collection="list" item="l" separator=",">#{l.rsProjectId}</foreach>)
+    </select>
+    <select id="getProjectSelect" resultType="com.yskc.ms.models.rs.RsProjectBaseModel">
+        SELECT id,pname,rdTitle
+        FROM p_project
+		WHERE companyId = #{companyId} AND hasChild = false and formula=10
+		AND beginYear &lt;= #{year} AND endYear >= #{year}
+		order by rdTitle
+    </select>
+    <select id="getRdFunds" resultType="com.yskc.ms.models.rdfunds.RdFinaFundsModel">
+        select pp.rdTitle,pp.pname,sum(case when ps.rdType in (
+        <foreach collection="model.children" item="r" separator=",">
+            #{r}
+        </foreach>
+        ) then ps.rdFunds else 0 end) as totalAmount,
+        par.id,pp.id as projectId
+        from p_project pp
+        left join p_summary ps on pp.id=ps.projectId and ps.rdType in (
+        <foreach collection="model.children" item="r" separator=",">
+            #{r}
+        </foreach>
+        ) and ps.month=#{model.month}
+        left join p_audit_rdFee par on par.companyId=pp.companyId and par.projectId=pp.id and par.month=#{model.month} and par.rdType=#{model.rdType}
+        where pp.companyId = #{model.companyId} and pp.beginDate &lt;= #{monthLastDay} and pp.endDate >= #{model.month}
+        <if test="null != model.projectId">
+            and pp.id = #{model.projectId}
+        </if>
+        group by pp.id order by pp.rdTitle
+    </select>
+    <select id="getRdMemberFunds" resultType="com.yskc.ms.models.rdfunds.RdMemberFundsModel">
+        select pp.rdTitle,pp.pname,sum(case when ps.rdType=10000 then ps.rdFunds else 0 end) as salary,
+            sum(case when ps.rdType=10100 then rdFunds else 0 end) as insurance,par.id,pp.id as projectId
+        from p_project pp
+        left join p_summary ps on pp.id=ps.projectId and ps.rdType in (
+        <foreach collection="model.children" item="r" separator=",">
+            #{r}
+        </foreach>
+        ) and ps.month=#{model.month}
+        left join p_audit_rdFee par on par.companyId=pp.companyId and par.projectId=pp.id and par.month=#{model.month} and par.rdType=#{model.rdType}
+        where pp.companyId = #{model.companyId} and pp.beginDate &lt;= #{monthLastDay} and pp.endDate >= #{model.month}
+        <if test="null != model.projectId">
+            and pp.id = #{model.projectId}
+        </if>
+        group by pp.id order by pp.rdTitle
+    </select>
+    <select id="getRdEquipmentFunds" resultType="com.yskc.ms.models.rdfunds.RdEquipmentFundsModel">
+        select pp.rdTitle,pp.pname,sum(case when ps.rdType=30000 then ps.rdFunds else 0 end) as prod,
+            sum(case when ps.rdType=30100 then ps.rdFunds else 0 end) as lad,par.id,pp.id as projectId
+        from p_project pp
+        left join p_summary ps on pp.id=ps.projectId and ps.rdType in (
+        <foreach collection="model.children" item="r" separator=",">
+            #{r}
+        </foreach>
+        ) and ps.month=#{model.month}
+        left join p_audit_rdFee par on par.companyId=pp.companyId and par.projectId=pp.id and par.month=#{model.month} and par.rdType=#{model.rdType}
+        where pp.companyId = #{model.companyId} and pp.beginDate &lt;= #{monthLastDay} and pp.endDate >= #{model.month}
+        <if test="null != model.projectId">
+            and pp.id = #{model.projectId}
+        </if>
+        group by pp.id order by pp.rdTitle
+    </select>
+    <select id="getInspectionFeesData" resultType="com.yskc.ms.models.projectAudit.RdFeeInspectionModel">
+        select d.accDate,d.expense,d.accNumber,d.type,d.summary,p.rdAmount
+        FROM
+        p_inspection p
+        JOIN d_inspection d ON p.inspectionDataId = d.id
+        WHERE
+        p.projectId = #{query.projectId}
+          <if test="query.rdTypes!=null and query.rdTypes.size()>0">
+            and d.type in
+            <foreach collection="query.rdTypes" item="rdType" open="(" separator="," close=")">
+                #{rdType}
+            </foreach>
+          </if>
+        <if test="query.month!=null">
+            AND d.accDate &gt;= #{query.month}
+        </if>
+        <if test="monthend!=null">
+            AND d.accDate &lt;= #{monthend}
+        </if>
+        AND p.companyId = #{query.companyId}
+    </select>
+    <select id="getBeginYear" resultType="java.lang.Integer">
+        select year(beginDate) from p_project where id = #{id}
+    </select>
+    <select id="getProjectNameAndRd" resultType="com.yskc.ms.models.rs.RsProjectBaseModel">
+        select pname,rdTitle from p_project where id = #{id}
+    </select>
+    <select id="getProjectFundsAll" resultType="com.yskc.ms.models.rdfunds.RdFundsAllModel">
+        SELECT pp.id AS id, pname, rdTitle, beginDate, endDate, month,
+               SUM(CASE WHEN rdType DIV 1000 = 10 THEN rdFunds ELSE 0 END ) AS c10000,
+               SUM(CASE WHEN rdType DIV 100 = 200 THEN rdFunds ELSE 0 END ) AS c20000,
+               SUM(CASE WHEN rdType DIV 100 = 201 THEN rdFunds ELSE 0 END ) AS c20100,
+               SUM(CASE WHEN rdType DIV 100 = 202 THEN rdFunds ELSE 0 END ) AS c20200,
+               SUM(CASE WHEN rdType DIV 100 = 203 THEN rdFunds ELSE 0 END ) AS c20300,
+               SUM(CASE WHEN rdType DIV 100 = 205 THEN rdFunds ELSE 0 END ) AS c20500,
+               SUM(CASE WHEN rdType DIV 100 = 206 THEN rdFunds ELSE 0 END ) AS c20600,
+               SUM(CASE WHEN rdType DIV 100 = 207 THEN rdFunds ELSE 0 END ) AS c20700,
+               SUM(CASE WHEN rdType DIV 1000 = 30 THEN rdFunds ELSE 0 END ) AS c30000,
+               SUM(CASE WHEN rdType DIV 1000 = 40 THEN rdFunds ELSE 0 END ) AS c40000,
+               SUM(CASE WHEN rdType = 50000 THEN rdFunds ELSE 0 END ) AS c50000,
+               SUM(CASE WHEN rdType = 60400 THEN rdFunds ELSE 0 END ) AS c60400,
+               SUM(CASE WHEN (rdType DIV 1000 = 60 AND rdType != 60400 ) OR (rdType = 69900) THEN rdFunds ELSE 0 END ) AS c69900,
+               SUM(rdType) AS totalAmount
+        FROM p_project pp LEFT JOIN p_summary ps ON pp.id = ps.projectId
+        WHERE month = #{month} AND companyId = #{companyId} AND hasChild = false
+        GROUP BY pp.id, ps.month
+    </select>
+    <select id="getProjectListByMonth" resultType="com.yskc.ms.models.rdfunds.RdFundsAllModel">
+        SELECT id, pname, rdTitle, beginDate, endDate FROM p_project
+        WHERE companyId = #{companyId} AND
+              beginDate &lt; #{endMonth} AND endDate >= #{startMonth} AND
+              hasChild = false
+    </select>
+</mapper>

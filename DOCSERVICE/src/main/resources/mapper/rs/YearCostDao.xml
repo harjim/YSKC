@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yskc.docservice.dao.rs.YearCostDao">
+    <insert id="insertOrUpdate">
+        INSERT INTO c_year_cost(
+                                creatorId,
+                                lastUpdatorId,
+                                createTime,
+                                lastUpdateTime,
+                                msCreatorId,
+                                msLastUpdatorId,
+                                companyId,
+                                year,
+                                rdType,
+                                cost,
+                                month
+                                )
+        VALUES
+               <foreach collection="list" item="item" separator=",">
+                   (
+                    #{item.creatorId},
+                    #{item.lastUpdatorId},
+                    #{item.createTime},
+                    #{item.lastUpdateTime},
+                    #{item.msCreatorId},
+                    #{item.msLastUpdatorId},
+                    #{item.companyId},
+                    #{item.year},
+                    #{item.rdType},
+                    #{item.cost},
+                    #{item.month}
+                   )
+               </foreach>
+        ON DUPLICATE KEY UPDATE
+        lastUpdateTime = values(lastUpdateTime),
+        lastUpdatorId = values(lastUpdatorId),
+        msLastUpdatorId = values(msLastUpdatorId),
+        cost = values(cost)
+    </insert>
+    <delete id="deleteCost" >
+        delete from c_year_cost
+        where <foreach collection="list" item="item" separator="or">
+        (companyId = #{item.companyId}  and year = #{item.year} and month = #{item.month} and rdType = #{item.rdType})
+    </foreach>
+    </delete>
+</mapper>

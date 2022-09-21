@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.ServiceCustomerDao">
+    <insert id="addCustomerList">
+        insert into service_apply_customer (serviceApplyId,customerId,causes,
+                                            `creatorId`, `createTime`, `lastUpdateTime`, `lastUpdatorId`)
+        values <foreach collection="list" separator="," item="item">
+            (#{item.serviceApplyId},#{item.customerId},#{item.causes},#{item.creatorId},#{item.createTime},
+        #{item.lastUpdateTime},#{item.lastUpdatorId})
+            </foreach>
+    </insert>
+    <update id="updateCustomer">
+        <foreach collection="list" separator=";" item="item">
+            update service_apply_customer set
+            customerId=#{item.customerId},causes=#{item.causes},lastUpdateTime=#{item.lastUpdateTime},lastUpdatorId=#{item.lastUpdatorId}
+            where id = #{item.id}
+        </foreach>
+    </update>
+    <delete id="delByCustomerIds">
+        delete from service_apply_customer
+        where serviceApplyId = #{serviceApplyId}
+          <if test="ids!=null and ids.size>0">
+              and (id not in (<foreach collection="ids" separator="," item="item">
+              #{item}
+          </foreach>))
+          </if>
+    </delete>
+    <delete id="delByApplyIds">
+        delete from service_apply_customer
+        where serviceApplyId in (<foreach collection="ids" separator="," item="item">
+        #{item}
+        </foreach>)
+    </delete>
+
+
+    <select id="getCustomerList" resultType="com.yskc.ms.models.serviceApply.ServiceCustomerModel">
+        select sac.id,sac.serviceApplyId,sac.customerId,sac.causes,c.companyName
+        from service_apply_customer sac
+        left join customer c on sac.customerId = c.id
+        where sac.serviceApplyId in
+        (<foreach collection="serviceIds" separator="," item="item">
+            #{item}
+        </foreach>)
+    </select>
+    <select id="getServiceNo" resultType="com.yskc.ms.models.serviceApply.ServiceNoModel">
+        select sac.customerId,sa.serviceNo,yu.id ownerId,yu.realName ownerName,yd.deptName,sa.begin,sa.end
+        from service_apply_customer sac
+        inner join service_apply sa on sa.id = sac.serviceApplyId
+        inner join flowInstance_form ff on ff.formId = sa.id and ff.moduleId = 14
+        left join service_apply_member sam on sa.id = sam.serviceApplyId and sam.mtype = 3
+        left join customer c on sac.customerId = c.id
+        left join ys_user yu on sam.userId = yu.id
+        left join user_dept ud on sam.userId = ud.userId
+        left join ys_dept yd on ud.depId = yd.id
+        where sac.customerId = #{customerId}
+        and ff.status = #{status}
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.selectDept">
+            <property name="table" value="yd"/>
+            <property name="userDept" value="ud"/>
+        </include>
+    </select>
+
+</mapper>

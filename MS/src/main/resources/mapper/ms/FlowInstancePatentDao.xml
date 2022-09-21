@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.FlowInstancePatentDao">
+    <select id="getPatentAudit" resultType="com.yskc.ms.models.patentPlan.PatentAuditModel">
+        select f.status as auditStatus,fp.id,f.id as instanceId,fic.curNodeId,fp.patentPlanId
+        from flowInstance_patent fp
+        inner join flowInstance f on fp.instanceId=f.id
+        inner join flowInstance_curNode fic on fic.instanceId=f.id
+        where fp.patentPlanId in (<foreach collection="ids" item="id" separator=",">#{id}</foreach>)
+    </select>
+    <select id="getPatentInstanceUsers" resultType="com.yskc.ms.entity.ms.FlowInstanceUser">
+        select fu.id,fu.instanceId,fu.nodeId,fi.lastSubmiter
+        from flowInstance fi
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id
+        inner join flowInstance_patent fip on fip.instanceId = fi.id
+        inner join flowInstance_user fu on fu.instanceId=fi.id and fu.nodeId=fic.curNodeId
+        where fip.patentPlanId in (<foreach collection="patentIds" item="patentId" separator=",">#{patentId}</foreach>)
+        and fu.userId = #{userId} and fi.status = 0
+        and fip.moduleId=7
+    </select>
+    <select id="getCancelPatentInstanceUsers" resultType="com.yskc.ms.entity.ms.FlowInstanceUser">
+        select fu.id,fu.instanceId,fu.nodeId,fi.lastSubmiter
+        from flowInstance fi
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id
+        inner join flowInstance_patent fip on fip.instanceId = fi.id
+        inner join flowInstance_user fu on fu.instanceId=fi.id and fu.nodeId=fic.curNodeId
+        where fip.patentPlanId in (<foreach collection="patentIds" item="patentId" separator=",">#{patentId}</foreach>)
+        and fic.nodeStatus = 0
+        and fip.moduleId=7
+    </select>
+    <select id="getPatentInstances" resultType="com.yskc.ms.entity.ms.FlowInstanceCurNode">
+        select fic.instanceId,fic.curNodeId,fic.nodeStatus
+        from flowInstance fi
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id
+        inner join flowInstance_patent fip on fip.instanceId = fi.id
+        where fip.patentPlanId in (<foreach collection="patentIds" item="patentId" separator=",">#{patentId}</foreach>)
+        and fic.nodeStatus = 1
+        and fip.moduleId=7
+    </select>
+    <select id="getPatents" resultType="com.yskc.ms.entity.ms.FlowInstancePatent">
+        select distinct fp.patentPlanId,fp.moduleId
+        from flowInstance_patent fp
+        inner join flowInstance fi on fp.instanceId=fi.id
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id and fic.nodeStatus=0
+        inner join flowInstance_user fu on fu.instanceId=fi.id and fic.curNodeId=fu.nodeId and fu.status is null and
+        fu.userId=#{userId}
+        where fp.patentPlanId in
+        <foreach collection="patentIds" item="patentId" open="(" separator="," close=")">
+            #{patentId}
+        </foreach>
+    </select>
+    <select id="getPassInstances" resultType="com.yskc.ms.entity.ms.FlowInstancePatent">
+        select fp.id,fp.patentPlanId
+        from flowInstance_patent fp
+        inner join flowInstance fi on fi.id=fp.instanceId
+        where fi.status=1
+    </select>
+    <select id="getPassPatents" resultType="com.yskc.ms.entity.ms.FlowInstancePatent">
+        select fp.patentPlanId
+        from flowInstance_patent fp
+        inner join flowInstance fi on fi.id=fp.instanceId
+        where fp.patentPlanId in (<foreach collection="patentIds" item="patentId" separator=",">#{patentId}</foreach>)
+        and fi.status!=1
+    </select>
+    <select id="getAuditStatus" resultType="com.yskc.ms.models.projectAudit.AuditStatusModel">
+        select fip.moduleId,fm.modeName,fn.nodeName,fi.flowId,fi.status,fic.nodeStatus,fic.curNodeId,fip.instanceId
+        from flowInstance_patent fip
+        inner join flowInstance fi on fi.id = fip.instanceId
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id
+        inner join flowModule fm on fm.id=fip.moduleId
+        inner join flowNode fn on fn.id=fic.curNodeId
+        where fip.patentPlanId=#{patentPlanId}
+        limit 1
+    </select>
+    <select id="getInstanceInfo" resultType="com.yskc.ms.models.flowInstance.FlowInstanceInfoModel">
+        select patentPlanId,moduleId from flowInstance_patent where instanceId=#{instanceId} limit 1
+    </select>
+    <select id="getAuditInfo" resultType="com.yskc.ms.models.patent.FlowPatentModel">
+        select fip.id,fip.instanceId,fip.patentPlanId,fip.moduleId,fi.status
+        from flowInstance_patent fip
+        inner join flowInstance fi on fi.id = fip.instanceId
+        where fi.status=1 and fip.patentPlanId in (<foreach collection="ids" item="id" separator=",">#{id}</foreach>)
+    </select>
+    <select id="getUserAudit" resultType="com.yskc.ms.entity.ms.FlowInstance">
+        select f.*
+        from flowInstance_patent pap
+        inner join flowInstance f on pap.instanceId=f.id
+        inner join flowInstance_curNode fic on fic.instanceId=f.id and fic.nodeStatus=0
+        inner join flowInstance_user fu on fu.instanceId=f.id and fic.curNodeId=fu.nodeId and fu.userId=#{msUserId} and fu.status is null
+        where f.id=#{instanceId}
+    </select>
+    <select id="getPatentPlanInfo" resultType="com.yskc.ms.models.patentPlan.PatentPlanModel">
+        select pap.companyId,pp.year,pp.id from patent_plan pp
+        inner join flowInstance_patent pap on pap.patentPlanId=pp.id
+        where pap.instanceId in (<foreach collection="instanceIds" separator="," item="iId">#{iId}</foreach>)
+    </select>
+    <select id="getInstanceId" resultType="java.lang.Integer">
+        select fp.instanceId from flowInstance_patent fp
+        inner join patent_plan pp on pp.id = fp.patentPlanId
+        where pp.id in (
+            <foreach collection="ids" separator="," item="id">
+                #{id}
+            </foreach>
+            )
+    </select>
+</mapper>

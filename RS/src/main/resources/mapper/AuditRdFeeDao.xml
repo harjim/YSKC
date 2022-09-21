@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.project.AuditRdFeeDao">
+    <update id="updateStatus">
+        update p_audit_rdFee set `status`=#{status},msLastUpdatorId=#{msUserId},lastUpdateTime=#{now},suggestion='' where id=#{id}
+    </update>
+    <select id="getStatus" resultType="com.yskc.rs.models.finance.AuditStatusModel">
+        select `month`,rdType,status,suggestion from p_audit_rdFee
+        where projectId = #{projectId}
+        and `month`>=#{beginDate} and `month` &lt;= #{endDate}
+        order by `month` DESC
+    </select>
+    <select id="getStatusList" resultType="com.yskc.rs.models.project.AuditRdFeeModel">
+        select par.status,par.month,pp.rdTitle from p_audit_rdFee par
+        inner join p_project pp on pp.id = par.projectId
+        where par.rdType in
+        (<foreach collection="rdTypes" item="rdType" separator=",">
+            #{rdType}
+        </foreach>)
+          and
+        (<foreach collection="list" item="l" separator="OR">
+            (par.projectId = #{l.projectId} and par.month = #{l.month})
+        </foreach> )
+    </select>
+    <select id="getAudit" resultType="com.yskc.rs.entity.project.AuditRdFeeEntity">
+        select id,`status` from p_audit_rdFee
+        <where>
+            <if test="null != model.companyId">
+                and companyId = #{model.companyId}
+            </if>
+            <if test="null != model.month">
+                and `month` = #{model.month}
+            </if>
+            <if test="null != model.projectId">
+                and projectId = #{model.projectId}
+            </if>
+            <if test="null != model.rdType">
+                and rdType = #{model.rdType}
+            </if>
+        </where>
+        limit 1
+    </select>
+</mapper>

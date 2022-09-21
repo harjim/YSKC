@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xxl.job.executor.dao.ms.ProjectDao">
+    <insert id="insertProject" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO project
+        (creatorId,lastUpdatorId,createTime,lastUpdateTime,customerId,year,productId,owerId,deptId,businessId)
+        VALUES
+        <foreach collection="list" separator="," item="l">
+            (#{l.creatorId},#{l.lastUpdatorId},#{l.createTime},#{l.lastUpdateTime},#{l.customerId},#{l.year},
+            #{l.productId}, #{l.owerId},#{l.deptId},#{l.businessId})
+        </foreach>
+    </insert>
+    <insert id="insertMembers">
+        INSERT INTO `project_member`
+        ( `projectId`, `mType`, `memberId`, `remark`, `creatorId`, `createTime`, `lastUpdateTime`, `lastUpdatorId`,
+        `customerId` )
+        VALUES
+        <foreach collection="projectMembers" item="item" separator=",">
+            (#{item.projectId}, #{item.mType}, #{item.memberId}, #{item.remark}, #{item.creatorId}, #{item.createTime},
+            #{item.lastUpdateTime}, #{item.lastUpdatorId}, #{item.customerId} )
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        projectId=values(projectId),
+        mType=values(mType),
+        memberId=values(memberId),
+        lastUpdateTime=values(lastUpdateTime),
+        lastUpdatorId=values(lastUpdatorId),
+        customerId=values(customerId);
+    </insert>
+    <insert id="insertPatentDemand">
+        INSERT INTO `patent_buying_demand`
+        (`creatorId`,`lastUpdatorId`,`createTime`,`lastUpdateTime`,`customerId`,`status`,`filePath`,`remark`,
+         `inventionNum`,`utilityNum`,`appearanceDesignNum`,`inventorInfo`,`ownerId`,`year`,`type`,`engineerId`)
+        VALUES
+        (-1,-1,now(),now(),#{customerId},0,'',#{remark},0,0,0,'',#{ownerId},#{year},1,#{engineerId})
+        ON DUPLICATE KEY UPDATE
+        ownerId=values(ownerId),
+        engineerId = values(engineerId),
+        lastUpdateTime = values(lastUpdateTime);
+    </insert>
+    <update id="batchUpdateMembers">
+        delete from msdb.project_member where projectId=#{projectId}
+        <if test="memberList!=null and memberList.size>0 ">
+            and
+            <foreach collection="memberList" item="item" separator="and">
+                (mType!=#{item.mType} or memberId!=#{item.memberId})
+            </foreach>
+        </if>
+        <if test="mTypes!=null and mTypes.size>0 ">
+            and mType in
+            <foreach collection="mTypes" open="(" separator="," close=")" item="mType">
+                #{mType}
+            </foreach>
+        </if>
+        ;
+        INSERT INTO `project_member`
+        (
+        `projectId`,
+        `mType`,
+        `memberId`,
+        `remark`,
+        `creatorId`,
+        `createTime`,
+        `lastUpdateTime`,
+        `lastUpdatorId`,
+        `customerId`
+        )
+        VALUES
+        <foreach collection="memberList" item="item" separator=",">
+            (#{item.projectId},
+            #{item.mType},
+            #{item.memberId},
+            #{item.remark},
+            #{item.creatorId},
+            #{item.createTime},
+            #{item.lastUpdateTime},
+            #{item.lastUpdatorId},
+            #{item.customerId}
+            )
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        projectId=values(projectId),
+        mType=values(mType),
+        memberId=values(memberId),
+        lastUpdateTime=values(lastUpdateTime),
+        lastUpdatorId=values(lastUpdatorId),
+        customerId=values(customerId);
+    </update>
+<!--    <select id="getCompanyIds" resultType="java.lang.Integer">-->
+<!--        SELECT DISTINCT cu.companyId FROM project p-->
+<!--        INNER JOIN customer cu ON p.customerId = cu.id and cu.companyId > 0-->
+<!--        INNER JOIN product pu ON pu.id = p.productId-->
+<!--         where pu.`productType` in (1,2)-->
+<!--    </select>-->
+    <select id="getByCompanyIds" resultType="com.xxl.job.executor.models.projectsummary.ProjectSummaryModel">
+        SELECT p.customerId,p.year,c.companyId,p.id as projectId
+        FROM project p
+        INNER JOIN customer c ON c.id = p.customerId
+        INNER JOIN product pr ON pr.id = p.productId
+        WHERE pr.productType in (1,2)
+        and c.companyId in
+        <foreach collection="companyIds" item="companyId" open="(" separator="," close=")">
+            #{companyId}
+        </foreach>
+    </select>
+    <select id="getCustomerByDeptIds" resultType="com.xxl.job.executor.entity.ms.DistrictSummary">
+        select p.year,ud.depId as deptId, p.customerId
+        from project p
+        INNER JOIN project_member pm on pm.projectId = p.id
+        INNER JOIN user_dept ud on ud.userId = pm.memberId
+        where ud.depId in
+        <foreach collection="deptIds" item="deptId" open="(" separator="," close=")">
+            #{deptId}
+        </foreach>
+        group by year,ud.depId,customerId
+    </select>
+    <select id="getLastCreateCompanyIds" resultType="java.lang.Integer">
+        select c.companyId from project p
+        INNER JOIN customer c on c.id = p.customerId
+        where c.companyId > 0 and createTime >= #{lastTime}
+    </select>
+    <select id="getRdByCompanyYear" resultType="com.xxl.job.executor.entity.ms.ProjectProgressDetail">
+        select c.companyId,p.year from customer c
+        inner join project p on p.customerId = c.id
+        inner join product pt on pt.id = p.productId
+        where
+        pt.productType in (1,2) and (
+        <foreach collection="list" separator=" or " item="l">
+            (c.companyId = #{l.companyId} and p.year = #{l.year})
+        </foreach>
+        )
+    </select>
+    <select id="getProjectMembers" resultType="com.xxl.job.executor.models.h3.ProjectMemberModel">
+        select projectId,mType,memberId,customerId from project_member where projectId in
+        <foreach collection="projectIds" open="(" separator="," close=")" item="pId">
+            #{pId}
+        </foreach>
+    </select>
+    <select id="getCustomerByIds" resultType="com.xxl.job.executor.models.techproject.CustomerIdYearModel">
+        select customerId,`year`,id from project
+        where id in
+        <foreach collection="ids" open="(" separator="," close=")" item="id">
+            #{id}
+        </foreach>
+    </select>
+    <select id="queryCompany" resultType="com.xxl.job.executor.models.ProjectInfo.ProjectCustomerModel">
+        select c.companyId,p.customerId,p.year,p.id from
+        project p
+        inner join product pd on p.productId=pd.id
+        inner join customer c on p.customerId=c.id
+        where pd.productType=1
+    </select>
+    <select id="getCompanyIdYear" resultType="com.xxl.job.executor.models.ProjectInfo.ProjectCustomerModel">
+         select c.companyId,p.year,p.id from
+        project p
+        inner join product pd on p.productId=pd.id
+        inner join customer c on p.customerId=c.id
+        where pd.productType=1
+        and (
+        <foreach collection="list" separator=" or " item="l">
+            c.companyId = #{l.companyId} and p.year = #{l.year}
+        </foreach>
+        )
+    </select>
+</mapper>

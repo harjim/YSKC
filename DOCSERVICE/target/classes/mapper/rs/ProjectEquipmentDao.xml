@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yskc.docservice.dao.rs.project.ProjectEquipmentDao">
+    <update id="updateBatch">
+        update p_equipment
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix=" equData =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.equData != null">
+                        when id = #{l.id} then #{l.equData}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" workHours =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.workHours != null">
+                        when id = #{l.id} then #{l.workHours}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" lastUpdateTime =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.lastUpdateTime != null">
+                        when id = #{l.id} then #{l.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" lastUpdatorId =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.lastUpdatorId != null">
+                        when id = #{l.id} then #{l.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" msLastUpdatorId =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.msLastUpdatorId != null">
+                        when id = #{l.id} then #{l.msLastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        ,equEdit = true
+        WHERE
+        <foreach collection="list" item="l" separator="or">
+            id = #{l.id}
+        </foreach>
+    </update>
+    <select id="getProjectEquipments" resultType="com.yskc.docservice.entity.rs.project.ProjectEquipmentEntity">
+        select equData,`month`,ecode,id from p_equipment
+        where projectId = #{projectId} and
+        (<foreach collection="list" separator="or" item="l">(`month`=#{l.month} and ecode =#{l.ecode})</foreach>)
+    </select>
+</mapper>

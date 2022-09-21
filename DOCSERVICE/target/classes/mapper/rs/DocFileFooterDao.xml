@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.docservice.dao.rs.DocFileFooterDao">
+    <insert id="insertList">
+        insert into p_docFile_footer (creatorId,lastUpdatorId,createTime,lastUpdateTime,msCreatorId,msLastUpdatorId,
+                                      projectId,companyId,toCompileEnumber,auditEnumber,approvalEnumber,`year`)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.creatorId},#{item.lastUpdatorId},#{item.createTime},#{item.lastUpdateTime},#{item.msCreatorId},
+            #{item.msLastUpdatorId},#{item.projectId},#{item.companyId},#{item.toCompileEnumber},#{item.auditEnumber},#{item.approvalEnumber},#{item.year})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        lastUpdatorId = values(lastUpdatorId),
+        lastUpdateTime = values(lastUpdateTime),
+        msLastUpdatorId =values(msLastUpdatorId),
+        toCompileEnumber =values(toCompileEnumber),
+        auditEnumber =values(auditEnumber),
+        approvalEnumber =values(approvalEnumber)
+    </insert>
+    <select id="getFooter" resultType="com.yskc.docservice.entity.rs.DocFileFooterEntity">
+        select id,projectId,companyId,toCompileEnumber,auditEnumber,approvalEnumber
+        from p_docFile_footer
+        where projectId=#{projectId} and `year`=#{year}
+    </select>
+</mapper>

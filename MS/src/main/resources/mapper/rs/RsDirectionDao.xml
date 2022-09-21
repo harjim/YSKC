@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.rs.RsDirectionDao">
+    <insert id="insertList">
+        insert into t_direction(direction,expiryDate,productId,creatorId,lastUpdatorId,createTime,lastUpdateTime,appGuideUrl,hasStage,
+        linkName,linkTel,mainDirection,noticeNo,noticeUrl,policyPath,publicItemUrl)
+        values
+        <foreach collection="directionEntities" separator="," item="item">
+            (#{item.direction},#{item.expiryDate},#{item.productId},#{item.creatorId},#{item.lastUpdatorId},#{item.createTime},#{item.lastUpdateTime},
+            #{item.appGuideUrl},#{item.hasStage},#{item.linkName},#{item.linkTel},#{item.mainDirection},#{item.noticeNo},#{item.noticeUrl},
+            #{item.policyPath},#{item.publicItemUrl})
+        </foreach>
+    </insert>
+    <update id="updateList">
+            <foreach collection="updateList" separator=";" item="item">
+                update t_direction set direction=#{item.direction},expiryDate=#{item.expiryDate},lastUpdatorId=#{userId},
+                lastUpdateTime=#{date},appGuideUrl=#{item.appGuideUrl},linkName=#{item.linkName},linkTel=#{item.linkTel},mainDirection=#{item.mainDirection},
+                noticeNo=#{item.noticeNo},noticeUrl=#{item.noticeUrl},policyPath=#{item.policyPath},publicItemUrl=#{item.publicItemUrl}
+                where id=#{item.id}
+            </foreach>
+    </update>
+    <delete id="delByProductId">
+        delete from t_direction where productId in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    <select id="getByProductId" resultType="com.yskc.ms.entity.rs.RsDirectionEntity">
+        select * from t_direction where productId in
+        <foreach collection="productIds" item="productId" open="(" close=")" separator=",">
+            #{productId}
+        </foreach>
+    </select>
+    <select id="getListByProduct" resultType="com.yskc.ms.models.rs.RsDirectionModel">
+        select id,productId,direction,expiryDate,appGuideUrl,hasStage,linkName,linkTel,mainDirection,noticeNo,noticeUrl,policyPath,publicItemUrl
+        from t_direction
+        where productId in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+</mapper>

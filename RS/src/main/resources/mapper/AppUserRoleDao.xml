@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.AppUserRoleDao">
+    <insert id="addBatch">
+        INSERT INTO app_user_role(userId,roleId,companyId,creatorId,createTime)
+        VALUES
+        <foreach collection="userRoles" item="ur" separator=",">
+            (#{ur.userId},#{ur.roleId},#{ur.companyId},#{ur.creatorId},#{ur.createTime})
+        </foreach>
+    </insert>
+    <delete id="delByUserId">
+        delete from app_user_role where userId = #{userId}
+    </delete>
+    <select id="getCountByRoleId" resultType="java.lang.Integer">
+        select count(1) from app_user_role where roleId=#{roleId} ;
+    </select>
+    <select id="getUserRoleIds" resultType="java.lang.Integer">
+        select roleId from app_user_role where userId=#{userId} <if test="companyId!=null">and companyId=#{companyId}</if>
+    </select>
+    <select id="getUserRoleByMTypes" resultType="java.lang.Integer">
+        SELECT distinct id FROM app_role where
+        <foreach collection="ProductMtypes" item="pm" separator="or">
+            (mType = #{pm.mType} and productType = #{pm.productType})
+        </foreach>
+    </select>
+    <select id="getCompanyIds" resultType="java.lang.Integer">
+        select distinct companyId from app_user_role where userId=#{userId}
+    </select>
+</mapper>

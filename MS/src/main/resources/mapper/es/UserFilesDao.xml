@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.es.UserFilesDao">
+    <select id="getFiles" resultType="com.yskc.ms.models.newexpert.expert.UserFilesModel">
+        select id,userId,filename,filePath,'type' from user_files where userId in
+        (<foreach collection="userIds" item="userId" separator=",">
+            #{userId}
+        </foreach>);
+    </select>
+</mapper>

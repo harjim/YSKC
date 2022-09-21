@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.docservice.dao.rs.project.ProjectDocFileDao">
+    <select id="queryFileList" resultType="com.yskc.docservice.models.rs.docfile.PDataListFormModel">
+      <!--  select p.id, p.docFileName, sd.value as stageType, p.seq
+        from p_docFile p
+        left join sys_dictionary sd on sd.type = 6 and sd.key = p.stage
+        where
+        <if test="pDocFileIds != null and pDocFileIds.size()>0">
+            p.id in (<foreach collection="pDocFileIds" item="pDocId" separator=",">#{pDocId}</foreach>)
+        </if>
+        <if test="pDocFileIds == null or pDocFileIds.size()==0">
+            p.projectId = #{projectId} and p.deleted=false
+        </if>
+        order by p.stage, p.seq-->
+        select p.id, p.docFileName, ps.stageName as stageType, p.seq
+        from p_docFile p
+        left join p_stage ps on ps.projectId = p.projectId and ps.stageKey = p.stage
+        where
+        <if test="pDocFileIds != null and pDocFileIds.size()>0">
+            p.id in (<foreach collection="pDocFileIds" item="pDocId" separator=",">#{pDocId}</foreach>)
+        </if>
+        <if test="pDocFileIds == null or pDocFileIds.size()==0">
+            p.projectId = #{projectId} and p.deleted=false
+        </if>
+        order by p.stage, p.seq
+    </select>
+</mapper>

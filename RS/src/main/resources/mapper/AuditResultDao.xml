@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.project.AuditResultDao">
+    <insert id="insertOrUpdate">
+        insert into p_audit_result(companyId,documentId,moduleId,status,msCreatorId,msLastUpdatorId,createTime,lastUpdateTime)
+        values
+        <foreach collection="audits" item="item" separator=",">
+            (#{item.companyId},#{item.documentId},#{item.moduleId},#{item.status},#{item.msCreatorId},
+            #{item.msLastUpdatorId},#{item.createTime},#{item.lastUpdateTime})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        status = values(status),
+        msLastUpdatorId=values(msLastUpdatorId),
+        lastUpdateTime=values(lastUpdateTime),
+        companyId=values(companyId)
+    </insert>
+    <select id="getResultAudits" resultType="com.yskc.rs.entity.ResultAuditEntity">
+        select id,documentId,moduleId,status
+        from p_audit_result
+        where moduleId=#{moduleId}
+        and documentId in (<foreach collection="documentIds" item="documentId" separator=",">#{documentId}</foreach> )
+    </select>
+    <select id="getStatus" resultType="java.lang.Integer">
+        select `status` from p_audit_result where documentId=#{id}
+    </select>
+</mapper>

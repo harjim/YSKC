@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.ProjectUnCollectedDao">
+    <select id="getList" resultType="com.yskc.ms.models.projectuncollected.ProjectUnCollectedModel">
+        select r.id,r.year,r.rdTitle,r.pname,r.createTime,c.companyName as customerName
+        from rsProject_uncollected as r
+        left join customer as c on r.companyId = c.companyId
+    </select>
+</mapper>

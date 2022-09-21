@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.project.DocFileAttachmentDao">
+    <insert id="addBatch">
+        insert into p_docFile_attachment(projectId,companyId,docFileId,fileName,filePath,uploadTime,creatorId,
+         lastUpdatorId,createTime,lastUpdateTime,msCreatorId,msLastUpdatorId)
+         VALUES
+        <foreach collection="list" separator="," item="l">
+            (#{l.projectId},#{l.companyId},#{l.docFileId},#{l.fileName},#{l.filePath},#{l.uploadTime},#{l.creatorId},
+            #{l.lastUpdatorId},#{l.createTime},#{l.lastUpdateTime},#{l.msCreatorId},#{l.msLastUpdatorId})
+        </foreach>
+    </insert>
+    <select id="getByDocFile" resultType="com.yskc.rs.models.docFile.AttachmentModel">
+        select id,fileName,filePath,uploadTime,docFileId,fileType
+        from p_docFile_attachment
+        where projectId=#{projectId} and  docFileId=#{docFileId}
+    </select>
+    <select id="getList" resultType="com.yskc.rs.models.project.DocFileAttachmentModel">
+        select pda.fileName,pda.filePath,pda.uploadTime,pp.pname,pp.rdTitle,pda.projectId,
+        concat_ws("/",pp.deptName,pp.workshop,pp.productLine,pp.processSection),pda.id
+        from  p_docFile_attachment pda
+        inner join p_project pp on pda.projectId=pp.id
+        where uploadTime &gt;=#{begin} and uploadTime &lt;=#{end} and pp.companyId=#{companyId}
+        and pp.deptName is not null and pp.workshop is not null and pp.productLine is not null and pp.processSection is not null
+        <if test="query.deptName!=null and query.deptName!=''">
+            and pp.deptName=#{query.deptName}
+        </if>
+        <if test="query.workshop!=null and query.workshop!=''">
+            and pp.workshop=#{query.workshop}
+        </if>
+        <if test="query.productLine!=null and query.productLine!=''">
+            and pp.productLine=#{query.productLine}
+        </if>
+        <if test="query.processSection!=null and query.processSection!=''">
+            and pp.processSection=#{query.processSection}
+        </if>
+        <if test="query.pname!=null and query.pname!=''">
+            and pp.pname like "%"#{query.pname}"%"
+        </if>
+        <if test="query.projectId!=null">
+            and pda.projectId=#{query.projectId}
+        </if>
+    </select>
+</mapper>

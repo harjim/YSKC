@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.rs.DocFileStageDao">
+
+    <select id="queryDocFileStageList" resultType="com.yskc.ms.models.rs.DocFileStageModel">
+        select a.id,b.docName,a.creatorId,a.lastUpdatorId,a.createTime,a.lastUpdateTime,a.msCreatorId,
+        a.msLastUpdatorId,a.stageKey,a.docFileId,a.seq,a.autoAdd,a.monthly,a.mPrefix,a.needEdit
+        from docFileStage a
+        left join docFile b on a.docFileId = b.id
+        where stageKey = #{stageKey}
+        order by a.seq asc
+    </select>
+
+    <insert id="saveDocFileStages" parameterType="com.yskc.ms.entity.rs.DocFileStageEntity">
+        insert into docFileStage
+        (creatorId,lastUpdatorId,createTime,lastUpdateTime,msCreatorId,msLastUpdatorId,stageKey,
+        docFileId,seq,autoAdd,monthly,mPrefix,needEdit)
+        values
+        <foreach collection="docFileStages" separator="," item="docFileStage">
+            (#{docFileStage.creatorId},#{docFileStage.lastUpdatorId},#{docFileStage.createTime},#{docFileStage.lastUpdateTime},
+            #{docFileStage.msCreatorId},#{docFileStage.msLastUpdatorId},#{docFileStage.stageKey},#{docFileStage.docFileId},
+            #{docFileStage.seq},#{docFileStage.autoAdd},#{docFileStage.monthly},#{docFileStage.mPrefix},#{docFileStage.needEdit})
+        </foreach>
+    </insert>
+
+    <select id="getMaxSeq" resultType="Integer">
+        select MAX(seq)
+        from docFileStage
+        where stageKey = #{stageKey}
+    </select>
+    <update id="updateDocFileStage" parameterType="com.yskc.ms.entity.rs.DocFileStageEntity">
+        update docFileStage
+        set
+        msLastUpdatorId = #{docFileStageEntity.msLastUpdatorId},
+        lastUpdateTime = #{docFileStageEntity.lastUpdateTime}
+        <if test="docFileStageEntity.autoAdd!=null">
+            ,autoAdd = #{docFileStageEntity.autoAdd}
+        </if>
+        <if test="docFileStageEntity.monthly!=null">
+            ,monthly = #{docFileStageEntity.monthly}
+        </if>
+        <if test="docFileStageEntity.mPrefix!=null">
+            ,mPrefix = #{docFileStageEntity.mPrefix}
+        </if>
+        <if test="docFileStageEntity.needEdit!=null">
+            ,needEdit = #{docFileStageEntity.needEdit}
+        </if>
+        <if test="docFileStageEntity.seq!=null">
+            ,seq = #{docFileStageEntity.seq}
+        </if>
+        where id = #{docFileStageEntity.id}
+    </update>
+
+    <select id="findByIdSeq" resultType="com.yskc.ms.entity.rs.DocFileStageEntity">
+        select id,seq from docFileStage where id in
+        <foreach item="id" index="index" collection="ids" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+    <select id="getStageNoDocFiles" resultType="com.yskc.ms.models.doc.DocFileBaseModel">
+        select df.id,df.docName from docFile df
+        left join docFileStage dfs on dfs.docFileId=df.id and dfs.stageKey=#{stageKey}
+        where dfs.id is null and df.enabled
+    </select>
+    <select id="getByDocFileId" resultType="com.yskc.ms.entity.rs.DocFileStageEntity">
+        select stageKey,id,seq,autoAdd
+        from docFileStage
+        where docFileId=#{docFileId}
+        limit 1
+    </select>
+
+</mapper>

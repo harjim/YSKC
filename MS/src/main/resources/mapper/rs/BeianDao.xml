@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yskc.ms.dao.rs.BeianDao">
+    <update id="updateBeian">
+        update t_beian set `year`=#{year},remark=#{remark},msLastUpdatorId=#{msUserId},lastUpdateTime=#{now}
+        where id=#{id}
+    </update>
+
+    <select id="getBySourceIds" resultType="com.yskc.ms.models.rs.TechProjectResultModel">
+        select tb.id,tb.year pyear,pd.productName pname,pd.addressCode,tb.sourceProjectId,pd.year as
+        reportYear,tb.productId
+        from t_beian tb
+        left join t_product pd on pd.id=tb.productId
+        where tb.sourceProjectId in
+        <foreach collection="projectIds" item="projectId" open="(" separator="," close=")">
+            #{projectId}
+        </foreach>
+    </select>
+    <select id="getById" resultType="com.yskc.ms.models.rs.RelatedProjectModel">
+        select tb.id as projectId,tb.year pyear,tb.sourceProjectId,tb.productId,tb.remark,pd.productName,
+        pd.addressCode,pd.year as reportYear
+        from t_beian tb
+        left join t_product pd on pd.id=tb.productId
+        where tb.id=#{id}
+    </select>
+    <select id="countData" resultType="java.lang.Integer">
+        select count(id) from  t_investment where beianId=#{id}
+    </select>
+    <select id="getBySourceProjectId" resultType="java.lang.Integer">
+        select id from t_beian where sourceProjectId=#{sourceProjectId} limit 1
+    </select>
+    <select id="getList" resultType="com.yskc.ms.models.tech.BeianInfoModel">
+        select t.id as beianId,t.year,t.pname,t.equipment,t.initWorkCapital,t.construction,t.completeRate,
+        t.equipmentCost,t.initWorkCapitalCost,
+        t.constructionCost,t.beianNo,beianDate,t.productId,t.sourceProjectId as projectId
+        from t_beian t
+        where t.sourceProjectId in
+        <foreach collection="projectIds" item="projectId" open="(" separator="," close=")">
+            #{projectId}
+        </foreach>
+    </select>
+    <select id="getExport" resultType="com.yskc.ms.models.tech.BeianExportModel">
+        select DISTINCT t.id as beianId,t.year,t.pname,t.powerUsed,t.energyUsed,t.projectNo,t.changedCnt,
+               t.equipment,t.initWorkCapital,t.construction,t.completeRate,
+        t.beianNo,beianDate,t.productId,t.sourceProjectId as projectId,t.beginDate,t.endDate,
+               ts.totalAmountTax,ts.totalAmount,t.equipmentCnt,t.equipmentQuantity,
+               td.taxAmount,tc.amount,t.accountName,t.accountPassword
+        from t_beian t
+        left join t_beian_summary ts on ts.beianId = t.id
+        left join t_investment ti on ti.beianId = t.id
+        left join t_contract_detail tc on ti.id = tc.investmentId
+        left join t_invoice_detail td on ti.id = td.investmentId
+        where t.sourceProjectId in
+        <foreach collection="projectIds" item="projectId" open="(" separator="," close=")">
+            #{projectId}
+        </foreach>
+    </select>
+    <select id="getData" resultType="com.yskc.ms.models.tech.BeianInfoModel">
+        select id,equipment,initWorkCapital,construction,completeRate,equipmentCost,initWorkCapitalCost,constructionCost
+        from t_beian
+        where 1=1
+        <if test="companyIds!=null and companyIds.size()>0">
+            and companyId in
+            <foreach collection="companyIds" item="companyId" open="(" separator="," close=")">
+                #{companyId}
+            </foreach>
+        </if>
+    </select>
+</mapper>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xxl.job.executor.dao.rs.EmployeeOpenidDao">
+    <select id="getOpenid" resultType="com.xxl.job.executor.entity.rs.EmployeeOpenidEntity">
+        select companyId,enumber,openid from employeeOpenid
+        where
+        <foreach collection="list" item="l" separator="or">
+            (companyId = #{l.companyId}) and enumber in
+            <foreach collection="l.enumbers" open="(" separator="," close=")" item="enumber">#{enumber}</foreach>
+        </foreach>
+    </select>
+</mapper>

@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.es.ExpertUserDao">
+    <select id="getExpertList" resultType="com.yskc.ms.models.newexpert.expert.ExpertModel">
+        SELECT id,realname,username,birthday,gender,mobile,remark,
+               email,idType,idNo,types,disabled
+        FROM `user`
+        <where>
+            <if test="query.realname != null and query.realname !=''">
+                and realname like "%"#{query.realname}"%"
+            </if>
+            <if test="query.types!= null and query.types!=''">
+                and types = #{query.types}
+            </if>
+            <if test="query.gender!= null and query.gender!=''">
+                and gender = #{query.gender}
+            </if>
+        </where>
+    </select>
+    <update id="ChangeUserStatus">
+        update user
+        set disabled = #{disabled},lastUpdateTime = #{now}
+        where id = #{id};
+    </update>
+    <update id="resetPassword">
+        update user
+        set password = #{password},lastUpdateTime = #{now}
+        where id = #{id}
+    </update>
+    <update id="updateExpertTags">
+        update user_expert
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="tags =case" suffix="end,">
+                <foreach collection="list" item="i" index="index">
+                    <if test="i.tags!=null">
+                        when id=#{i.id} then #{i.tags}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="list" separator="or" item="i" index="index">
+            id=#{i.id}
+        </foreach>
+    </update>
+
+    <select id="getExpertAuditList" resultType="com.yskc.ms.models.newexpert.expert.ExpertAuditModel">
+        select ue.id,u.realname,u.gender,u.mobile,u.birthday,ui.otherTitles,ue.referrer,ue.tags,
+               ui.titles,ui.researchArea,ui.industries,ue.types,ue.status,ui.unitName,ue.lastUpdateTime
+        from user u
+            inner join user_expert ue on u.id = ue.userId
+            inner join user_info ui on u.id = ui.userId
+        <where>
+            <if test="null != query.realname and query.realname != ''">
+                and u.realname like "%"#{query.realname}"%"
+            </if>
+            <if test="null != query.gender">
+                and u.gender = #{query.gender}
+            </if>
+            <if test="null != query.researchArea and query.researchArea != ''">
+                <bind name="researchAreaBind" value="','+query.researchArea"/>
+                and (ui.researchArea like #{query.researchArea}"%" OR ui.researchArea like "%"#{researchAreaBind}"%")
+            </if>
+            <if test="null != query.titles and query.titles != ''">
+                and ui.titles like #{query.titles}"%"
+            </if>
+            <if test="null != query.industries and query.industries != ''">
+                <bind name="industriesBind" value="','+query.industries"/>
+                and (ui.industries like #{query.industries}"%" OR ui.industries like "%"#{industriesBind}"%")
+            </if>
+            <if test="null != query.types">
+                and ue.types like "%"#{query.types}"%"
+            </if>
+            <if test="null != query.status">
+                and ue.status = #{query.status}
+            </if>
+        </where>
+    </select>
+
+    <resultMap id="userEnterModel" type="com.yskc.ms.models.newexpert.expert.UserEnterModel">
+        <id column="ueId" property="id"/>
+        <result column="realname" property="realname"/>
+        <result column="gender" property="gender"/>
+        <result column="nativePlace" property="nativePlace"/>
+        <result column="birthday" property="birthday"/>
+        <result column="idType" property="idType"/>
+        <result column="idNo" property="idNo"/>
+        <result column="mobile" property="mobile"/>
+        <result column="email" property="email"/>
+        <result column="eduLevel" property="eduLevel"/>
+        <result column="graduatedSchool" property="graduatedSchool"/>
+        <result column="degree" property="degree"/>
+        <result column="titles" property="titles"/>
+        <result column="researchArea" property="researchArea"/>
+        <result column="industries" property="industries"/>
+        <result column="unitName" property="unitName"/>
+        <result column="unitType" property="unitType"/>
+        <result column="job" property="job"/>
+        <result column="unitAddressCode" property="unitAddressCode"/>
+        <result column="unitAddress" property="unitAddress"/>
+        <result column="types" property="types"/>
+        <result column="transferResult" property="transferResult"/>
+        <result column="govReview" property="govReview"/>
+        <result column="govReviewName" property="govReviewName"/>
+        <result column="researchResult" property="researchResult"/>
+        <result column="deptName" property="deptName"/>
+        <result column="status" property="status"/>
+        <result column="avatar" property="avatar"/>
+        <result column="otherTitles" property="otherTitles"/>
+        <result column="referrer" property="referrer"/>
+        <result column="tags" property="tags"/>
+        <collection property="files" ofType="com.yskc.ms.models.newexpert.expert.UserFilesModel">
+            <id column="ufId" property="id"/>
+            <result column="userId" property="userId"/>
+            <result column="filename" property="filename"/>
+            <result column="filePath" property="filePath"/>
+            <result column="type" property="type"/>
+        </collection>
+    </resultMap>
+    <select id="getUserEnterData" resultMap="userEnterModel">
+        select u.realname,u.gender,u.birthday,u.idType,u.idNo,u.mobile,u.email,u.avatar,ui.nativePlace,ui.eduLevel,ui.otherTitles,
+               ui.degree,ui.titles,ui.graduatedSchool,ui.researchArea,ui.industries,ui.unitName,ui.unitType,ui.deptName,
+               ui.job,ui.unitAddressCode,ui.unitAddress,ue.types,ue.transferResult,ue.govReview,ue.govReviewName,ue.status,
+               ue.researchResult,ue.id as ueId,uf.id as ufId,uf.userId,uf.filename,uf.filePath,uf.type,ue.referrer,ue.tags
+        from user_expert ue LEFT JOIN user_info ui ON ue.userId = ui.userId
+                            LEFT JOIN `user` u ON u.id = ue.userId
+                            LEFT JOIN user_files uf ON ue.userId = uf.userId
+        where ue.id = #{id}
+    </select>
+    <select id="getStatusTotal" resultType="com.yskc.ms.models.CountModel">
+        select status as `value`,COUNT(status) as `count` from user_expert group by status
+    </select>
+    <update id="editExpertStatus">
+        update user_expert set status = #{model.status} where id in
+        <foreach collection="model.userExpertIds" separator="," item="userId" open="(" close=")">
+            #{userId}
+        </foreach>
+    </update>
+    <select id="getUserStatus" resultType="java.lang.Integer">
+        select status from user_expert where id in
+        <foreach collection="ids" separator="," item="id" open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+    <select id="verifyUniqueIdNo" resultType="java.lang.String">
+        select idNo from user where id !=#{id} and idType = #{idType} and idNo = #{idNo}
+    </select>
+    <update id="updateUser">
+        update user set realname = #{user.realname},mobile = #{user.mobile},gender = #{user.gender},
+            birthday = #{user.birthday},email = #{user.email},idType = #{user.idType},idNo = #{user.idNo},
+            remark = #{user.remark} where id =#{user.id}
+    </update>
+</mapper>

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.tech.PaymentDao">
+    <update id="updateByInvestmentIds">
+        <foreach collection="delIds" item="item" separator=";">
+            update t_payment set investmentId = null
+            where id = #{item}
+        </foreach>
+    </update>
+    <update id="updateList">
+        <foreach collection="ids" separator=";" item="id">
+            update t_payment set investmentId = #{investmentId}
+            where id = #{id}
+        </foreach>
+    </update>
+    <delete id="delRelated">
+        delete from t_payment
+        where investmentId = #{investmentId}
+    </delete>
+    <select id="getByInvestment" resultType="java.lang.Integer">
+        select id
+        from t_payment where investmentId = #{investmentId}
+    </select>
+    <select id="getByInvestmentId" resultType="com.yskc.rs.models.tech.PaymentModel">
+        select id, investmentId, seq, voucherNo, voucherDate, payType, acceptDate, amount,
+               payDate, payee, payStage, payRate, voucherPath, bankReceiptPath,taxRate,amountTax
+        from t_payment where investmentId = #{investmentId}
+    </select>
+    <select id="getReceiptInfo" resultType="com.yskc.rs.models.tech.PaymentModel">
+        select id, investmentId, seq, voucherNo, voucherDate, payType, acceptDate, amount,
+        payDate, payee, payStage, payRate, voucherPath, bankReceiptPath,taxRate,amountTax
+        from t_payment
+        where companyId=#{companyId}
+            and investmentId is null
+        <if test="query.voucherNo!=null and query.voucherNo!=''">
+            and voucherNo like "%"#{query.voucherNo}"%"
+        </if>
+        <if test="query.payee!=null and query.payee!=''">
+            and payee like "%"#{query.payee}"%"
+        </if>
+    </select>
+    <select id="getRelated" resultType="java.lang.Integer">
+        select id
+        from t_payment
+        where investmentId is not null and id in
+        <foreach collection="ids" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        <if test="investmentId!=null and investmentId>0">
+            and investmentId !=#{investmentId}
+        </if>
+    </select>
+    <select id="countInfo" resultType="com.yskc.rs.models.tech.InvestmentInfoModel">
+        select sum(amount) as totalBank,investmentId
+        from t_payment
+        where companyId=#{companyId} and investmentId in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        group by investmentId
+    </select>
+</mapper>

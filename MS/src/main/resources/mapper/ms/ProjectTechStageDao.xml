@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.ms.ProjectTechStageDao">
+
+    <select id="getByProjectId" resultType="com.yskc.ms.models.ProjectTechStage.ProjectStageModel">
+        select pts.stageId as projectStageId,ps.stageKey,ps.order,pts.deadline,pts.id
+        from project_tech_stage pts
+        left join product_stage ps on ps.id=pts.stageId
+        where pts.projectId=#{projectId}
+    </select>
+
+    <insert id="insertList">
+        insert into project_tech_stage (creatorId,lastUpdatorId,createTime,lastUpdateTime,stageId,deadline,projectId) values
+        <foreach collection="entities" item="item" separator=",">
+            (#{item.creatorId},#{item.lastUpdatorId},#{item.createTime},#{item.lastUpdateTime},#{item.stageId},#{item.deadline},#{item.projectId})
+        </foreach>
+    </insert>
+
+    <update id="updateList">
+        <foreach collection="stageModels" item="item" separator=";">
+            update project_tech_stage set deadline=#{item.deadline},lastUpdateTime=#{date},lastUpdatorId=#{userId}
+            where id=#{item.projectStageId}
+        </foreach>
+    </update>
+
+    <delete id="deleteByStage">
+        delete  from project_tech_stage
+        where  projectId in
+        <foreach collection="projectIds" item="projectId" open="(" close=")" separator=",">
+            #{projectId}
+        </foreach>
+        AND stageId in
+        <foreach collection="stageIds" item="stageId" open="(" close=")" separator=",">
+            #{stageId}
+        </foreach>
+
+    </delete>
+</mapper>

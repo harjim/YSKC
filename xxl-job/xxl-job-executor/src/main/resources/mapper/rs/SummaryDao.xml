@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xxl.job.executor.dao.rs.SummaryDao">
+    <update id="updateProjectBudget">
+        update p_project
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="estimateExpense =case" suffix="end,">
+                <foreach collection="list" item="i" index="index">
+                    <if test="i.estimateExpense!=null">
+                        when id=#{i.id} then #{i.estimateExpense}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="list" separator="or" item="i" index="index">
+            id=#{i.id}
+        </foreach>
+    </update>
+    <select id="countDocFile" resultType="com.xxl.job.executor.models.ProjectInfo.ProjectDataModel">
+        select pp.beginYear `year`,pp.companyId,MIN(ps.beginTime) beginTime,MAX(ps.endTime) endTime,SUM(ps.docNum) docNum, ps.stage
+        from p_project pp
+        inner join
+        (select pd.projectId,pd.stage,min(pd.createTime) beginTime,max(pd.lastUpdateTime) endTime,count(1) docNum
+        from p_docFile  pd
+         inner join p_docFile_data  pdd on pd.id=pdd.pdocFileId
+         where pdd.wordLength &gt; 50
+         group by pd.projectId,pd.stage
+        ) ps on pp.id=ps.projectId
+        where
+        <foreach collection="companyModels" item="item" separator="or">
+            (pp.companyId=#{item.companyId} and pp.beginYear=#{item.year})
+        </foreach>
+        group by pp.companyId,pp.beginYear,ps.stage
+    </select>
+    <select id="getRdAmount" resultType="com.xxl.job.executor.models.ProjectInfo.ProjectDataModel">
+        SELECT pp.companyId,SUM(ps.rdFunds) totalAmount,MIN(ps.createTime) beginTime,MAX(ps.lastUpdateTime) endTime ,ps.year
+         FROM p_project pp
+        INNER JOIN (
+        SELECT projectId, SUM(rdFunds) rdFunds,YEAR(`month`) `year`,MIN(createTime) createTime,MAX(lastUpdateTime) lastUpdateTime
+        FROM p_summary
+        WHERE YEAR(`month`) &gt;=YEAR(`month`) AND YEAR(`month`)&lt;YEAR(`month`)+1
+        GROUP BY projectId,YEAR) ps
+        ON pp.id=ps.projectId
+        WHERE
+        <foreach collection="companyModels" item="item" separator="or">
+            (pp.companyId=#{item.companyId} and pp.beginYear &lt;= #{item.year} and pp.endYear &gt;= #{item.year} and ps.year=#{item.year})
+        </foreach>
+        GROUP BY pp.companyId,ps.year
+    </select>
+    <select id="getLastProject" resultType="com.xxl.job.executor.models.ProjectInfo.ProjectBudgetModel">
+        select distinct p.id,endDate from p_project p inner join p_summary ps on p.id=ps.projectId
+        where ps.lastUpdateTime >=#{lastTime}
+    </select>
+    <select id="getMaximumMonths" resultType="com.xxl.job.executor.models.ProjectInfo.ProjectBudgetModel">
+        select projectId id,min(`month`) minMonth,max(`month`)maxMonth from p_summary
+        where projectId in (<foreach collection="projectIds" item="id" separator=",">#{id}</foreach> )group by projectId
+    </select>
+    <select id="getEarlyMonthFunds"
+            resultType="com.xxl.job.executor.models.projectsummary.ProjectSummaryModel">
+        select projectId,sum(rdFunds) rdFunds,rdType from p_summary
+        where <foreach collection="list" item="l" separator="or">
+              (projectId=#{l.id} and `month`>=#{l.minMonth} and `month`&lt;=#{l.nextMonth} )</foreach>
+        group by projectId,rdType
+    </select>
+
+    <select id="getByProject" resultType="com.xxl.job.executor.models.ProjectInfo.ProjectDataModel">
+        select id as projectId from p_project where lastUpdateTime &gt;=#{before}
+        union
+        select projectId from  i_member where lastUpdateTime &gt;=#{before}
+        union
+        select projectId from  i_equipment where lastUpdateTime &gt;=#{before}
+        union
+        select pd.projectId from p_docFile pd left join p_docFile_data pdd ON pd.id=pdd.pdocFileId
+                                              left join p_audit_docFile ad on ad.docFileId =pd.id
+        where pd.lastUpdateTime &gt;=#{before} or pdd.lastUpdateTime &gt;=#{before} or ad.lastUpdateTime &gt;=#{before}
+        union
+        select projectId from patent where lastUpdateTime &gt;=#{before} and  projectId is not null
+
+    </select>
+    <select id="getProjects" resultType="com.xxl.job.executor.models.ProjectInfo.ProjectModel">
+        select id,pname,rdTitle,beginYear,endYear,companyId,workshop,processSection
+        from p_project
+        where id in (<foreach collection="projectIds" item="projectId" separator=",">#{projectId}</foreach> )
+    </select>
+    <select id="getProjectMembers" resultType="com.xxl.job.executor.models.ProjectInfo.MemberModel">
+        select `year`,projectId,companyId,count(1) as countData
+        from i_member
+        where projectId in (<foreach collection="projectIds" item="projectId" separator=",">#{projectId}</foreach> )
+        group by projectId,`year`,companyId
+    </select>
+    <select id="getProjectEquipments" resultType="com.xxl.job.executor.models.ProjectInfo.MemberModel">
+        select `year`,projectId,companyId,count(1) as countData
+        from i_equipment
+        where projectId in (<foreach collection="projectIds" item="projectId" separator=",">#{projectId}</foreach> )
+        group by projectId,`year`,companyId
+    </select>
+    <select id="getProjectReport" resultType="com.xxl.job.executor.models.ProjectInfo.MemberModel">
+        select pd.projectId,case when ad.status is null then 5 else ad.status end as status
+        from p_docFile pd
+        left join p_audit_docFile ad on pd.id=ad.docFileId
+        where pd.docFileId=27 and !pd.deleted and pd.projectId in (<foreach collection="projectIds" item="projectId" separator=",">#{projectId}</foreach> )
+    </select>
+    <select id="getStageInfo" resultType="com.xxl.job.executor.entity.rs.StageEntity">
+        select s.*
+        from p_stage s
+                 inner join p_docFile pd on pd.stage=s.stageKey and pd.projectId=s.projectId
+        where pd.id=#{docFileId} and s.projectId=#{projectId}
+    </select>
+    <select id="getDocByProject" resultType="com.xxl.job.executor.entity.rs.ProjectDocFileEntity">
+        select pd.*,case when ad.status is null then 5 else ad.status end as status,pp.beginYear,pp.endYear
+        from p_docFile pd
+        inner join p_docFile_data pdd on pdd.pdocFileId=pd.id
+        left join p_audit_docFile ad on ad.docFileId=pd.id
+        inner join p_project pp on pd.projectId=pp.id
+        where !pd.deleted and  pd.projectId in (<foreach collection="projectIds" item="projectId" separator=",">#{projectId}</foreach> )
+    </select>
+    <select id="getPatentData" resultType="com.xxl.job.executor.models.ProjectInfo.MemberModel">
+        select projectId,companyId,count(1) as countData
+        from patent
+        where projectId in (<foreach collection="projectIds" item="projectId" separator=",">#{projectId}</foreach> )
+        group by projectId,companyId
+    </select>
+    <select id="getRdFunds" resultType="com.xxl.job.executor.models.projectsummary.FeeInfoModel">
+        select #{year} `year`,p.companyId,ps.rdType,ps.month,ps.rdFunds fee from p_summary ps
+        inner join p_project p on p.id=ps.projectId
+        where p.companyId in (<foreach collection="companyIds" separator="," item="cId">#{cId}</foreach>)
+        and p.beginYear &lt;= #{year} and p.endYear>=#{year}
+        and ps.month >=#{begin} and ps.month &lt;=#{end} order by ps.month
+    </select>
+    <select id="getRevenues" resultType="com.xxl.job.executor.models.projectsummary.FeeInfoModel">
+        select `year`,companyId,`month`,revenue fee from c_revenue
+        where companyId in (<foreach collection="companyIds" separator="," item="cId">#{cId}</foreach>)
+        and year=#{year} order by `month`
+    </select>
+</mapper>

@@ -1,0 +1,429 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.project.ProjectRdEmployeeDao">
+    <delete id="deleteData">
+        delete pr from p_rdEmployee pr
+        inner join rdEmployee rde on rde.companyId=pr.companyId and rde.year=#{year} and rde.enumber=pr.enumber
+        where pr.companyId=#{companyId} and pr.month=#{month} and rde.etype in (<foreach collection="etypes" separator="," item="etype">#{etype}</foreach>)
+    </delete>
+    <select id="getList" resultType="com.yskc.rs.models.projectrdemployee.ProjectRdEmployeeModel">
+        select pre.id,i.enumber,e.ename,pre.rdHour,pre.rdInsuranceFund,ds.payDetail,ds.insuranceDetail,
+        pre.rdPay,ifnull(ds.deptName,e.deptName) deptName,rde.etype,ds.insuranceFund,ds.pay,ds.workHours,e.position from
+        i_member i
+        LEFT JOIN p_rdEmployee pre on pre.enumber = i.enumber and pre.projectId = i.projectId and pre.month =
+        #{query.month}
+        LEFT JOIN d_salary ds on ds.enumber = i.enumber and ds.companyId = i.companyId and ds.month = #{query.month}
+        LEFT JOIN rdEmployee rde on rde.enumber = i.enumber and rde.companyId = i.companyId and rde.year = #{query.year}
+        LEFT JOIN employee e on e.enumber = i.enumber and e.companyId = i.companyId
+        where
+        i.companyId = #{companyId} and i.year=#{query.year}
+        and ( i.entryDate is null or i.entryDate &lt;= #{query.monthLastDay} )
+        and i.projectId = #{query.projectId}
+        <if test="query.enumber != null and query.enumber != ''">
+            and i.enumber like "%"#{query.enumber}"%"
+        </if>
+        <if test="query.ename != null and query.ename != ''">
+            and e.ename like "%"#{query.ename}"%"
+        </if>
+        <if test="query.etype != null and query.etype > 0">
+            and rde.etype = #{query.etype}
+        </if>
+        <if test="query.deptName != null and query.deptName != ''">
+            and ds.deptName like "%"#{query.deptName}"%"
+        </if>
+    </select>
+    <select id="getTotal" resultType="com.yskc.rs.models.projectrdemployee.ProjectRdEmployeeTotalModel">
+        select sum(pre.rdPay) as pay,sum(pre.rdInsuranceFund) as insuranceFund
+        from p_rdEmployee pre
+        LEFT JOIN employee e on e.enumber = pre.enumber and e.companyId = pre.companyId
+        LEFT JOIN rdEmployee rde on rde.enumber = pre.enumber and rde.companyId = pre.companyId and rde.year =
+        #{query.year}
+        where
+        pre.companyId = #{companyId}
+        and pre.projectId = #{query.projectId}
+        and pre.month = #{query.month}
+        <if test="query.enumber != null and query.enumber != ''">
+            and pre.enumber like "%"#{query.enumber}"%"
+        </if>
+        <if test="query.ename != null and query.ename != ''">
+            and e.ename like "%"#{query.ename}"%"
+        </if>
+        <if test="query.etype != null and query.etype > 0">
+            and rde.etype = #{query.etype}
+        </if>
+        <if test="query.deptName != null and query.deptName != ''">
+            and e.deptName like "%"#{query.deptName}"%"
+        </if>
+    </select>
+    <select id="getSummary" resultType="com.yskc.rs.models.projectrdemployee.ProjectRdEmployeeTotalModel">
+        select sum(rdPay) as pay,sum(rdInsuranceFund) as insuranceFund,`month`,projectId
+        from p_rdEmployee
+        where projectId in (<foreach collection="projectIds" separator="," item="pId">#{pId}</foreach>)
+        and `month` in
+        <foreach collection="months" open="(" separator="," close=")" item="m">
+            #{m}
+        </foreach>
+        group by projectId,`month`
+    </select>
+    <select id="getAllUsed" resultType="com.yskc.rs.models.project.RdUsedHourModel">
+        select p.rdTitle,pre.rdHour,i.enumber as `key`,pre.rdPay as rdAmount,pre.rdInsuranceFund
+        from i_member i
+        left join p_rdEmployee as pre on pre.enumber = i.enumber and pre.projectId = i.projectId and pre.month =
+        #{query.month}
+        INNER JOIN p_project as p on p.id = i.projectId
+        where i.companyId = #{companyId} and i.year=#{query.year}
+        and ( i.entryDate is null or i.entryDate &lt;= #{query.monthLastDay} )
+        and i.enumber in
+        <foreach collection="enumbers" open="(" separator="," close=")" item="enumber">
+            #{enumber}
+        </foreach>
+        ORDER BY p.rdTitle
+    </select>
+    <select id="getRdUsed" resultType="com.yskc.rs.models.init.InitRdUsedModel">
+        select distinct pre.enumber as `key`,e.ename as name
+        from p_rdEmployee pre
+        INNER JOIN i_member i on i.enumber = pre.enumber and i.projectId = pre.projectId and i.year=#{year}
+        LEFT JOIN employee e on e.companyId = pre.companyId and e.enumber = pre.enumber
+        where
+        pre.projectId = #{projectId}
+        and pre.month >=#{begin}
+        <if test="end != null">
+            and pre.month &lt; #{end}
+        </if>
+        and i.id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        group by e.ename,pre.enumber
+    </select>
+    <select id="getByEnumbers" resultType="com.yskc.rs.models.projectattendance.ExportProjectAttendanceModel">
+        select pre.enumber,e.ename,pre.rdHour,ds.deptName,p.rdTitle,pre.projectId,ds.workHours,re.etype
+        from p_rdEmployee pre
+        left join rdEmployee re on re.year=#{year} and re.companyId = pre.companyId and re.enumber=pre.enumber
+        LEFT JOIN employee e on e.enumber = pre.enumber and e.companyId = pre.companyId
+        LEFT JOIN d_salary ds on ds.companyId = pre.companyId and ds.month = pre.month and  ds.enumber = pre.enumber
+        INNER JOIN p_project p on p.id = pre.projectId
+        where pre.companyId= #{companyId}
+        <if test="all ==null or !all">
+            and pre.projectId=#{projectId}
+        </if>
+        and pre.month = #{month}
+        and pre.enumber in
+        <foreach collection="enumbers" open="(" separator="," close=")" item="enumber">
+            #{enumber}
+        </foreach>
+        <if test="etype != null and etype > 0">
+            and rde.etype = #{etype}
+        </if>
+        order by p.rdTitle,pre.enumber
+
+    </select>
+    <select id="getMonthWorkSheetList" resultType="com.yskc.rs.models.workSheet.MonthWorkSheetItem">
+        select pre.enumber,
+               pre.rdHour,
+               pre.rdInsuranceFund,
+               pre.rdPay,
+               p.rdIndex,
+               rd.deptName,
+               ie.role,
+               e.ename
+        from p_rdEmployee pre
+                 LEFT JOIN p_project p on p.id = pre.projectId
+                 LEFT JOIN i_member as ie on ie.enumber = pre.enumber and ie.projectId = pre.projectId
+                 LEFT JOIN employee e on e.enumber = pre.enumber and e.companyId = pre.companyId
+                 LEFT JOIN rdEmployee rde
+                           on rde.enumber = pre.enumber and rde.companyId = pre.companyId and ie.year=rde.year
+                 LEFT JOIN rdDept rd on rd.id = rde.rdDeptId
+        where pre.projectId = #{query.projectId} and rde.year = #{query.year}
+          and pre.month = #{query.month}
+    </select>
+
+    <insert id="addBatch">
+        INSERT INTO p_rdEmployee
+        (creatorId,lastUpdatorId,createTime,lastUpdateTime,msCreatorId,msLastUpdatorId,companyId,projectId
+        ,`month`,rdInsuranceFund,rdPay,enumber,rdHour,attendanceHour)
+        VALUES
+        <foreach collection="list" item="l" separator=",">
+            (#{l.creatorId},#{l.lastUpdatorId},#{l.createTime},#{l.lastUpdateTime},#{l.msCreatorId},#{l.msLastUpdatorId}
+            ,#{l.companyId},#{l.projectId},#{l.month},#{l.rdInsuranceFund},#{l.rdPay},#{l.enumber},#{l.rdHour},#{l.attendanceHour})
+        </foreach>
+    </insert>
+    <update id="updateBatch">
+        UPDATE p_rdEmployee
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix=" month =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.month != null">
+                        when id = #{l.id} then #{l.month}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" rdInsuranceFund =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.rdInsuranceFund != null">
+                        when id = #{l.id} then #{l.rdInsuranceFund}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" rdPay =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.rdPay != null">
+                        when id = #{l.id} then #{l.rdPay}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" rdHour =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.rdHour != null">
+                        when id = #{l.id} then #{l.rdHour}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" lastUpdatorId =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.lastUpdatorId != null">
+                        when id = #{l.id} then #{l.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" lastUpdateTime =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.lastUpdateTime != null">
+                        when id = #{l.id} then #{l.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" msLastUpdatorId =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.msLastUpdatorId != null">
+                        when id = #{l.id} then #{l.msLastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        WHERE
+        <foreach collection="list" item="l" separator="or">
+            id = #{l.id}
+        </foreach>
+    </update>
+    <update id="updateAttendances">
+        UPDATE p_rdEmployee
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix=" attendanceHour =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.attendanceHour != null">
+                        when id = #{l.id} then #{l.attendanceHour}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" attendanceEdit =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.attendanceEdit != null">
+                        when id = #{l.id} then #{l.attendanceEdit}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" lastUpdatorId =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.lastUpdatorId != null">
+                        when id = #{l.id} then #{l.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" lastUpdateTime =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.lastUpdateTime != null">
+                        when id = #{l.id} then #{l.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" msLastUpdatorId =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.msLastUpdatorId != null">
+                        when id = #{l.id} then #{l.msLastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        WHERE
+        <foreach collection="list" item="l" separator="or">
+            id = #{l.id}
+        </foreach>
+    </update>
+
+    <select id="queryEmployeeList" resultType="com.yskc.rs.models.employee.RdEmployeeSummaryModel">
+        select e.ename,rd.deptName as rdDeptName,im.role,pr.rdHour as monthWorkOurs,re.etype from
+        p_rdEmployee pr
+        LEFT JOIN employee e ON pr.companyId=e.companyId AND pr.enumber=e.enumber
+        LEFT JOIN i_member im ON im.companyId=pr.companyId AND im.projectId = pr.projectId AND im.enumber=pr.enumber and im.year=#{year}
+        LEFT JOIN rdEmployee re ON re.companyId=pr.companyId AND re.enumber=pr.enumber and re.year=im.year
+        LEFT JOIN rdDept rd ON re.rdDeptId=rd.id
+        where im.companyId=#{companyId} and pr.month=#{month} and re.year=#{year} and pr.rdHour != 0
+        and im.projectId in
+        <foreach collection="projectIds" item="projectId" open="(" close=")" separator=",">
+            #{projectId}
+        </foreach>
+
+    </select>
+
+    <select id="queryListByYear" resultType="com.yskc.rs.models.employee.RdEmployeeSummaryModel">
+        SELECT e.ename,im.projectId,e.enumber,re.etype,rd.deptName AS rdDeptName,im.role,SUM(pr.rdHour) AS yearWorkOurs FROM
+        p_rdEmployee pr
+        LEFT JOIN employee e ON pr.companyId=e.companyId AND pr.enumber=e.enumber
+        LEFT JOIN i_member im ON im.companyId=pr.companyId AND im.projectId = pr.projectId AND im.enumber=pr.enumber
+        LEFT JOIN rdEmployee re ON re.companyId=pr.companyId AND re.enumber=pr.enumber and re.year = im.year
+        LEFT JOIN rdDept rd ON re.rdDeptId=rd.id
+        WHERE im.companyId=#{companyId} and im.year=#{year}
+        AND im.projectId in
+        <foreach collection="projectIds" item="projectId" open="(" close=")" separator=",">
+            #{projectId}
+        </foreach>
+        GROUP BY e.ename,im.projectId,e.enumber,rdDeptName,im.role,re.etype
+        order by re.etype
+    </select>
+    <select id="exportFromEmployee" resultType="com.yskc.rs.models.aggregation.EmployeeExportModel">
+        select p.rdTitle,pr.month as
+        `date`,pr.companyId,p.beginYear,pr.enumber,e.ename,e.position,ifnull(ds.deptName,e.deptName)deptName,ds.pay,ds.insuranceFund,rde.etype,
+        ds.workDays,ds.workHours,ds.payDetail,ds.insuranceDetail,pr.rdPay,pr.rdInsuranceFund,pr.rdHour,pr.rdRatio
+        from p_rdEmployee pr
+        INNER JOIN p_project p on p.id = pr.projectId
+        INNER JOIN d_salary ds on ds.enumber = pr.enumber and ds.companyId = pr.companyId and ds.month = pr.month
+        INNER JOIN employee e on e.enumber = pr.enumber and e.companyId = pr.companyId
+        INNER JOIN rdEmployee rde on rde.companyId = pr.companyId and rde.enumber = pr.enumber and rde.year =#{year}
+        where e.companyId = #{companyId}
+        and p.id in
+        <foreach collection="term.projectIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        and pr.month in
+        <foreach collection="term.months" item="m" open="(" separator="," close=")">
+            #{m}
+        </foreach>
+        order by `date`, rdTitle
+    </select>
+    <select id="getRdEmployeeList" resultType="com.yskc.rs.models.projectrdemployee.ProjectRdEmployeeModel">
+        select
+        pr.id,pr.`month`,pr.rdInsuranceFund,pr.rdPay,pr.rdHour,pr.rdRatio,pr.enumber,e.ename,ds.pay,ds.insuranceFund
+        from
+        p_rdEmployee pr
+        inner join d_salary ds on ds.enumber = pr.enumber and ds.companyId = pr.companyId and ds.month = pr.month
+        inner join employee e on e.companyId = pr.companyId and e.enumber = pr.enumber
+        where
+        pr.id in
+        <foreach collection="ids" open="(" separator="," close=")" item="id">
+            #{id}
+        </foreach>
+    </select>
+    <select id="getUsedSum" resultType="com.yskc.rs.models.projectrdemployee.ProjectRdEmployeeModel">
+        select d.enumber,d.pay,d.insuranceFund,d.workHours,d.payDetail,d.insuranceDetail,d.month,
+        (d.workHours-sum(pre.rdHour))as remainHour from d_salary d
+        left join p_rdEmployee pre on pre.companyId = d.companyId and pre.month = d.month and pre.enumber = d.enumber
+        and pre.projectId not in (<foreach collection="projectIds" separator="," item="pId">#{pId}</foreach>)
+        where d.companyId = #{companyId}
+        and (
+        <foreach collection="mKeysList" separator="or" item="mKeys">
+            (d.month = #{mKeys.month} and d.enumber in
+            <foreach collection="mKeys.keys" open="(" separator="," close=")" item="key">
+                #{key}
+            </foreach>)
+        </foreach>
+        )
+        group by d.companyId,d.enumber,d.month
+    </select>
+    <select id="getEnumberId" resultType="com.yskc.rs.entity.project.ProjectRdEmployeeEntity">
+        select id,enumber,`month` from p_rdEmployee where projectId = #{projectId}
+        and (
+        <foreach collection="mKeysList" separator="or" item="mKeys">
+            (`month` = #{mKeys.month} and enumber in
+            <foreach collection="mKeys.keys" open="(" separator="," close=")" item="key">
+                #{key}
+            </foreach>
+            )
+        </foreach>
+        )
+    </select>
+    <select id="getAtteByEnumbers" resultType="com.yskc.rs.entity.project.ProjectRdEmployeeEntity">
+        select id, enumber,attendanceHour,rdHour from p_rdEmployee where projectId = #{projectId} and `month` = #{month}
+        and enumber in
+        <foreach collection="enumbers" open="(" separator="," close=")" item="e">#{e}</foreach>
+    </select>
+    <select id="getRdAccountingList" resultType="com.yskc.rs.models.projectrdemployee.SalaryAccountingModel">
+        select i.enumber,
+               e.ename,
+               pre.rdHour,
+               pre.rdInsuranceFund,
+               ds.payDetail,
+               ds.insuranceDetail,
+               pre.rdPay,
+               ds.deptName,
+               rde.etype,
+               ds.insuranceFund,
+               ds.pay,
+               ds.workHours,
+               e.position,
+               prp.planTime
+        from i_member i
+                 LEFT JOIN p_rdEmployee_plan prp on prp.companyId = i.companyId and prp.projectId = i.projectId
+            and prp.enumber = i.enumber and prp.month = #{query.month}
+                 LEFT JOIN p_rdEmployee pre on pre.companyId = i.companyId and pre.projectId = i.projectId
+            and pre.enumber = i.enumber and pre.month = #{query.month}
+                 LEFT JOIN d_salary ds on ds.enumber = i.enumber and ds.companyId = i.companyId and ds.month = #{query.month}
+                 LEFT JOIN rdEmployee rde on rde.enumber = i.enumber and rde.companyId = i.companyId and rde.year = i.year
+                 LEFT JOIN employee e on e.enumber = i.enumber and e.companyId = i.companyId
+        where i.companyId = #{companyId}
+          and i.year=#{query.year}
+          and (i.entryDate is null or i.entryDate &lt;= #{query.monthLastDay})
+          and i.projectId = #{query.projectId}
+    </select>
+    <select id="queryEmployees" resultType="com.yskc.rs.models.employee.RdEmployeeSummaryModel">
+        select e.ename,rd.deptName as rdDeptName,im.role,pr.rdHour as monthWorkOurs from
+        p_rdEmployee pr
+        LEFT JOIN employee e ON pr.companyId=e.companyId AND pr.enumber=e.enumber
+        LEFT JOIN i_member im ON im.companyId=pr.companyId AND im.projectId = pr.projectId AND im.enumber=pr.enumber
+        LEFT JOIN rdEmployee re ON re.companyId=pr.companyId AND re.enumber=pr.enumber and re.year=im.year
+        LEFT JOIN rdDept rd ON re.rdDeptId=rd.id
+        where im.companyId=#{companyId} and pr.month=#{month} and re.year=#{year} and pr.rdHour != 0
+        and im.projectId in
+        <foreach collection="projectIds" item="projectId" open="(" close=")" separator=",">
+            #{projectId}
+        </foreach>
+    </select>
+    <select id="getAggList" resultType="com.yskc.rs.models.projectrdemployee.ProjectRdEmployeeModel">
+        select pr.id,pr.enumber,pr.rdHour,pr.rdInsuranceFund,pr.rdPay,ds.workHours,ds.insuranceFund,ds.pay,ds.payDetail,
+        ds.insuranceDetail,pr.projectId,e.ename from p_rdEmployee pr
+        INNER JOIN d_salary ds on ds.companyId=pr.companyId and ds.month=pr.month and ds.enumber=pr.enumber
+        INNER JOIN employee e on e.companyId=pr.companyId and e.enumber=pr.enumber
+        where pr.companyId=#{companyId} and pr.month=#{month}
+    </select>
+    <select id="countAnalysisMember" resultType="com.yskc.rs.models.projectDocFile.ProjectAnalysisModel">
+        select count(distinct im.companyId,im.projectId,im.enumber) expectation,
+               count(distinct pre.companyId,pre.projectId,pre.enumber) actuality
+        from i_member im
+        left join p_rdEmployee pre on pre.companyId=im.companyId and pre.projectId=im.projectId and pre.enumber=im.enumber
+        where im.companyId=#{companyId} and im.projectId=#{projectId}
+    </select>
+    <select id="getMonthTotalStaff" resultType="com.yskc.rs.models.employee.RdEmployeeSummaryModel">
+        select e.ename,rd.deptName as rdDeptName,sum(pr.rdHour) as monthWorkOurs from
+        p_rdEmployee pr
+        LEFT JOIN employee e ON pr.companyId=e.companyId AND pr.enumber=e.enumber
+        LEFT JOIN rdEmployee re ON re.companyId=pr.companyId AND re.enumber=pr.enumber
+        LEFT JOIN rdDept rd ON re.rdDeptId=rd.id
+        where pr.companyId=#{companyId} and pr.month=#{month} and re.year=#{year} and pr.rdHour != 0
+        group by pr.enumber,rdDeptName
+    </select>
+    <select id="getFeeDetail" resultType="com.yskc.rs.models.projectrdemployee.SalaryRdFeeBaseModel">
+        select ds.accountTitleId,at.accountName,pr.rdHour,ds.workHours
+        <if test="query.type == 0">
+            ,pr.rdPay rdFunds,ds.payDetail feeDetail,ds.pay fee
+        </if>
+        <if test="query.type == 1">
+            ,pr.rdInsuranceFund rdFunds,ds.insuranceDetail feeDetail,ds.insuranceFund fee
+        </if>
+        from p_rdEmployee pr
+        inner join d_salary ds on ds.companyId=pr.companyId and ds.month=pr.month and ds.enumber=pr.enumber
+        left join accountTitle at on at.id=ds.accountTitleId
+        where pr.companyId=#{query.companyId} and pr.projectId=#{query.projectId} and pr.month=#{query.month}
+        order by at.level,at.accountNumber
+    </select>
+</mapper>

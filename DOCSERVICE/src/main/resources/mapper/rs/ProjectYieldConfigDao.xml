@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yskc.docservice.dao.rs.project.ProjectYieldConfigDao">
+    <insert id="addBatch">
+        INSERT INTO p_yield_config (creatorId,lastUpdatorId,createTime,lastUpdateTime,msCreatorId,msLastUpdatorId,
+        deptName,projectId,`month`,totalYield,rdYield,companyId,endTime,planYield,startTime,trialDate,unit,
+                                    trialProduct,`source`,testEndTime,testHour,testStartTime,totalHour,rdHour,trialHour)
+        VALUES
+        <foreach collection="list" separator="," item="l">
+            (#{l.creatorId},#{l.lastUpdatorId},#{l.createTime},#{l.lastUpdateTime},#{l.msCreatorId},#{l.msLastUpdatorId},
+            #{l.deptName},#{l.projectId},#{l.month},#{l.totalYield},#{l.rdYield},#{l.companyId},#{l.endTime},#{l.planYield},
+            #{l.startTime},#{l.trialDate},#{l.unit},#{l.trialProduct},#{l.source},#{l.testEndTime},#{l.testHour},
+            #{l.testStartTime},#{l.totalHour},#{l.rdHour},#{l.trialHour})
+        </foreach>
+    </insert>
+    <update id="updateBatch">
+        update p_yield_config
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix=" lastUpdatorId =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.lastUpdatorId != null">
+                        when id = #{l.id} then #{l.lastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" lastUpdateTime =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.lastUpdateTime != null">
+                        when id = #{l.id} then #{l.lastUpdateTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" msLastUpdatorId =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.msLastUpdatorId != null">
+                        when id = #{l.id} then #{l.msLastUpdatorId}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" rdYield =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.rdYield != null">
+                        when id = #{l.id} then #{l.rdYield}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" totalYield =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.totalYield != null">
+                        when id = #{l.id} then #{l.totalYield}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" endTime =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    when id = #{l.id} then #{l.endTime}
+                </foreach>
+            </trim>
+            <trim prefix=" planYield =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.planYield != null">
+                        when id = #{l.id} then #{l.planYield}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" startTime =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    when id = #{l.id} then #{l.startTime}
+                </foreach>
+            </trim>
+            <trim prefix=" unit =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.unit != null">
+                        when id = #{l.id} then #{l.unit}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" trialProduct =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.trialProduct != null">
+                        when id = #{l.id} then #{l.trialProduct}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" testEndTime =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.testEndTime != null">
+                        when id = #{l.id} then #{l.testEndTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" testHour =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.testHour != null">
+                        when id = #{l.id} then #{l.testHour}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" testStartTime =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.testStartTime != null">
+                        when id = #{l.id} then #{l.testStartTime}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" totalHour =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.totalHour != null">
+                        when id = #{l.id} then #{l.totalHour}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" rdHour =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.rdHour != null">
+                        when id = #{l.id} then #{l.rdHour}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix=" trialHour =case" suffix="end,">
+                <foreach collection="list" item="l">
+                    <if test="l.trialHour != null">
+                        when id = #{l.id} then #{l.trialHour}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        WHERE
+        <foreach collection="list" item="l" separator="or">
+            id = #{l.id}
+        </foreach>
+    </update>
+
+    <select id="findByBean" resultType="com.yskc.docservice.entity.rs.project.ProjectYieldConfigEntity" parameterType="com.yskc.docservice.entity.rs.project.ProjectYieldConfigEntity">
+        select pyc.id,pyc.projectId,pyc.trialDate,pyc.deptName from p_yield_config pyc WHERE
+        <foreach collection="queryList" separator="or" item="bean">
+        (pyc.projectId = #{bean.projectId}
+        AND pyc.deptName = #{bean.deptName}
+        AND pyc.trialDate = #{bean.trialDate})
+        </foreach>
+    </select>
+
+    <select id="getDate" resultType="date">
+        select distinct trialDate from p_yield_config
+        where
+        projectId = #{projectId}
+        and companyId = #{companyId}
+        and month = #{month}
+        order by trialDate asc
+    </select>
+    <select id="getTrialDate" resultType="java.util.Date">
+        select DISTINCT (trialDate) from p_yield_config
+        where projectId = #{query.projectId}
+          and `month` = #{query.month}
+        order by trialDate ASC
+    </select>
+
+    <select id="getReport" resultType="com.yskc.docservice.entity.rs.project.ProjectYieldConfigEntity">
+        select py.id,p.rdTitle,py.deptName,py.trialDate,py.startTime,py.endTime,py.testEndTime,py.testStartTime
+        from p_yield_config py
+        left join p_project p on py.projectId = p.id
+        where <foreach collection="configs" item="config" separator="or">
+        (py.projectId = #{config.projectId}
+        and py.deptName = #{config.deptName}
+        and py.trialDate = #{config.trialDate}
+        <if test="config.id!=null and config.id!=0">
+            and py.id != #{config.id}
+        </if>
+        and ((#{config.startTime} &lt; py.endTime and #{config.startTime}>= py.startTime) or
+        (#{config.endTime} &lt;= py.endTime and #{config.endTime}> py.startTime) or
+        (#{config.testStartTime} &lt; py.endTime and #{config.testStartTime}>= py.startTime) or
+        (#{config.testEndTime} &lt;= py.endTime and #{config.testEndTime}> py.startTime) or
+        (#{config.startTime} &lt; py.testEndTime and #{config.startTime}>= py.testStartTime) or
+        (#{config.endTime} &lt;= py.testEndTime and #{config.endTime}> py.testStartTime) or
+        (#{config.testStartTime} &lt; py.testEndTime and #{config.testStartTime}>= py.testStartTime) or
+        (#{config.testEndTime} &lt;= py.testEndTime and #{config.testEndTime}> py.testStartTime)))
+    </foreach>
+        limit 1
+    </select>
+</mapper>

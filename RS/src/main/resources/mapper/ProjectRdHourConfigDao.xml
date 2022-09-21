@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.rs.dao.project.ProjectRdHourConfigDao">
+    <update id="insertOrUpdate">
+        insert into p_rdHour_config
+            (projectId,type,companyId,`month`,config,createTime,lastUpdateTime,
+             creatorId,lastUpdatorId,msCreatorId,msLastUpdatorId)
+        values (#{c.projectId},#{c.type},#{c.companyId},#{c.month},#{c.config},#{c.createTime},#{c.lastUpdateTime},
+                #{c.creatorId},#{c.lastUpdatorId},#{c.msCreatorId},#{c.msLastUpdatorId})
+        ON DUPLICATE KEY UPDATE
+        config=values(config),
+        msLastUpdatorId=values(msLastUpdatorId),
+        lastUpdatorId=values(lastUpdatorId),
+        lastUpdateTime=values(lastUpdateTime)
+    </update>
+    <select id="getRdHourConfig" resultType="java.lang.String">
+        select config from p_rdHour_config where companyId = #{companyId} and projectId = #{config.projectId}
+          and `month` = #{config.month} and `type`=#{config.type}
+    </select>
+</mapper>

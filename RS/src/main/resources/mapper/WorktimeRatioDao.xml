@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.WorktimeRatioDao">
+    <select id="getWorktimeRatio" resultType="com.yskc.rs.entity.project.WorktimeRatioEntity">
+        select * from p_worktimeRatio where companyId = #{companyId} and projectId = #{projectId} and `month` = #{month}
+    </select>
+</mapper>

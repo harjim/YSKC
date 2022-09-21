@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.FlowInstanceRdFeeDao">
+
+    <select id="getAuditData" resultType="com.yskc.ms.models.rdfunds.RdFinaFundsModel">
+        SELECT fir.rdFeeId as id,(case when fi.status is null then 5 else fi.status end) as status,fi.auditUsers,
+               fi.id as instanceId,(case when fis.status is null and fis.userId = #{userId} then true  else false end) as hasPermision
+        FROM flowInstance_rdFee fir
+        inner join flowInstance fi on fi.id=fir.instanceId
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id
+        left join flowInstance_user fis on fis.instanceId = fi.id and fis.nodeId = fic.curNodeId
+        where fir.rdFeeId in (
+            <foreach collection="ids" separator="," item="id">
+                #{id}
+            </foreach>
+            )
+    </select>
+    <select id="getAuditCnt" resultType="java.util.Map">
+        select
+        count(CASE WHEN fir.rdType div 100 = 100 OR fir.rdType div 100 = 101 THEN 1 ELSE null END) AS `10000`,
+        count(CASE WHEN fir.rdType div 100 = 300 OR fir.rdType div 100 = 301 THEN 2 ELSE null END) AS `30000`,
+        count(CASE WHEN fir.rdType div 100 = 200 THEN 3 ELSE null END) AS `20000`,
+        count(CASE WHEN fir.rdType div 100 = 201 THEN 4 ELSE null END) AS `20100`,
+        count(CASE WHEN fir.rdType div 100 = 202 THEN 5 ELSE null END) AS `20200`,
+        count(CASE WHEN fir.rdType div 100 = 203 THEN 6 ELSE null END) AS `20300`,
+        count(CASE WHEN fir.rdType div 100 = 206 THEN 7 ELSE null END) AS `20600`,
+        count(CASE WHEN fir.rdType div 100 = 205 THEN 8 ELSE null END) AS `20500`,
+        count(CASE WHEN fir.rdType div 100 = 207 THEN 9 ELSE null END) AS `20700`,
+        count(CASE WHEN fir.rdType div 100 = 500 THEN 10 ELSE null END) AS `50000`,
+        count(CASE WHEN fir.rdType div 100 = 400 OR fir.rdType div 100 = 401 OR fir.rdType div 100 = 402 THEN 11 ELSE null
+        END) AS `40000`,
+        count(CASE WHEN fir.rdType div 100 = 604 THEN 12 ELSE null END) AS `60400`,
+        count(CASE WHEN fir.rdType div 100 = 699 THEN 13 ELSE null END) AS `69900`
+        from flowInstance_rdFee fir
+        inner join flowInstance fi on fir.instanceId = fi.id
+        inner join flowInstance_curNode fic on fic.instanceId=fi.id
+        left join flowInstance_user fiu on fiu.instanceId = fi.id and fiu.nodeId = fic.curNodeId
+        where
+        <if test="query.companyId!=null and query.companyId>0">
+            fir.companyId = #{query.companyId}
+        </if>
+        <if test="query.month!=null">
+            and fir.month = #{query.month}
+        </if>
+        <if test="userId!=null and userId>0">
+            and fiu.userId = #{userId}
+        </if>
+        and  fiu.status is null
+    </select>
+    <select id="getByRdFeeId" resultType="com.yskc.ms.entity.ms.FlowInstanceRdFee">
+        select companyId,`month`,rsProjectId from flowInstance_rdFee where rdFeeId = #{rdFeeId}
+    </select>
+    <select id="getInstanceInfo" resultType="com.yskc.ms.models.flowInstance.FlowInstanceInfoModel">
+        select fir.rdFeeId dataId, fir.rdType,fir.moduleId
+        from flowInstance_rdFee fir
+        where fir.instanceId = #{id}  limit 1
+    </select>
+    <select id="getAuditStatus" resultType="com.yskc.ms.models.projectAudit.AuditStatusModel">
+        select fir.moduleId,fm.modeName,fn.nodeName,fi.flowId,fi.status,fic.nodeStatus,fic.curNodeId,fir.instanceId
+        from flowInstance_rdFee fir
+                 inner join flowInstance fi on fi.id = fir.instanceId
+                 inner join flowInstance_curNode fic on fic.instanceId=fi.id
+                 inner join flowModule fm on fm.id=fir.moduleId
+                 inner join flowNode fn on fn.id=fic.curNodeId
+        where fir.rdFeeId=#{rdFeeId}
+            limit 1
+    </select>
+    <select id="getFundsAudits" resultType="com.yskc.ms.models.projectAudit.FinaAuditMonthModel">
+            select crf.`year`,crf.companyId,amount,crf.month,count(distinct fiu.id)auditCnt
+            from c_rd_funds crf
+            left join flowInstance_rdFee fir on fir.companyId=crf.companyId and fir.month=crf.month
+            left join flowInstance_curNode fic on fic.instanceId=fir.instanceId and fic.closed=false
+            left join flowInstance_user fiu on fiu.instanceId=fic.instanceId and fiu.nodeId=fic.curNodeId and fiu.userId=#{userId} and fiu.status is null
+            inner join customer c ON crf.companyId = c.companyId
+            where crf.type = 0
+            and (<foreach collection="list" separator=" or " item="l">
+            (crf.companyId=#{l.companyId} and crf.year=#{l.year})
+        </foreach>)
+        group by `year`,companyId,`month`
+    </select>
+    <select id="getList" resultType="com.yskc.ms.models.projectAudit.FinaAuditModelGroup">
+        SELECT c.companyName,c.companyId,ip.year,yd.fullname as deptName,yu.realName as owerName, ps.rdFunds rdFunds,
+        ppd.operationTime,ip.id as id, c.id as customerId,pas.ongoingCnt,pas.doneCnt
+        from innovation_project ip
+        INNER JOIN customer c ON c.id = ip.customerId
+        LEFT JOIN project_progress_detail ppd ON c.companyId=ppd.companyId and ip.year=ppd.year and ppd.stage=60000
+        LEFT JOIN project_summary_data ps on ps.customerId = ip.customerId and ps.year=ip.year
+        left join project_audit_summary pas on pas.customerId=ip.customerId and pas.year=ip.year and pas.auditType=1
+        LEFT JOIN ys_dept yd on yd.id=ip.deptId
+        LEFT JOIN ys_user yu on yu.id = c.owerId
+        WHERE `c`.companyId != 0
+        <include refid="com.yskc.ms.dao.ms.BaseDataDao.project">
+            <property name="tableAlias" value="ip"/>
+            <property name="dataPerm" value="#{dataPerm}"/>
+            <property name="userTable" value="innovation_member"/>
+            <property name="colId" value="innovationId"/>
+        </include>
+        <if test="query.companyName != null and query.companyName != ''">
+            and c.companyName like "%"#{query.companyName}"%"
+        </if>
+        <if test="query.deptId != null and query.deptId != ''">
+            and yd.fullPath like CONCAT('%', #{query.deptId,jdbcType=VARCHAR}, '/%')
+        </if>
+        <if test="query.year != null">
+            and ip.year =#{query.year}
+        </if>
+        <if test="query.tIds != null and query.tIds.length>0">
+            and ip.id in (select innovationId from innovation_member where mType=1 and memberId in
+            <foreach collection="query.tIds" open="(" separator="," close=")" item="tId">
+                #{tId}
+            </foreach>)
+        </if>
+        <if test="query.fIds != null and query.fIds.length>0">
+            and ip.id in (select innovationId from innovation_member where mType=2 and memberId in
+            <foreach collection="query.fIds" open="(" separator="," close=")" item="fId">
+                #{fId}
+            </foreach>)
+        </if>
+    </select>
+</mapper>

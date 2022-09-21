@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xxl.job.executor.dao.rs.ProjectDeliverDao">
+    <insert id="addOrUpdate">
+        insert into p_deliver
+        (creatorId,lastUpdatorId,createTime,lastUpdateTime,msCreatorId,msLastUpdatorId,
+         companyId,projectId,`type`,deliverType,status,node,`month`)
+         VALUES
+        <foreach collection="list" item="l" separator=",">
+            (-1,-1,#{now},#{now},-1,-1,#{l.companyId},#{l.projectId},#{l.type},
+             #{l.deliverType},#{l.status},#{l.node},#{l.month})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        lastUpdateTime=values(lastUpdateTime)
+    </insert>
+</mapper>

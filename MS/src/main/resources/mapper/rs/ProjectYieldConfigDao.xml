@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yskc.ms.dao.rs.ProjectYieldConfigDao">
+
+    <select id="getTrialDate" resultType="java.util.Date">
+        select DISTINCT (trialDate) from p_yield_config
+        where projectId = #{query.projectId}
+          and `month` = #{query.month}
+        order by trialDate ASC
+    </select>
+    <select id="getRangeMonths" resultType="java.util.Date">
+        select distinct `month` from p_yield_config
+        where projectId=#{projectId} and `month`>=#{begin} and `month` &lt;=#{end}
+    </select>
+
+</mapper>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.ActivityDao">
+
+    <select id="getActiveMap" resultType="java.util.Map">
+        select pKey,pValue from c_activity where companyId = #{companyId} and `year` = #{year}
+    </select>
+
+    <select id="getActivityByYearAndPkey" resultType="com.yskc.rs.entity.ActivityEntity">
+        select * from c_activity where companyId = #{companyId} and `year` = #{year} and pkey = #{pkey}
+    </select>
+</mapper>

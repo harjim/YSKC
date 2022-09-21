@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.FlowNodeDao">
+    <update id="updateList">
+        <foreach collection="updateList" item="item" separator=";">
+            update flowNode set nextNode=#{item.nextNode},prevNode=#{item.prevNode}
+            where id=#{item.id}
+        </foreach>
+    </update>
+    <delete id="delByFlow">
+        delete from flowNode where flowId=#{flowId}
+    </delete>
+    <select id="getNodes" resultType="com.yskc.ms.models.flow.FlowNodeModel">
+        select id,nodeName,`order`
+        from flowNode
+        where flowId=#{nodeType}
+    </select>
+    <select id="getByFlow" resultType="com.yskc.ms.models.flow.FlowNodeTreeModel">
+        select id as nodeId, flowId,nodeName,`type`,mode as auditType,nextNode,prevNode,nodeExpired,nodeNumber,skip
+        from flowNode where flowId=#{flowId}
+    </select>
+    <select id="getFirstNode" resultType="com.yskc.ms.entity.ms.FlowNodeEntity">
+        select * from flowNode where prevNode is null  and flowId=#{flowId}
+    </select>
+    <select id="getNodeByBranch" resultType="com.yskc.ms.entity.ms.FlowNodeEntity">
+        select fn.*
+        from flowBranch fb
+        inner join flowNode fn on fn.flowId=fb.flowId
+        where fb.flowId is not null and fb.id in (<foreach collection="branchIds" item="branchId" separator=",">
+        #{branchId}</foreach>)
+    </select>
+    <update id="updateFlow">
+        update flowNode
+        set lastUpdatorId = #{entity.lastUpdatorId},
+            lastUpdateTime = #{entity.lastUpdateTime},
+            flowId = #{entity.flowId},
+            nodeName = #{entity.nodeName},
+            type = #{entity.type},
+            mode = #{entity.mode},
+            nextNode = #{entity.nextNode},
+            prevNode = #{entity.prevNode},
+            parentId = #{entity.parentId},
+            nodeExpired = #{entity.nodeExpired},
+            nodeNumber = #{entity.nodeNumber},
+            skip = #{entity.skip}
+        where id = #{entity.id}
+    </update>
+</mapper>

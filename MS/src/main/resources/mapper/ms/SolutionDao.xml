@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yskc.ms.dao.ms.SolutionDao">
+    <update id="updateSolution">
+        update solution
+        set title=#{entity.title},
+            customer=#{entity.customer},
+            serveProject=#{entity.serveProject},
+            industry=#{entity.industry},
+            content=#{entity.content},
+            lastUpdatorId=#{entity.lastUpdatorId},
+            filePath=#{entity.filePath},
+            lastUpdateTime=#{entity.lastUpdateTime},
+            `description` = #{entity.description}
+        where id = #{entity.id}
+    </update>
+    <update id="updateRate">
+        update solution
+        set rate=#{rate},
+            rateUserId=#{userId},
+            rateTime=#{now}
+        where id = #{id}
+    </update>
+    <select id="getList" resultType="com.yskc.ms.models.solution.SolutionModel">
+        select s.id,s.title,s.customer,s.serveProject,s.industry,s.type,s.rate,s.filePath,s.description,
+        s.content,s.createTime,ys.realName creatorName from solution s
+        inner join ys_user ys on ys.id=s.creatorId
+        where s.type=#{query.type}
+        <if test="query.type == 0">
+            <include refid="com.yskc.ms.dao.ms.BaseDataDao.byCreator">
+                <property name="tableAlias" value="s"/>
+                <property name="perm" value="#{perm}"/>
+            </include>
+        </if>
+        <if test="query.customer != null and query.customer != ''">
+            and s.customer like "%"#{query.customer}"%"
+        </if>
+        <if test="query.title != null and query.title != ''">
+            and s.title like "%"#{query.title}"%"
+        </if>
+        <if test="query.industry != null and query.industry != ''">
+            and s.industry like "%"#{query.industry}"%"
+        </if>
+        <if test="query.serveProject != null and query.serveProject != ''">
+            and s.serveProject like "%"#{query.serveProject}"%"
+        </if>
+    </select>
+    <select id="getShareList" resultType="com.yskc.ms.models.solution.SolutionModel">
+        select s.id,s.title,s.customer,s.serveProject,s.industry,s.rate,s.type,s.filePath,
+        s.content,s.createTime,ys.realName creatorName from solution s
+        inner join ys_user ys on ys.id=s.creatorId
+        inner join (select distinct solutionId from solution_share ss
+        left join ys_dept yd on yd.id=ss.dataId and ss.type=1
+        where (ss.type=0 and ss.dataId=#{userId}) or (ss.type=1 and (
+        <foreach collection="paths" item="path" separator="or">
+            yd.fullPath like #{path}"%"
+        </foreach>
+        ))) t on t.solutionId=s.id
+        where 1=1
+        <if test="query.customer != null and query.customer != ''">
+            and s.customer like "%"#{query.customer}"%"
+        </if>
+        <if test="query.title != null and query.title != ''">
+            and s.title like "%"#{query.title}"%"
+        </if>
+        <if test="query.industry != null and query.industry != ''">
+            and s.industry like "%"#{query.industry}"%"
+        </if>
+        <if test="query.serveProject != null and query.serveProject != ''">
+            and s.serveProject like "%"#{query.serveProject}"%"
+        </if>
+    </select>
+</mapper>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.rs.dao.ReportDao">
+    <update id="saveCntOrTechIntro">
+        update p_report set
+        lastUpdatorId = #{report.lastUpdatorId},lastUpdateTime = #{report.lastUpdateTime},
+        msLastUpdatorId = #{report.msLastUpdatorId}
+        <if test="report.cnt != null">
+            ,cnt = #{report.cnt}
+        </if>
+        <if test="report.rdFee != null">
+            ,rdFee = #{report.rdFee}
+        </if>
+        <if test="report.techIntro != null">
+            ,techIntro = #{report.techIntro}
+        </if>
+        <if test="report.employeeAmount != null">
+            ,employeeAmount = #{report.employeeAmount}
+        </if>
+        <if test="report.revenueFcst != null">
+            ,revenueFcst=#{report.revenueFcst}
+        </if>
+        <if test="report.deptIds != null and report.deptIds != ''">
+            ,deptIds=#{report.deptIds}
+        </if>
+        where id = #{report.id}
+    </update>
+
+    <select id="queryByYear" resultType="com.yskc.rs.entity.ReportEntity">
+		 select id from p_report where companyId = #{companyId} and ryear = #{year}
+	</select>
+    <select id="getTechIntro" resultType="java.lang.String">
+		select techIntro from p_report where companyId = #{companyId} and ryear = #{year}
+	</select>
+    <select id="getPlanInfo" resultType="com.yskc.rs.models.project.PlanInfo">
+		select cnt,rdFee,employeeAmount,revenueFcst,deptIds from p_report where  companyId = #{companyId} and ryear = #{year}
+	</select>
+    <select id="getEmployeeAmount" resultType="java.lang.Integer">
+        select employeeAmount from p_report where companyId = #{companyId} and ryear = #{year}
+    </select>
+    <select id="getPlanInfoNoYear" resultType="java.lang.String">
+        select deptIds from p_report where  companyId = #{companyId}
+    </select>
+</mapper>

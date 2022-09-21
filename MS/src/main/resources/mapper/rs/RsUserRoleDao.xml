@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yskc.ms.dao.rs.RsUserRoleDao">
+
+    <!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.yskc.ms.entity.rs.RsUserRole" id="roleMap">
+        <result property="id" column="id"/>
+        <result property="userId" column="userId"/>
+        <result property="roleId" column="roleId"/>
+        <result property="companyId" column="companyId"/>
+        <result property="creatorId" column="creatorId"/>
+        <result property="createTime" column="createTime"/>
+    </resultMap>
+    <select id="getByRoleId" resultType="java.lang.Integer">
+        select count(id) from app_user_role where roleId = #{roleId}
+    </select>
+    <!--    where ur.userId = #{userId}-->
+    <select id="getUserMenu" resultType="com.yskc.ms.entity.rs.models.role.RsActionMenuModel">
+        select m.id,m.parentId,m.name,m.type from app_menu as m
+        LEFT JOIN app_role_menu as rm on m.id = rm.menuId
+        LEFT JOIN app_user_role as ur on rm.roleId = ur.roleId
+        where m.status = 1
+        GROUP BY m.id order by m.seq
+    </select>
+
+    <insert id="addBatch">
+        INSERT INTO app_user_role(userId,roleId,companyId,creatorId,createTime)
+        VALUES
+        <foreach collection="userRoles" item="ur" separator=",">
+            (#{ur.userId},#{ur.roleId},#{ur.companyId},#{ur.creatorId},#{ur.createTime})
+        </foreach>
+    </insert>
+    <delete id="delByUserId">
+        delete from app_user_role where userId = #{userId}
+        and companyId in (<foreach collection="companyIds" separator="," item="cId">#{cId}</foreach>)
+        and roleId in(<foreach collection="pageRoleIds" separator="," item="roleId">#{roleId}</foreach>)
+    </delete>
+    <select id="getUserRoleIds" resultType="java.lang.Integer">
+        select DISTINCT aur.roleId from app_user_role aur
+        inner join `user` u on u.id=aur.userId
+        where u.companyId = #{companyId}
+        and aur.roleId in
+        <foreach collection="roleIds" open="(" separator="," close=")" item="roleId">
+            #{roleId}
+        </foreach>
+    </select>
+    <select id="getGroupUserRole" resultType="java.lang.Integer">
+        select aur.id from app_user_role aur inner join `user` u on aur.userId=u.id
+        where u.companyId=#{groupId}
+        and aur.companyId in (<foreach collection="companyIds" separator="," item="cId">#{cId}</foreach>)
+    </select>
+</mapper>

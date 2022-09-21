@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.yskc.rs.dao.RevenueDao">
+    <select id="getByYearAndCompanyId" resultType="com.yskc.rs.models.revenuemanage.RevenueModel">
+        select id,companyId,`month`,revenue,`year` from c_revenue where companyId = #{companyId}
+            <if test="null != year">
+                and `year` = #{year}
+            </if>
+        ORDER BY `month` ASC
+    </select>
+    <delete id="del">
+        delete from c_revenue where companyId = #{companyId} and `year` = #{year}
+    </delete>
+    <select id="checkout" resultType="com.yskc.rs.entity.RevenueEntity">
+        select id,companyId,`month`,revenue,`year` from c_revenue where companyId = #{companyId} and `year` = #{year}
+    </select>
+    <insert id="batchInsert">
+        insert into c_revenue (creatorId,lastUpdatorId,createTime,lastUpdateTime,msCreatorId,msLastUpdatorId,companyId,`year`,`month`,revenue)
+        VALUES
+        <foreach collection="list" item="entity" separator=",">
+            (#{entity.creatorId},#{entity.lastUpdatorId},#{entity.createTime},#{entity.lastUpdateTime},#{entity.msCreatorId},
+             #{entity.msLastUpdatorId},#{entity.companyId},#{entity.year},#{entity.month},#{entity.revenue})
+        </foreach>
+    </insert>
+    <update id="batchUpdate">
+        <foreach collection="list" separator=";" item="entity">
+            update c_revenue set lastUpdatorId=#{entity.lastUpdatorId},lastUpdateTime=#{entity.lastUpdateTime},
+            msLastUpdatorId=#{entity.msLastUpdatorId},revenue=#{entity.revenue}
+            where companyId = #{entity.companyId} and `year`=#{entity.year} and `month`=#{entity.month}
+        </foreach>
+    </update>
+</mapper>
