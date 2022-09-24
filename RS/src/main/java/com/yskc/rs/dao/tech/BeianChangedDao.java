@@ -43,4 +43,13 @@ public interface BeianChangedDao extends BaseMapper<BeianChangedEntity> {
      * @return
      */
     Integer updateList(@Param("list") List<BeianChangedEntity> list);
+
+    /**
+     * 编辑beian时删除
+     * @param list
+     * @param beianId
+     * @param companyId
+     * @return
+     */
+    Integer delList(@Param("list") List<Integer> list,@Param("beianId") Integer beianId, @Param("companyId") Integer companyId);
 }

@@ -174,7 +174,7 @@ public class RsTProjectServiceImpl implements RsTProjectService {
         if (null != model.getProjectId()) {
             return rsBeianDao.updateBeian(model.getProjectId(), model.getPyear(), model.getRemark(), now, userInfo.getId()) > 0;
         }
-        if (model.getCompanyId() < 1) {
+        if (model.getCompanyId()==null||model.getCompanyId() < 1) {
             throw new OwnerException("未开通客户端，请开通后关联申报项目！");
         }
         return rsBeianDao.insert(new BeianEntity(model, userInfo.getId(), now)) > 0;

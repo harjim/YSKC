@@ -29,11 +29,18 @@
     <select id="getBySourceProjectId" resultType="java.lang.Integer">
         select id from t_beian where sourceProjectId=#{sourceProjectId} limit 1
     </select>
-    <select id="getList" resultType="com.yskc.ms.models.tech.BeianInfoModel">
-        select t.id as beianId,t.year,t.pname,t.equipment,t.initWorkCapital,t.construction,t.completeRate,
-        t.equipmentCost,t.initWorkCapitalCost,
-        t.constructionCost,t.beianNo,beianDate,t.productId,t.sourceProjectId as projectId
+    <select id="getList" resultType="com.yskc.ms.models.tech.BeianExportModel">
+        select DISTINCT t.id as beianId,t.year,t.pname,t.powerUsed,t.energyUsed,t.projectNo,t.changedCnt,
+        t.equipment,t.initWorkCapital,t.construction,t.completeRate,t.changedDates,
+        t.beianNo,beianDate,t.productId,t.sourceProjectId as projectId,t.beginDate,t.endDate,
+        ts.totalAmountTax,ts.totalAmount,t.equipmentCnt,t.equipmentQuantity,
+        td.taxAmount,tc.amount,t.accountName,t.accountPassword
         from t_beian t
+        left join t_beian_summary ts on ts.beianId = t.id
+        left join (select sum(td.taxAmount) as taxAmount,ti.beianId from t_investment ti
+        left join t_invoice_detail td on ti.id = td.investmentId group by ti.beianId) td on td.beianId = t.id
+        left join (select sum(tc.amount) as amount,ti.beianId from t_investment ti
+        left join t_contract_detail tc on ti.id = tc.investmentId group by ti.beianId) tc on tc.beianId = t.id
         where t.sourceProjectId in
         <foreach collection="projectIds" item="projectId" open="(" separator="," close=")">
             #{projectId}
@@ -41,15 +48,16 @@
     </select>
     <select id="getExport" resultType="com.yskc.ms.models.tech.BeianExportModel">
         select DISTINCT t.id as beianId,t.year,t.pname,t.powerUsed,t.energyUsed,t.projectNo,t.changedCnt,
-               t.equipment,t.initWorkCapital,t.construction,t.completeRate,
+               t.equipment,t.initWorkCapital,t.construction,t.completeRate,t.changedDates,
         t.beianNo,beianDate,t.productId,t.sourceProjectId as projectId,t.beginDate,t.endDate,
                ts.totalAmountTax,ts.totalAmount,t.equipmentCnt,t.equipmentQuantity,
-               td.taxAmount,tc.amount,t.accountName,t.accountPassword
+        td.taxAmount,tc.amount,t.accountName,t.accountPassword
         from t_beian t
         left join t_beian_summary ts on ts.beianId = t.id
-        left join t_investment ti on ti.beianId = t.id
-        left join t_contract_detail tc on ti.id = tc.investmentId
-        left join t_invoice_detail td on ti.id = td.investmentId
+        left join (select sum(td.taxAmount) as taxAmount,ti.beianId from t_investment ti
+        left join t_invoice_detail td on ti.id = td.investmentId group by ti.beianId) td on td.beianId = t.id
+        left join (select sum(tc.amount) as amount,ti.beianId from t_investment ti
+        left join t_contract_detail tc on ti.id = tc.investmentId group by ti.beianId) tc on tc.beianId = t.id
         where t.sourceProjectId in
         <foreach collection="projectIds" item="projectId" open="(" separator="," close=")">
             #{projectId}

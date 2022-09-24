@@ -26,7 +26,11 @@
         <span style="margin-right: 15px;"><b>转账总金额：</b><span><b><a>{{ amountTotal }}</a></b></span></span>
       </template>
       <vxe-table-column field="seq" title="序号" width="60" align="center" header-align="center"></vxe-table-column>
-      <vxe-table-column title="付款记账凭证字号" field="voucherNo" width="140" align="left" header-align="center"></vxe-table-column>
+      <vxe-table-column title="付款记账凭证字号" field="voucherNo" width="140" align="left" header-align="center">
+        <template #default="{row}">
+          <a @click="onEditBankReceipts(row)" title="点击编辑付款">{{ row.voucherNo }}</a>
+        </template>
+      </vxe-table-column>
       <vxe-table-column title="记账日期" field="transferDate" width="120" align="left" header-align="center">
         <template #default="{row}">
           {{ moment(row.transferDate).format("YYYY-MM-DD") }}
@@ -66,6 +70,7 @@
       </vxe-table-column>
     </vxe-grid>
     <choice-modal v-bind="$attrs" :investRecord="investRecord" ref="choiceModal" @updateTable="updateTable"></choice-modal>
+    <AddBankReceiptModal ref="addBankReceiptModal" />
   </div>
 </template>
 
@@ -75,11 +80,13 @@ import { cloneDeep } from 'lodash'
 import moment from 'moment'
 import ChoiceModal from './BankReceiptModules/ChoiceModal'
 import { mapState } from 'vuex'
+import AddBankReceiptModal from './BankReceiptModules/AddBankReceiptModal.vue'
 
 export default {
   name: 'BankReceipts',
   components: {
-    ChoiceModal
+    ChoiceModal,
+    AddBankReceiptModal
   },
   props: {
     investRecord: {
@@ -125,6 +132,9 @@ export default {
         })
       }
       this.$refs.choiceModal.show('选择付款', ids, cloneDeep(this.tableDatas))
+    },
+    onEditBankReceipts (record) {
+      this.$refs.addBankReceiptModal.edit(`编辑付款信息`, record)
     },
     resetTableData () {
       this.tableDatas = []

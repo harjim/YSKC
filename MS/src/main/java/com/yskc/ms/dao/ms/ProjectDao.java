@@ -110,7 +110,7 @@ public interface ProjectDao extends BaseMapper<Project> {
      * @param query
      * @return
      */
-    List<BeianInfoModel> getBeianProjects(@Param("page") Pagination page, @Param("dataPerm") DataPermModel dataPerm, @Param("query") QueryBeianModel query);
+    List<BeianExportModel> getBeianProjects(@Param("page") Pagination page, @Param("dataPerm") DataPermModel dataPerm, @Param("query") QueryBeianModel query);
     /**
      * 获取备案项目列表导出
      *

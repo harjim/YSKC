@@ -132,18 +132,16 @@
         </a-layout-content>
       </a-layout>
       <upload-modal ref="uploadModal" :patternMap="patternMap"></upload-modal>
-      <preview-modal url="/techAttachments/preview" ref="previewModal"></preview-modal>
     </a-layout>
   </a-spin>
 </template>
 <script>
 import moment from 'moment'
-import { PreviewModal } from '@/components'
 import uploadModal from '../uploadModal'
+
 export default {
   name: 'DataListTab',
   components: {
-    PreviewModal,
     uploadModal
   },
   created () {
@@ -298,7 +296,12 @@ export default {
         this.$message.info('请先上传文件')
         return
       }
-      this.$refs.previewModal.show(file.filePath, file.fileName !== undefined ? file.fileName : '')
+      this.$preview({
+        filePath: file.filePath,
+        docName: file.fileName || '',
+        visible: true,
+        url: '/techAttachments/preview'
+      })
     },
     download (record, file) {
       this.$exportData('/techAttachments/download', { id: file.id, filePath: file.filePath, fileName: file.fileName }, file.fileName, this.$message)

@@ -16,7 +16,6 @@ import FooterToolbar from '@/components/FooterToolbar'
 import IconSelector from '@/components/IconSelector'
 import MultiTab from '@/components/MultiTab'
 import Preview from '@/components/Preview'
-import PreviewModal from '@/components/PreviewModal'
 import Result from '@/components/Result'
 import SelectDown from '@/components/SelectDown'
 import SetRdDept from '@/components/SetRdDept'
@@ -49,7 +48,6 @@ export {
   YsDivider,
   ystable,
   Preview,
-  PreviewModal,
   SelectDown,
   EditTableTitle,
   TooltipTable,

@@ -83,7 +83,6 @@
             </template>
           </vxe-table-column>
         </vxe-table>
-        <preview-modal ref="previewModal"/>
       </a-spin>
     </div>
     <template slot="footer">
@@ -96,15 +95,13 @@
 <script>
 import ystable from '@/components/Table/ystable'
 import UploadFile from '@/components/UploadFile'
-import { PreviewModal } from '@/components'
 import { getPatentFiles, getPatentOpinions } from '@/api/patent/patent'
 
 export default {
   name: 'AttachmentsModal',
   components: {
     ystable,
-    UploadFile,
-    PreviewModal
+    UploadFile
   },
   data () {
     return {
@@ -228,7 +225,11 @@ export default {
         return
       }
       const filename = this.getPatentFileName(filePath)
-      this.$refs.previewModal.show(filePath, filename)
+      this.$preview({
+        filePath: filePath,
+        docName: filename || '',
+        visible: true
+      })
     },
     downloadFile (path, record, file) {
       if (this.isSpecial(record.fileType)) {

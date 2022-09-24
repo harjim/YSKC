@@ -17,6 +17,7 @@ import VueParticles from 'vue-particles'
 // import './mock'
 
 import bootstrap from './core/bootstrap'
+import Preview from '@/components/PreviewModal'
 import './core/use'
 import './permission' // permission control
 import './utils/filter' // global filter
@@ -29,6 +30,8 @@ Vue.use(VueParticles)
 Vue.use(VueAxios)
 Vue.use(myPlugin)
 Vue.use(VXETable)
+
+Vue.prototype.$preview = Preview
 
 new Vue({
   router,

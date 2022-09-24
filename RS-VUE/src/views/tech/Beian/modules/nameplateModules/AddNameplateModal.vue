@@ -87,15 +87,11 @@
         <a-row :gutter="24">
           <a-col span="12">
             <a-form-item label="设备安装位置" :labelCol="labelCol" :wrapperCol="wrapperCol">
-              <a-input-group
-                compact
+              <a-auto-complete
+                :dataSource="address"
+                placeholder="请输入设备安装位置"
                 v-decorator="['setPlace', { rules: [{ required: true, message: '请输入设备安装位置' }] }]"
-              >
-                <a-select style="width: 60%" placeholder="请选择" v-decorator="['setP', { rules: [{ required: true, message: '请选择' }] }]">
-                  <a-select-option v-for="item in address" :key="item">{{ item }}</a-select-option>
-                </a-select>
-                <a-input style="width: 40%" placeholder="请输入" v-decorator="['setPlace', { rules: [{ required: true, message: '请输入' }] }]"/>
-              </a-input-group>
+              />
             </a-form-item>
           </a-col>
           <a-col span="12">
@@ -103,9 +99,11 @@
               <a-upload
                 :fileList="files['filePath']"
                 :multiple="false"
-                @preview="download('filePath')"
-                :beforeUpload="file => beforeUpload(file, 'filePath')"
+                @preview="preview"
+                @download="download('filePath')"
                 @change="file => handleChange(file, 'filePath')"
+                :beforeUpload="file => beforeUpload(file, 'filePath')"
+                :showUploadList="{ showPreviewIcon: true, showRemoveIcon: true, showDownloadIcon: true }"
                 v-decorator="[
                   'filePathUpload',
                   { rules: [{ required: true, type: 'array', transform: transformUpload, message: '请上传附件' }] }
@@ -125,6 +123,7 @@
 import moment from 'moment'
 import { mapState } from 'vuex'
 import SearchSelect from '../SearchSelect'
+import { get } from 'lodash'
 
 export default {
   name: '',
@@ -204,7 +203,6 @@ export default {
         if (!error) {
           values['filePath'] = this.files['filePath'][0].url
           values['ename'] = values['ename'][0]
-          values.setPlace = values.setP + values.setPlace
           this.tableDatas.push(values)
           this.$emit('updateTableDatas', this.tableDatas)
           this.isVisible = false
@@ -212,6 +210,9 @@ export default {
       })
     },
     beforeUpload (file, key) {
+      if (!this.$checkFileSize(file, this.$message)) {
+        return
+      }
       const param = new FormData()
       param.append('file', file)
       const config = {
@@ -242,6 +243,15 @@ export default {
       this.btnDisabled = false
       if (file.file.status === 'removed') {
         this.files[key] = file.fileList
+      }
+    },
+    preview (file) {
+      if (file.url) {
+        this.$preview({
+          filePath: file.url,
+          docName: get(file, 'name', ''),
+          visible: true
+        })
       }
     },
     download (key) {

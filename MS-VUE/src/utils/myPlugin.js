@@ -2,6 +2,7 @@ import store from '@/store/index'
 import { exportServe } from '@/utils/request'
 import * as dd from 'dingtalk-jsapi'
 import moment from 'moment'
+// eslint-disable-next-line no-unused-vars
 const Qs = require('qs')
 const notInDingTalk = dd.env.platform === 'notInDingTalk'
 const cachedCode = {}

@@ -71,16 +71,15 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import { PreviewModal } from '@/components'
 import ResultUploadModal from '@/views/project/modules/ResultUploadModal'
 import { getTemplateContent } from '@/docTemplate/Templates/js/templateContentType'
 import upload from '@/components/UploadModal/TrustUpload.vue'
 import uploadImg from '@/components/UploadImg/UploadImg.vue'
+
 export default {
   name: 'TrustOrgForm',
   components: {
     ResultUploadModal,
-    PreviewModal,
     upload,
     uploadImg
   },
@@ -192,10 +191,6 @@ export default {
     },
     downloadFile (row) {
       this.$exportData('/sysDocument/downloadFile', { id: row.id }, row.fileName, this.$message)
-    },
-    preview (record) {
-      const txt = this.getExtension(record.filePath)
-      this.$refs.previewModal.show(record.filePath, record.fileName + txt)
     },
     onUpload () {
       this.$refs.upload.show(this.stage)

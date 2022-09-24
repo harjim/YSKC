@@ -60,7 +60,6 @@
         </vxe-table-column>
       </ystable>
     </div>
-    <preview-modal ref="previewModal"></preview-modal>
     <upload-file
       :paramData="paramData"
       :haveMonth="true"
@@ -75,7 +74,7 @@
 </template>
 
 <script>
-import { UploadFile, PreviewModal, SelectProject } from '@/components'
+import { UploadFile, SelectProject } from '@/components'
 import ystable from '@/components/Table/ystable'
 import yearMiXin from '@/utils/yearMixin'
 
@@ -95,7 +94,6 @@ export default {
   components: {
     ystable,
     UploadFile,
-    PreviewModal,
     SelectProject
   },
   data () {
@@ -146,7 +144,11 @@ export default {
         this.$message.info('请先上传文件')
         return
       }
-      this.$refs.previewModal.show(record.filePath, record.fileName !== undefined ? record.fileName : '')
+      this.$preview({
+        filePath: record.filePath,
+        docName: record.fileName || '',
+        visible: true
+      })
     },
     downloadFile (record) {
       this.$exportData('/sysDocument/downloadFile', { id: record.id }, record.fileName, this.$message)

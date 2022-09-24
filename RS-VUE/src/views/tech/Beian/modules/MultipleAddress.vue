@@ -3,8 +3,8 @@
     <div v-for="(item, index) in list" :key="index" class="list__item">
       <a-input :value="item" placeholder="请输入" @change="e => handleChange(e.target.value, index)" />
       <div class="list__item__icon">
-        <a-icon v-if="list.length > 1" style="font-size: 24px; color: red;" type="minus-circle" @click="delItem(index)" />
-        <a-icon v-if="index === list.length-1" style="font-size: 24px; color: #1890ff;" type="plus-circle" @click="addItem" />
+        <a-icon :style="{ fontSize: '24px', color: list.length === 1 ? '' : 'red' }" type="minus-circle" @click="delItem(index)" />
+        <a-icon v-if="index === 0" style="font-size: 24px; color: #1890ff;" type="plus-circle" @click="addItem" />
       </div>
     </div>
   </div>
@@ -33,10 +33,11 @@ export default {
       this.triggerChange(this.list)
     },
     addItem () {
-      this.list.push('')
+      this.list.unshift('')
       this.triggerChange(this.list)
     },
     delItem (i) {
+      if (this.list.length === 1) return
       this.list.splice(i, 1)
       this.triggerChange(this.list)
     },

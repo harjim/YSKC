@@ -58,19 +58,16 @@
       :projectId="projectId"
       isAppendixForm
       accept="image/png,image/jpg,image/jpeg,image/gif,application/pdf"></upload>
-    <preview-modal url="/document/appendixPreview" ref="previewModal"></preview-modal>
   </div>
 </template>
 <script>
 import { getTemplateContent } from '@/docTemplate/Templates/js/templateContentType'
 import moment from 'moment'
-import PreviewModal from '@/components/PreviewModal'
 import upload from '@/components/UploadModal/TrustUpload.vue'
 
 export default {
   name: 'TrustAppendixForm',
   components: {
-    PreviewModal,
     upload
   },
 
@@ -156,7 +153,12 @@ export default {
     },
     onPreview (record) {
       const txt = this.getExtension(record.filePath)
-      this.$refs.previewModal.show(record.filePath, record.fileName + txt)
+      this.$preview({
+        filePath: record.filePath,
+        docName: record.fileName + txt,
+        visible: true,
+        url: '/document/appendixPreview'
+      })
     },
     onEdit (record) {
       this.$refs.upload.edit(this.stage, record)

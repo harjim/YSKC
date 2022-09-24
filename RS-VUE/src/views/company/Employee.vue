@@ -169,7 +169,7 @@
           <vxe-table-column title="签名" field="autographUrl" width="130" align="center">
             <template v-slot="{ row }">
               <div v-if="row.autographUrl">
-                <a @click="$refs.previewModal.show(row.autographUrl, `[${row.ename}]签名${row.autographUrl.substring(row.autographUrl.lastIndexOf('.'))}`)"><img :src="row.autographUrl" style="width:100px;height:45px;"></a>&nbsp;
+                <a @click="preview(row.autographUrl, `[${row.ename}]签名${row.autographUrl.substring(row.autographUrl.lastIndexOf('.'))}`)"><img :src="row.autographUrl" style="width:100px;height:45px;"></a>&nbsp;
                 <a-popconfirm
                   v-if="$auth('company:employee:uploadAutograph')"
                   title="是否确定删除签名?"
@@ -245,7 +245,6 @@
         @error="error"
       />
       <set-role-type-modal ref="setRoleType" @ok="search"/>
-      <preview-modal url="/document/appendixPreview" ref="previewModal" />
       <upload-autograph-modal ref="uploadAutograph" @ok="search"/>
       <config-column-modal ref="configColumn" @ok="reloadTable" />
     </a-spin>
@@ -256,7 +255,7 @@
 import SetRoleTypeModal from './modules/SetRoleTypeModal'
 import UploadAutographModal from './modules/UploadAutographModal'
 import ConfigColumnModal from './modules/ConfigColumnModal'
-import { STable, UploadModal, Ellipsis, EditTableTitle, PreviewModal } from '@/components'
+import { STable, UploadModal, Ellipsis, EditTableTitle } from '@/components'
 import EmployeeModal from './modules/EmployeeModal'
 import moment from 'moment'
 import { mixinLoadTitleObject } from '@/utils/mixin.js'
@@ -308,7 +307,6 @@ export default {
     ystable,
     SetRoleTypeModal,
     UploadAutographModal,
-    PreviewModal,
     ConfigColumnModal
   },
   data () {
@@ -357,6 +355,14 @@ export default {
   },
   methods: {
     moment,
+    preview (filePath, fileName) {
+      this.$preview({
+        filePath: filePath,
+        docName: fileName,
+        visible: true,
+        url: '/document/appendixPreview'
+      })
+    },
     getTableField () {
       this.$http.get('/sysDictionary/getTableField', { params: { tableId: this.tableField.tableId } })
         .then(res => {

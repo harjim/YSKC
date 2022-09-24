@@ -25,7 +25,7 @@
             <a-form-item
               :labelCol="labelCol"
               :wrapperCol="wrapperCol"
-              :required="true"
+              :required="saveAuth"
               style="margin-bottom:0;"
               label="项目区间"
             >
@@ -150,7 +150,39 @@
                   { rules: [{ required: true, message: '请输入项目建设地点', whitespace: true }] }
                 ]"
               />
-              <template v-else>{{ beianInfo.constructionPlace ? beianInfo.constructionPlace : ' -' }}</template>
+              <template v-else>{{ JSON.parse(get(beianInfo, 'constructionPlace', '[]')).join(', ') }}</template>
+            </a-form-item>
+          </a-col>
+        </a-row>
+        <a-row :gutter="24">
+          <a-col span="12">
+            <a-form-item label="用电(万kW·h)" :labelCol="labelCol" :wrapperCol="wrapperCol">
+              <template>
+                {{ get(beianInfo, 'powerUsed', '-') }}
+              </template>
+            </a-form-item>
+          </a-col>
+          <a-col span="12">
+            <a-form-item label="项目用能" :labelCol="labelCol" :wrapperCol="wrapperCol">
+              <template>
+                {{ get(beianInfo, 'energyUsed', '-') }}
+              </template>
+            </a-form-item>
+          </a-col>
+        </a-row>
+        <a-row :gutter="24">
+          <a-col span="12">
+            <a-form-item label="备案资产项数" :labelCol="labelCol" :wrapperCol="wrapperCol">
+              <template>
+                {{ get(beianInfo, 'equipmentCnt', '-') }}
+              </template>
+            </a-form-item>
+          </a-col>
+          <a-col span="12">
+            <a-form-item label="备案资产数量" :labelCol="labelCol" :wrapperCol="wrapperCol">
+              <template>
+                {{ get(beianInfo, 'equipmentQuantity', '-') }}
+              </template>
             </a-form-item>
           </a-col>
         </a-row>
@@ -169,7 +201,7 @@
         </a-row>
         <a-row :gutter="24">
           <a-col span="24">
-            <a-form-item label="备案经费" required :labelCol="labelCol24" :wrapperCol="wrapperCol24">
+            <a-form-item label="备案经费" :required="saveAuth" :labelCol="labelCol24" :wrapperCol="wrapperCol24">
               <BaseInfoTable :record="beianInfo" :saveAuth="saveAuth" />
             </a-form-item>
           </a-col>
@@ -181,12 +213,14 @@
                 :disabled="!saveAuth"
                 :fileList="files['scanFilePath']"
                 :multiple="false"
-                @preview="download('scanFilePath')"
-                :beforeUpload="file => beforeUpload(file, 'scanFilePath')"
+                @preview="preview"
+                @download="download('scanFilePath')"
                 @change="file => handleChange(file, 'scanFilePath')"
+                :beforeUpload="file => beforeUpload(file, 'scanFilePath[0]')"
+                :showUploadList="{ showPreviewIcon: true, showRemoveIcon: true, showDownloadIcon: true }"
                 v-decorator="[
-                  'scanFilePathUpload',
-                  { rules: [{ required: true, type: 'array', transform: transformUpload, message: '请上传附件' }] }
+                  'scanFilePath',
+                  { rules: [{ required: saveAuth, message: '请上传附件' }] }
                 ]"
               >
                 <a-button> <a-icon type="upload" />上传</a-button>
@@ -200,12 +234,14 @@
                 :disabled="!saveAuth"
                 :fileList="files['filePath']"
                 :multiple="true"
-                @preview="multipleDownload"
-                :beforeUpload="file => multipleBeforeUpload(file, 'filePath')"
+                @preview="preview"
+                @download="multipleDownload"
                 @change="file => handleChange(file, 'filePath')"
+                :beforeUpload="file => multipleBeforeUpload(file, 'filePath')"
+                :showUploadList="{ showPreviewIcon: true, showRemoveIcon: true, showDownloadIcon: true }"
                 v-decorator="[
-                  'filePathUpload',
-                  { rules: [{ required: true, type: 'array', transform: transformUpload, message: '请上传附件' }] }
+                  'filePath',
+                  { rules: [{ required: saveAuth, message: '请上传附件' }] }
                 ]"
               >
                 <a-button> <a-icon type="upload" />上传</a-button>
@@ -215,7 +251,7 @@
         </a-row>
         <a-row :gutter="24">
           <a-col span="24">
-            <a-form-item required label="变更签发" :labelCol="labelCol24" :wrapperCol="wrapperCol24">
+            <a-form-item :required="saveAuth" label="变更签发" :labelCol="labelCol24" :wrapperCol="wrapperCol24">
               <vxe-grid
                 show-overflow
                 highlight-hover-row
@@ -230,31 +266,32 @@
                       <a-date-picker
                         v-if="saveAuth"
                         style="width: 100%"
-                        v-decorator="[`changedList[${$rowIndex}]changeLetterDate`, { rules: [{ required: true, message: '请选择日期' }] }]"
+                        v-decorator="[`changedList[${$rowIndex}]changeLetterDate`, { rules: [{ required: true, message: '请选择日期' }], initialValue: row.changeLetterDate ? moment(row.changeLetterDate) : null }]"
                       />
                       <span v-else>{{ row.changeLetterDate }}</span>
                     </a-form-item>
                   </template>
                 </vxe-table-column>
-                <vxe-table-column field="changeFilePath" title="变更函" width="160">
+                <vxe-table-column field="changeFilePath" title="变更函" width="240">
                   <template #default="{ row, $rowIndex }">
                     <a-form-item>
                       <a-upload
-                        v-if="saveAuth"
                         :disabled="!saveAuth"
-                        :fileList="files['changeFilePath']"
+                        :fileList="[]"
                         :multiple="false"
                         @preview="download('changeFilePath')"
-                        :beforeUpload="file => beforeUpload(file, 'changeFilePath')"
-                        @change="file => handleChange(file, 'changeFilePath')"
+                        :beforeUpload="file => beforeUpload(file, `changedList[${$rowIndex}][0]`)"
+                        @change="file => handleChange(file, `changedList[${$rowIndex}]`)"
                         v-decorator="[
-                          `changedList[${$rowIndex}]changeFilePathUpload`,
-                          { rules: [{ required: true, type: 'array', transform: transformUpload, message: '请上传附件' }] }
+                          `changedList[${$rowIndex}]changeFilePath`,
+                          { rules: [{ required: true, message: '请上传附件' }], initialValue: row.changeFilePath }
                         ]"
                       >
-                        <a-button> <a-icon type="upload" />上传</a-button>
+                        <span style="width: 100%;display: flex;">
+                          <a-input disabled style="width: 65%" :value="get(files, `changedList[${$rowIndex}][0].name`)" />
+                          <a-button style="width: 35%"> <a-icon type="upload" />上传</a-button>
+                        </span>
                       </a-upload>
-                      <span v-else>{{ row.changeFilePath }}</span>
                     </a-form-item>
                   </template>
                 </vxe-table-column>
@@ -263,68 +300,19 @@
                     <a-form-item>
                       <a-textarea
                         v-if="saveAuth"
-                        auto-size
+                        :auto-size="{ minRows: 2, maxRows: 6 }"
                         style="width: 100%"
-                        v-decorator="[`changedList[${$rowIndex}]changeContent`, { rules: [{ required: true, message: '请输入变更内容' }] }]"
+                        v-decorator="[`changedList[${$rowIndex}]changeContent`, { rules: [{ required: true, message: '请输入变更内容' }], initialValue: row.changeContent }]"
                       />
                       <span v-else>{{ row.changeContent }}</span>
                     </a-form-item>
                   </template>
                 </vxe-table-column>
               </vxe-grid>
-              <a-button block icon="plus" type="dashed" @click="addChanged">添加</a-button>
+              <a-button v-if="saveAuth" block icon="plus" type="dashed" @click="addChanged">添加</a-button>
             </a-form-item>
           </a-col>
         </a-row>
-        <template v-if="isChange">
-          <a-row :gutter="24">
-            <a-col span="12">
-              <a-form-item label="变更函签发时间" :labelCol="labelCol" :wrapperCol="wrapperCol">
-                <a-date-picker
-                  v-if="saveAuth"
-                  v-decorator="['changeLetterDate', { rules: [{ required: true, message: '变更函签发时间' }] }]"
-                ></a-date-picker>
-                <template v-else>{{
-                  beianInfo.changeLetterDate ? moment(beianInfo.changeLetterDate).format('YYYY-MM-DD') : ' -'
-                }}</template>
-              </a-form-item>
-            </a-col>
-            <a-col span="12">
-              <a-form-item label="变更函" :labelCol="labelCol" :wrapperCol="wrapperCol">
-                <a-upload
-                  :disabled="!saveAuth"
-                  :fileList="files['changeFilePath']"
-                  :multiple="false"
-                  @preview="download('changeFilePath')"
-                  :beforeUpload="file => beforeUpload(file, 'changeFilePath')"
-                  @change="file => handleChange(file, 'changeFilePath')"
-                  v-decorator="[
-                    'changeFilePathUpload',
-                    { rules: [{ required: true, type: 'array', transform: transformUpload, message: '请上传附件' }] }
-                  ]"
-                >
-                  <a-button> <a-icon type="upload" />上传</a-button>
-                </a-upload>
-              </a-form-item>
-            </a-col>
-          </a-row>
-          <a-row :gutter="24">
-            <a-col span="24">
-              <a-form-item label="变更内容" :labelCol="labelCol24" :wrapperCol="wrapperCol24">
-                <a-textarea
-                  v-if="saveAuth"
-                  placeholder="变更内容"
-                  rows="3"
-                  v-decorator="[
-                    'changeContent',
-                    { rules: [{ required: true, message: '变更内容', whitespace: true }] }
-                  ]"
-                ></a-textarea>
-                <template v-else>{{ beianInfo.changeContent ? beianInfo.changeContent : ' -' }}</template>
-              </a-form-item>
-            </a-col>
-          </a-row>
-        </template>
         <div style="text-align:center;padding-bottom:20px;">
           <a-button type="primary" @click="save" v-if="saveAuth" :loading="btnLoading">保存</a-button>
         </div>
@@ -334,12 +322,12 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
 import { getBeianInfo } from '@/api/tech/BeiAnGuanLi/index'
+import { cloneDeep, get, set, sum } from 'lodash'
 import moment from 'moment'
-import MultipleAddress from './modules/MultipleAddress.vue'
+import { mapGetters } from 'vuex'
 import BaseInfoTable from './modules/BaseInfoTable.vue'
-import { set } from 'lodash'
+import MultipleAddress from './modules/MultipleAddress.vue'
 
 export default {
   name: 'BaseInfo',
@@ -371,7 +359,7 @@ export default {
       },
       isChange: false,
       spinning: false,
-      files: { filePath: [], scanFilePath: [], changeFilePath: [] },
+      files: { filePath: [], scanFilePath: [], changedList: [] },
       totalAmount: undefined,
       totalBeianInvest: undefined,
       beianInfo: {},
@@ -382,8 +370,17 @@ export default {
   },
   created () {
     this.form = this.$form.createForm(this, { onValuesChange: (props, values) => {
-      console.log(values)
-      console.log(props.form.getFieldsValue())
+      if (values.equipment || values.equipmentTax || values.construction || values.constructionTax || values.initWorkCapital || values.initWorkCapitalTax) {
+        this.$nextTick(() => {
+          const { equipment = 0, equipmentTax = 0, construction = 0, constructionTax = 0, initWorkCapital = 0, initWorkCapitalTax = 0 } = this.form.getFieldsValue(['equipment', 'equipmentTax', 'construction', 'constructionTax', 'initWorkCapital', 'initWorkCapitalTax'])
+          this.form.setFieldsValue({
+            totalAmount: sum([+equipment, +construction, +initWorkCapital]),
+            totalAmountTax: sum([+equipmentTax, +constructionTax, +initWorkCapitalTax]),
+            amount: sum([+construction, +equipment]),
+            amountTax: sum([+constructionTax, +equipmentTax])
+          })
+        })
+      }
     } })
   },
   mounted () {
@@ -393,6 +390,7 @@ export default {
   methods: {
     ...mapGetters(['userInfo']),
     moment,
+    get,
     inputNumberChange (value, field) {
       const obj = this.form.getFieldsValue(['equipment', 'construction', 'initWorkCapital'])
       obj[field] = value
@@ -433,29 +431,22 @@ export default {
           this.btnLoading = true
           const data = { ...values }
           data.id = this.record.id
-          for (const key in this.files) {
-            if (this.files[key].length) {
-              // data[key] = this.files[key][0].url
-              const tempAry = this.files[key]
-              let url = ''
-              tempAry.forEach((item, index) => {
-                url += item.url + ','
-              })
-              url = url.substring(0, url.length - 1)
-              data[key] = url
-            }
-          }
-          if (!data.change) {
-            data['changeLetterDate'] = ''
-            data['changeFilePath'] = ''
-            data['changeContent'] = ''
-          }
+          data.beginDate = data.beginDate.format('YYYY-MM-DD')
+          data.beianDate = data.beianDate.format('YYYY-MM-DD')
+          data.endDate = data.endDate.format('YYYY-MM-DD')
+          data.scanFilePath = this.files.scanFilePath[0].url
+          data.filePath = this.files.filePath.map(item => item.url).join(',')
+          data.changedList.forEach((item, index) => {
+            item.changeLetterDate = item.changeLetterDate.format('YYYY-MM-DD')
+            item.changeFilePath = this.files.changedList[index][0].url
+          })
           this.$http
             .post('/beian/save', data)
             .then(res => {
               if (res.success && res.data) {
                 this.$emit('getBaseInfo', data)
                 this.$message.success('保存成功')
+                this.$store.commit('common/SET_ADDRESS', JSON.parse(get(data, 'constructionPlace', '[]')))
               } else {
                 this.$message.error(res.errorMessage ? res.errorMessage : '保存失败')
                 console.log(`save function error ${res.errorCode} : ${res.errorMessage} `)
@@ -482,35 +473,25 @@ export default {
             this.$emit('getBaseInfo', response.data)
             this.isChange = this.beianInfo.change
             this.$nextTick(() => {
-              for (const key in this.files) {
-                if (this.beianInfo[key]) {
-                  const filePath = this.beianInfo[key]
-                  const filePaths = filePath.split(',')
-                  if (Array.isArray(filePaths)) {
-                    filePaths.forEach(item => {
-                      const arr = item.split('/')
-                      const fileName = arr[arr.length - 1].substr(13)
-                      this.files[key].push({
-                        uid: item,
-                        name: fileName,
-                        status: 'done',
-                        url: item
-                      })
-                    })
-                  } else {
-                    const arr = filePath.split('/')
-                    const fileName = arr[arr.length - 1].substr(13)
-                    this.files[key] = [
-                      {
-                        uid: filePath,
-                        name: fileName,
-                        status: 'done',
-                        url: filePath
-                      }
-                    ]
-                  }
-                }
-              }
+              const scanFilePath = [{
+                uid: this.beianInfo.scanFilePath,
+                name: this.beianInfo.scanFilePath.substring(this.beianInfo.scanFilePath.lastIndexOf('/') + 14),
+                status: 'done',
+                url: this.beianInfo.scanFilePath
+              }]
+              const filePath = this.beianInfo.filePath.split(',').map(item => ({
+                uid: item,
+                name: item.substring(item.lastIndexOf('/') + 14),
+                status: 'done',
+                url: item
+              }))
+              const changedList = this.beianInfo.changedList.map(item => ([{
+                uid: item.changeFilePath,
+                name: item.changeFilePath.substring(item.changeFilePath.lastIndexOf('/') + 14),
+                status: 'done',
+                url: item.changeFilePath
+              }]))
+              this.files = { scanFilePath, filePath, changedList }
               this.handleInitForm(this.beianInfo)
             })
           } else {
@@ -534,6 +515,9 @@ export default {
       this.handleGetBeianInfo()
     },
     beforeUpload (file, key) {
+      if (!this.$checkFileSize(file, this.$message)) {
+        return
+      }
       const param = new FormData()
       param.append('file', file)
       const config = {
@@ -544,14 +528,14 @@ export default {
         .post('/beian/upload', param, config)
         .then(res => {
           if (res.success) {
-            this.files[key] = [
-              {
-                uid: res.data.fileName,
-                name: res.data.fileName,
-                status: 'done',
-                url: res.data.filePath
-              }
-            ]
+            const { files } = this
+            set(files, key, {
+              uid: res.data.fileName,
+              name: res.data.fileName,
+              status: 'done',
+              url: res.data.filePath
+            })
+            this.files = cloneDeep(files)
           } else {
             this.$message.error(res.errorMessage ? res.errorMessage : '上传失败')
           }
@@ -560,6 +544,9 @@ export default {
       return false
     },
     multipleBeforeUpload (file, key) {
+      if (!this.$checkFileSize(file, this.$message)) {
+        return
+      }
       const param = new FormData()
       param.append('file', file)
       const config = {
@@ -585,7 +572,16 @@ export default {
     },
     handleChange (file, key) {
       if (file.file.status === 'removed') {
-        this.files[key] = file.fileList
+        set(this.files, key, file.fileList)
+      }
+    },
+    preview (file) {
+      if (file.url) {
+        this.$preview({
+          filePath: file.url,
+          docName: get(file, 'name', ''),
+          visible: true
+        })
       }
     },
     download (key) {
@@ -632,11 +628,6 @@ export default {
       this.computedTotalAmount(equipment, construction)
       this.computedTotalBeianInvest(equipment, construction, initWorkCapital)
       this.$initForm(this.form, beianInfo, dates)
-      this.form.setFieldsValue({
-        filePathUpload: { fileList: this.files['filePath'] },
-        changeFilePathUpload: { fileList: this.files['changeFilePath'] },
-        scanFilePathUpload: { fileList: this.files['scanFilePath'] }
-      })
     },
     addChanged () {
       let { changedList } = this.beianInfo

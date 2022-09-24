@@ -1,9 +1,9 @@
 <!--
  * @Author: ldx
  * @Date: 2021-01-22 14:16:08
- * @LastEditTime: 2022-05-23 09:49:15
- * @LastEditors: zdf
- * @Description: 项目立项审核Tab
+ * @LastEditTime: 2022-09-22 09:27:18
+ * @LastEditors: hm
+ * @Description: 项目立项报告审核Tab
  * @FilePath: \MS-VUE\src\views\customer\modules\AuditProgress\modules\ReportTab.vue
 -->
 <template>
@@ -163,6 +163,9 @@ import TabLayout from './TabLayout.vue'
 import BatchActivateModal from './BatchActivateModal'
 import ProjectCheckModal from './duplicate/ProjectCheckModal.vue'
 import ReportDiffModal from './duplicate/ReportDiffModal.vue'
+
+const devTest = localStorage.getItem('dev_test') === 'true'
+const previewUrl = devTest ? '/doc/msRdfile/preview' : '/projectProgress/previewFile'
 export default {
   name: 'ProjectTab',
   components: {
@@ -264,7 +267,7 @@ export default {
       }
       this.spinning = true
       this.htmlData = ''
-      this.$http.get('/projectProgress/previewFile', { params: params }).then((res) => {
+      this.$http.get(previewUrl, { params: params }).then((res) => {
         if (res.data && res.success) {
           this.htmlData = res.data
         } else {

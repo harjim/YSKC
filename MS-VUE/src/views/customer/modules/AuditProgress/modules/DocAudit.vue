@@ -1,9 +1,9 @@
 <!--
  * @Author: ldx
  * @Date: 2021-04-20 13:57:59
- * @LastEditTime: 2021-09-02 16:28:17
- * @LastEditors: zdf
- * @Description: 当个过程文档审核
+ * @LastEditTime: 2022-09-21 15:07:52
+ * @LastEditors: hm
+ * @Description: 单个过程文档审核
  * @FilePath: \MS-VUE\src\views\customer\modules\AuditProgress\modules\DocAudit.vue
 -->
 <template>
@@ -37,7 +37,8 @@
 import TabLayout from './TabLayout'
 import AuditLog from './AuditLog'
 import AppendixForm from './AppendixForm'
-
+const devTest = localStorage.getItem('dev_test') === 'true'
+const previewUrl = devTest ? '/doc/msRdfile/preview' : '/projectProgress/previewFile'
 export default {
   name: 'DocAudit',
   components: {
@@ -79,7 +80,7 @@ export default {
         companyId: this.record.companyId
       }
       // this.spinning = true
-      this.$http.get('/projectProgress/previewFile', { params: params }).then((res) => {
+      this.$http.get(previewUrl, { params: params }).then((res) => {
         if (res.data && res.success) {
           this.htmlData = res.data
         } else {

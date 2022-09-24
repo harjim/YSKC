@@ -279,7 +279,7 @@ export default {
       this.$exportData('/document/downloadFile', { id: row.id, fileName: this.getFileName(file), filePath: file }, file.name, this.$message)
     },
     getFileName (filePath) {
-      return filePath.substring(filePath.lastIndexOf('/') + 1).replace(/\d+/, '')
+      return filePath.substring(filePath.lastIndexOf('/') + 14)
     },
     /** 预览文件 */
     preview (filePath) {

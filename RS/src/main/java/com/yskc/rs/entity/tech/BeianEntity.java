@@ -40,6 +40,7 @@ public class BeianEntity extends BaseEntity {
     private String remark;
     private String applicant;
 
+    private Integer changedCnt;
     private String changedDates;
     private String projectNo;
     private String accountName;
@@ -49,6 +50,14 @@ public class BeianEntity extends BaseEntity {
 
     private Integer equipmentCnt;//备案资产项数(sum(t_equipment))
     private Integer equipmentQuantity;//备案资产数量(sum(t_equipment.quantity))
+
+    public Integer getChangedCnt() {
+        return changedCnt;
+    }
+
+    public void setChangedCnt(Integer changedCnt) {
+        this.changedCnt = changedCnt;
+    }
 
     public Integer getId() {
         return id;

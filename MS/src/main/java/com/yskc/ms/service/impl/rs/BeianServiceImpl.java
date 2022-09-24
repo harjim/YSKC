@@ -43,43 +43,63 @@ public class BeianServiceImpl implements BeianService {
     private SysDictionaryDao sysDictionaryDao;
 
     @Override
-    public PageModel<List<BeianInfoModel>> getList(QueryBeianModel query, DataPermModel dataPerm) {
+    public PageModel<List<BeianExportModel>> getList(QueryBeianModel query, DataPermModel dataPerm) {
         Pagination page = query.getPagination();
         if (CollectionUtils.isEmpty(page.getAscs()) && CollectionUtils.isEmpty(page.getDescs())) {
             List<String> descs = new ArrayList<>();
             descs.add("p.lastUpdateTime");
             page.setDescs(descs);
         }
-        List<BeianInfoModel> beians = projectDao.getBeianProjects(page, dataPerm, query);
-        List<BeianInfoModel> result = new ArrayList<>();
+        List<BeianExportModel> beians = projectDao.getBeianProjects(page, dataPerm, query);
+        List<BeianExportModel> result = new ArrayList<>();
         List<Integer> companyIds = new ArrayList<>();
+        List<String> keys = new ArrayList<>();
+        Map<Integer,List<String>> keyMap = new HashMap<>();
         if (!CollectionUtils.isEmpty(beians)) {
-            List<Integer> projectIds = beians.stream().map(e -> e.getProjectId()).collect(Collectors.toList());
-            List<BeianInfoModel> beianModels = beianDao.getList(projectIds);
-            Map<Integer, List<BeianInfoModel>> dataMap = new HashMap<>();
-            for (BeianInfoModel model : beianModels) {
-                BigDecimal totalBudget = getTotal(model.getEquipment(), model.getInitWorkCapital(), model.getConstruction());
-                BigDecimal totalAmount = getTotal(model.getEquipmentCost(), model.getInitWorkCapitalCost(), model.getConstructionCost());
-                model.setTotalBudget(totalBudget);
-                model.setTotalAmount(totalAmount);
+            List<Integer> projectIds = beians.stream().map(e ->{
+                List<String> split = Arrays.asList(e.getAddressCode().split(","));
+                keys.addAll(split);
+                keyMap.put(e.getProjectId(),split);
+                return e.getProjectId();
+            }).collect(Collectors.toList());
+            List<BeianExportModel> beianModels = beianDao.getList(projectIds);
+            Map<Integer, List<BeianExportModel>> dataMap = new HashMap<>();
+            for (BeianExportModel model : beianModels) {
                 if (!dataMap.containsKey(model.getProjectId())) {
                     dataMap.put(model.getProjectId(), new ArrayList<>());
                 }
                 dataMap.get(model.getProjectId()).add(model);
             }
-            for (BeianInfoModel beian : beians) {
+            List<SysDictionaryEntityModel> addressList = sysDictionaryDao.getAddress(keys, 1);
+            Map<String, String> addressMap = addressList.stream().collect(Collectors.toMap(a -> a.getKey(), a -> a.getValue()));
+            for (BeianExportModel beian : beians) {
+                StringBuilder address = new StringBuilder();
+                List<String> list = keyMap.get(beian.getProjectId());
+                for (String key : list) {
+                    address.append(addressMap.get(key)==null?"":addressMap.get(key));
+                }
                 if (!dataMap.containsKey(beian.getProjectId())) {
+                    beian.setAddress(address.toString());
                     result.add(beian);
                 } else {
-                    List<BeianInfoModel> infoModels = dataMap.get(beian.getProjectId());
-                    for (BeianInfoModel infoModel : infoModels) {
-                        infoModel.setId(beian.getId());
-                        infoModel.setCompanyName(beian.getCompanyName());
-                        infoModel.setProductName(beian.getProductName());
-                        // infoModel.setYear(beian.getYear());
-                        infoModel.setCompanyId(beian.getCompanyId());
-                        infoModel.setCustomerId(beian.getCustomerId());
-                        result.add(infoModel);
+                    List<BeianExportModel> infoModels = dataMap.get(beian.getProjectId());
+                    for (BeianExportModel exportModel : infoModels) {
+                        exportModel.setId(beian.getId());
+                        exportModel.setCompanyName(beian.getCompanyName());
+                        exportModel.setProductName(beian.getProductName());
+                        exportModel.setCompanyId(beian.getCompanyId());
+                        exportModel.setCustomerId(beian.getCustomerId());
+                        exportModel.setDeptName(beian.getDeptName());
+                        exportModel.setAddress(address.toString());
+                        exportModel.setCompanyLevel(beian.getCompanyLevel());
+                        if (exportModel.getBeginDate()!=null&&exportModel.getEndDate()!=null){
+                            exportModel.setDate(DateUtil.format(exportModel.getBeginDate(),"yyyy-MM-dd")+"~"+
+                                    DateUtil.format(exportModel.getEndDate(),"yyyy-MM-dd"));
+                        }
+                        exportModel.setChange(exportModel.getChangedCnt()>0?"是":"否");
+                        exportModel.setTaxAmountDetail(exportModel.getDetail(exportModel.getTaxAmount()));
+                        exportModel.setAmountDetail(exportModel.getDetail(exportModel.getAmount()));
+                        result.add(exportModel);
                     }
                 }
             }
@@ -114,7 +134,7 @@ public class BeianServiceImpl implements BeianService {
                 StringBuilder address = new StringBuilder();
                 List<String> list = keyMap.get(projectId);
                 for (String key : list) {
-                    address.append(addressMap.get(key));
+                    address.append(addressMap.get(key)==null?"":addressMap.get(key));
                 }
 
                 if (!beianMap.containsKey(projectId)){

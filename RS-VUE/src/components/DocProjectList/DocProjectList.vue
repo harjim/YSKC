@@ -121,11 +121,10 @@
       @error="error"
     />
     <add-doc-modal ref="addDocModal" @ok="refreshList"></add-doc-modal>
-    <preview-modal ref="previewModal"></preview-modal>
   </a-card>
 </template>
 <script>
-import { UploadFile, PreviewModal, SelectProject } from '@/components'
+import { UploadFile, SelectProject } from '@/components'
 import yearMiXin from '@/utils/yearMixin'
 import AddDocModal from '../DocList/AddDocModal'
 
@@ -177,7 +176,6 @@ export default {
   name: 'DocProjectList',
   components: {
     UploadFile,
-    PreviewModal,
     SelectProject,
     AddDocModal
   },
@@ -310,7 +308,11 @@ export default {
         this.$message.info('请先上传文件')
         return
       }
-      this.$refs.previewModal.show(record.filePath, record.fileName !== undefined ? record.fileName : '')
+      this.$preview({
+        filePath: record.filePath,
+        docName: record.fileName || '',
+        visible: true
+      })
     },
     downloadFile (record) {
       this.$exportData('/sysDocument/downloadFile', { id: record.id }, record.fileName, this.$message)

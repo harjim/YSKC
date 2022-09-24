@@ -10,7 +10,6 @@ import com.yskc.rs.dao.tech.*;
 import com.yskc.rs.entity.tech.BeianChangedEntity;
 import com.yskc.rs.entity.tech.BeianEntity;
 import com.yskc.rs.entity.tech.BeianSummaryEntity;
-import com.yskc.rs.entity.tech.Investment;
 import com.yskc.rs.models.UserInfo;
 import com.yskc.rs.models.tech.*;
 import com.yskc.rs.service.BeianService;
@@ -26,7 +25,6 @@ import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @Author: hck
@@ -97,6 +95,8 @@ public class BeianServiceImpl implements BeianService {
         List<BeianChangedModel> changedList = model.getChangedList();
         List<BeianChangedEntity> insertList = new ArrayList<>();
         List<BeianChangedEntity> updateList = new ArrayList<>();
+        List<Integer> delList = new ArrayList<>();
+        beian.setChangedCnt(changedList.size());
         if (!CollectionUtils.isEmpty(changedList)){
             beian.setChange(true);
             StringBuilder changedDates = null;
@@ -110,9 +110,10 @@ public class BeianServiceImpl implements BeianService {
                 BeanUtils.copyProperties(changedModel,entity);
                 entity.setCompanyId(companyId);
                 entity.setBeianId(model.getId());
-                if (changedModel.getId()!=null){
+                if (changedModel.getId()!=null&&changedModel.getId()!=0){
                     ToolUtils.entityUpdate(entity,userInfo.getId(),userInfo.getMsUserId(),date);
                     updateList.add(entity);
+                    delList.add(changedModel.getId());
                 }else {
                     ToolUtils.entityCreate(entity,userInfo.getId(),userInfo.getMsUserId(),date);
                     insertList.add(entity);
@@ -120,17 +121,14 @@ public class BeianServiceImpl implements BeianService {
             }
             beian.setChangedDates(changedDates.toString());
         }
+        summaryEntity.setTotalAmount(summaryEntity.getEquipment().add(summaryEntity.getConstruction().add(summaryEntity.getInitWorkCapital())));
+        summaryEntity.setAmount(summaryEntity.getEquipment().add(summaryEntity.getConstruction()));
+        summaryEntity.setTotalAmountTax(summaryEntity.getEquipmentTax().add(summaryEntity.getConstructionTax().add(summaryEntity.getInitWorkCapitalTax())));
+        summaryEntity.setAmountTax(summaryEntity.getEquipmentTax().add(summaryEntity.getConstructionTax()));
 
-        TechEquipmentModel total = techEquipmentDao.getTotal(companyId, model.getId());
-        if (total!=null){
-            beian.setEquipmentCnt(total.getId());
-            beian.setEquipmentQuantity(total.getQuantity().intValue());
-            beian.setPowerUsed(total.getPowerUsed().divide(Constant.TEN_THOUSAND,2,BigDecimal.ROUND_HALF_UP));
-            beian.setEnergyUsed(total.getPowerUsed().multiply(BigDecimal.valueOf(1.229)).divide(Constant.TEN_THOUSAND,2,BigDecimal.ROUND_HALF_UP));
-        }
         TransactionStatus transactionStatus = TransactionUtils.newTransaction();
         try {
-            beianDao.updateById(beian);
+            beianDao.updateInfo(beian);
             if (summaryId!=null){
                 summaryEntity.setId(summaryId);
                 ToolUtils.entityUpdate(summaryEntity,userInfo.getId(),userInfo.getMsUserId(),date);
@@ -142,6 +140,7 @@ public class BeianServiceImpl implements BeianService {
                 ToolUtils.entityCreate(summaryEntity,userInfo.getId(),userInfo.getMsUserId(),date);
                 beianSummaryDao.insert(summaryEntity);
             }
+            beianChangedDao.delList(delList,model.getId(),companyId);
             if (!CollectionUtils.isEmpty(insertList)){
                 beianChangedDao.insertList(insertList);
             }
@@ -185,9 +184,17 @@ public class BeianServiceImpl implements BeianService {
         BigDecimal equipmentAmount = BigDecimal.ZERO;
         BigDecimal initWorkCapitalAmount = BigDecimal.ZERO;
         BigDecimal constructionAmount = BigDecimal.ZERO;
+
+        BigDecimal totalTaxFull = BigDecimal.ZERO;
+        BigDecimal totalAmountFull = BigDecimal.ZERO;
+
         for (CountInvoiceModel invoiceModel : invoiceDetails) {
-            BigDecimal data = invoiceModel.getTaxAmount().divide(Constant.TEN_THOUSAND, 4, BigDecimal.ROUND_HALF_UP);
-            BigDecimal amount = invoiceModel.getAmount().divide(Constant.TEN_THOUSAND, 4, BigDecimal.ROUND_HALF_UP);
+            BigDecimal data = invoiceModel.getTaxAmount().divide(Constant.TEN_THOUSAND, 2, BigDecimal.ROUND_HALF_UP);
+            BigDecimal amount = invoiceModel.getAmount().divide(Constant.TEN_THOUSAND, 2, BigDecimal.ROUND_HALF_UP);
+            BigDecimal dataFull = invoiceModel.getTaxAmount().divide(Constant.TEN_THOUSAND, 4, BigDecimal.ROUND_HALF_UP);
+            BigDecimal amountFull = invoiceModel.getAmount().divide(Constant.TEN_THOUSAND, 4, BigDecimal.ROUND_HALF_UP);
+            totalTaxFull = totalTaxFull.add(dataFull);
+            totalAmountFull = totalAmountFull.add(amountFull);
             String parentKey = invoiceModel.getType().substring(0, 4);
             int key = Integer.parseInt(parentKey);
             switch (key) {
@@ -213,10 +220,10 @@ public class BeianServiceImpl implements BeianService {
         BigDecimal completion = BigDecimal.ZERO;
         BigDecimal completionTax = BigDecimal.ZERO;
         if (beianAmount!=null&&beianAmount.compareTo(BigDecimal.ZERO)>0){
-            completion = totalAmount.multiply(BigDecimal.valueOf(100)).divide(beianAmount,2, BigDecimal.ROUND_HALF_UP);
+            completion = totalAmountFull.multiply(BigDecimal.valueOf(100)).divide(beianAmount,2, BigDecimal.ROUND_HALF_UP);
         }
         if (beianAmountTax!=null&&beianAmountTax.compareTo(BigDecimal.ZERO)>0){
-            completionTax = totalTax.multiply(BigDecimal.valueOf(100)).divide(beianAmountTax,2, BigDecimal.ROUND_HALF_UP);
+            completionTax = totalTaxFull.multiply(BigDecimal.valueOf(100)).divide(beianAmountTax,2, BigDecimal.ROUND_HALF_UP);
         }
 
         return new BeianTaxModel(totalAmount,fixedAmount,equipmentAmount,initWorkCapitalAmount,constructionAmount,completion,

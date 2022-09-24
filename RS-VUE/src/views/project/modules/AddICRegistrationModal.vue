@@ -103,20 +103,16 @@
         </a-row>
       </a-form>
     </a-spin>
-    <!-- 预览 -->
-    <preview-modal ref="previewModal"></preview-modal>
   </a-modal>
 </template>
 
 <script>
 import moment from 'moment'
 import YsUpload from '@/components/YsUpload'
-import { PreviewModal } from '@/components'
 
 export default {
   components: {
-    YsUpload,
-    PreviewModal
+    YsUpload
   },
   props: {
     rdProjectList: {
@@ -215,7 +211,11 @@ export default {
         this.$message.info('请先上传文件')
         return
       }
-      this.$refs.previewModal.show(path, name)
+      this.$preview({
+        filePath: path,
+        docName: name || '',
+        visible: true
+      })
     },
     onDownloadFile ({ name, path }) {
       this.$exportData('/beian/download', { filePath: path }, name, this.$message)

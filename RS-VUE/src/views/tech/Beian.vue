@@ -59,6 +59,7 @@
 import { mapGetters } from 'vuex'
 import { ystable, YearSelect } from '@/components'
 import ystabs from './Beian/Index.vue'
+import { get } from 'lodash'
 
 const economyTypes = ['有限责任公司', '股份有限公司']
 function getBeginAndEnd ({ row }) {
@@ -91,7 +92,7 @@ export default {
         { title: '年份', field: 'year', width: 80, headerAlign: 'center', align: 'center' },
         { title: '项目名称', field: 'pname', width: 220, headerAlign: 'center', align: 'left' },
         { title: '备案单位', field: 'applyName', width: 220, headerAlign: 'center', align: 'left', slots: { default: ({ row }) => row.applyName ? row.applyName : this.userInfo().companyName } },
-        { title: '项目建设地点', field: 'constructionPlace', width: 200, headerAlign: 'center', align: 'left' },
+        { title: '项目建设地点', field: 'constructionPlace', width: 200, headerAlign: 'center', align: 'left', formatter: ({ cellValue }) => JSON.parse(cellValue || '[]').join(', ') },
         { title: '经济类型', field: 'economyType', width: 110, headerAlign: 'center', align: 'left', slots: { default: ({ row }) => economyTypes[row.economyType] } },
         { title: '项目总投资', field: 'totalAmount', width: 100, headerAlign: 'center', align: 'right' },
         { title: '项目起止年限', field: 'beginAndEnd', width: 200, headerAlign: 'center', align: 'center', slots: { default: getBeginAndEnd } },
@@ -107,8 +108,7 @@ export default {
     },
     showDetail (record) {
       this.record = record
-      // TODO: 地址选择
-      this.$store.commit('common/SET_ADDRESS', record ? [record.constructionPlace] : [])
+      this.$store.commit('common/SET_ADDRESS', JSON.parse(get(record, 'constructionPlace', '[]')))
       this.isShowDetail = !this.isShowDetail
     },
     ...mapGetters(['userInfo']),

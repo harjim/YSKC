@@ -25,7 +25,11 @@
         <a-button size="small" type="primary" @click="onAdd" v-if="$auth('tech:beian:investments:relatedContract')">添加</a-button>
       </template>
       <vxe-table-column field="seq" title="序号" width="60" align="center" header-align="center"></vxe-table-column>
-      <vxe-table-column title="合同编号" field="contractNo" width="120" align="left" header-align="center"></vxe-table-column>
+      <vxe-table-column title="合同编号" field="contractNo" width="120" align="left" header-align="center">
+        <template #default="{row}">
+          <a @click="onEditContracts(row)" title="点击编辑合同">{{ row.contractNo }}</a>
+        </template>
+      </vxe-table-column>
       <vxe-table-column title="合同日期" field="contractDate" width="120" align="center" header-align="center">
         <template #default="{row}">
           {{ moment(row.contractDate).format('YYYY-MM-DD') }}
@@ -59,6 +63,7 @@
       </vxe-table-column>
     </vxe-grid>
     <choice-modal v-bind="$attrs" :investRecord="investRecord" ref="choiceModal" @updateTable="updateTable"></choice-modal>
+    <AddContractModal ref="addContractModal" />
   </div>
 </template>
 
@@ -68,11 +73,13 @@ import { ystable } from '@/components/'
 import { cloneDeep } from 'lodash'
 import moment from 'moment'
 import ChoiceModal from './contractModules/ChoiceModal'
+import AddContractModal from './contractModules/AddContractModal.vue'
 export default {
   name: 'Contracts',
   components: {
     ChoiceModal,
-    ystable
+    ystable,
+    AddContractModal
   },
   props: {
     investRecord: {
@@ -99,8 +106,8 @@ export default {
       }
       this.$refs.choiceModal.show('选择合同', ids, cloneDeep(this.tableDatas))
     },
-    onEdit (record) {
-
+    onEditContracts (record) {
+      this.$refs.addContractModal.edit(`编辑合同信息 【${record.contractNo}】`, record)
     },
     resetTableData () {
       this.tableDatas = []

@@ -33,8 +33,8 @@ public class EquipmentAggFormDocument extends RDDocument {
     @Override
     protected Map getDocMap(){
         ProjectEntity projectInfo = this.dataFactory.getProjectInfo();
-        Date m = this.getDocMonth();
-        if (m!=null){
+        Date m = DateUtil.getDateByString((String)getJsonMap().get("equipmentMonth") + "-01 00:00:00");
+        if (m != null){
             Integer year= cn.hutool.core.date.DateUtil.year(m);
             // 2021年8月10日16:56:28 姚娟 更改为只查询归集的设备
             List<RdEquipmentResultModel>  equipmentList= projectRdEquipmentDao.queryEquipmentList(projectInfo.getCompanyId(), projectInfo.getId(), m,year);

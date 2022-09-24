@@ -73,7 +73,7 @@ public interface BeianDao extends BaseMapper<BeianEntity> {
      * @param projectIds
      * @return
      */
-    List<BeianInfoModel> getList(@Param("projectIds") List<Integer> projectIds);
+    List<BeianExportModel> getList(@Param("projectIds") List<Integer> projectIds);
 
     /**
      * 导出备案列表

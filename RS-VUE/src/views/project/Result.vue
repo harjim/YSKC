@@ -242,13 +242,12 @@
       </a-spin>
     </div>
     <achievement-file-modal ref="fileModal" :converResults="converResults" @update="(row) => { $refs.table.expandConfig.loadMethod({ row }) }"/>
-    <preview-modal ref="previewModal"></preview-modal>
     <result-modal ref="resultModal" @ok="search" :types="types" :sources="sources" :converTypes="converTypes" />
   </a-card>
 </template>
 
 <script>
-import { PreviewModal, SelectProject } from '@/components'
+import { SelectProject } from '@/components'
 import moment from 'moment'
 import ystable from '@/components/Table/ystable'
 import yearMiXin from '@/utils/yearMixin'
@@ -261,7 +260,6 @@ export default {
   components: {
     ystable,
     SelectProject,
-    PreviewModal,
     ResultModal,
     AchievementFileModal
   },
@@ -369,7 +367,11 @@ export default {
       this.$exportData('/beian/download', { filePath: row.filepath }, row.fileName, this.$message)
     },
     preview (row) {
-      this.$refs.previewModal.show(row.filepath, row.fileName !== undefined ? row.fileName : '')
+      this.$preview({
+        filePath: row.filepath,
+        docName: row.fileName || '',
+        visible: true
+      })
     },
     getTypes () {
       return this.$http.get('/sysDocument/getFileType')

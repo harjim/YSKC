@@ -68,16 +68,11 @@
     <a-row style="text-align:right;">
       <a-button @click="closeModal">关闭</a-button>
     </a-row>
-    <preview-modal ref="previewModal"/>
   </a-modal>
 </template>
 
 <script>
-import PreviewModal from '@/components/PreviewModal'
 export default {
-  components: {
-    PreviewModal
-  },
   data () {
     return {
       patentFileTypes: [
@@ -171,7 +166,11 @@ export default {
       })
     },
     onPreview (path, name) {
-      this.$refs.previewModal.show(path, name)
+      this.$preview({
+        filePath: path,
+        docName: name || '',
+        visible: true
+      })
     },
     downloadFile (file) {
       this.$exportData('/patentDetail/downloadPatentFile', { id: file.id }, file.fileName, this.$message)

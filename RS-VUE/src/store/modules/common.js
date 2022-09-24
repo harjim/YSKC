@@ -15,10 +15,10 @@ export default {
     address: []
   },
   getters: {
-    getPayStageArr(state) {
+    getPayStageArr (state) {
       return Object.keys(state.payStage).map(k => ({ value: k, label: state.payStage[k] }))
     },
-    getPayTypeArr(state) {
+    getPayTypeArr (state) {
       return Object.keys(state.payType).map(k => ({ value: k, label: state.payType[k] }))
     }
   },

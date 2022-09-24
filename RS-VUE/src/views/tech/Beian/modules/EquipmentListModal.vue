@@ -4,6 +4,7 @@
     :width="800"
     v-model="visible"
     @ok="handleSubmit"
+    @cancel="handleCancel"
     :maskClosable="false"
     :confirmLoading="confirmLoading"
   >
@@ -90,9 +91,9 @@
             <a-form-item label="负荷系数" :labelCol="labelCol" :wrapperCol="wrapperCol">
               <a-input-number
                 v-decorator="['loadFactor', { rules: [{ required: true, message: '请输入负荷系数' }] }]"
-                :precision="2"
+                :precision="4"
                 :min="0"
-                :max="9.99"
+                :max="9.9998"
                 style="width:100%"
                 placeholder="请输入负荷系数"
               />
@@ -104,9 +105,9 @@
             <a-form-item label="稼动率" :labelCol="labelCol" :wrapperCol="wrapperCol">
               <a-input-number
                 v-decorator="['runRate', { rules: [{ required: true, message: '请输入稼动率' }] }]"
-                :precision="2"
+                :precision="4"
                 :min="0"
-                :max="9.99"
+                :max="9.9998"
                 style="width:100%"
                 placeholder="请输入稼动率"
               />
@@ -127,8 +128,8 @@
         </a-row>
         <a-row :gutter="24">
           <a-col :span="12">
-            <a-form-item label="用电" :labelCol="labelCol" :wrapperCol="wrapperCol">
-              {{ powerUsed }} kW·h
+            <a-form-item label="用电(kW·h)" :labelCol="labelCol" :wrapperCol="wrapperCol">
+              {{ powerUsed }}
             </a-form-item>
           </a-col>
         </a-row>
@@ -153,7 +154,7 @@ export default {
         if (values.usagePower || values.loadFactor || values.runRate || values.workHour) {
           this.$nextTick(() => {
             const { usagePower = 0, loadFactor = 0, runRate = 0, workHour = 0 } = this.form.getFieldsValue(['usagePower', 'loadFactor', 'runRate', 'workHour'])
-            this.powerUsed = usagePower * loadFactor * runRate * workHour
+            this.powerUsed = (usagePower * loadFactor * runRate * workHour).toFixed(2)
           })
         }
       } }),
@@ -184,6 +185,9 @@ export default {
         this.$initForm(this.form, row)
       })
     },
+    handleCancel () {
+      Object.assign(this.$data, this.$options.data.call(this))
+    },
     handleSubmit () {
       const {
         form: { validateFields }
@@ -200,7 +204,7 @@ export default {
                 if (res.success && res.data) {
                   this.$message.success('更新成功')
                   this.$emit('ok', false)
-                  this.visible = false
+                  this.handleCancel()
                 } else {
                   this.$message.error(res.errorMessage ? res.errorMessage : '更新失败')
                 }
@@ -216,7 +220,7 @@ export default {
                 if (res.success && res.data) {
                   this.$message.success('添加成功')
                   this.$emit('ok', true)
-                  this.visible = false
+                  this.handleCancel()
                 } else {
                   this.$message.error(res.errorMessage ? res.errorMessage : '添加失败')
                 }

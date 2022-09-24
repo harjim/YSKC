@@ -145,7 +145,7 @@ public abstract class RDDocument {
     }
 
     protected Map getFooterMap() {
-        return this.dataFactory.getFooterMap(this.getDocYear());
+        return this.dataFactory.getFooterMap(this.getDocYear(), this.ftlPath);
     }
 
     public void appendData(Map map) {

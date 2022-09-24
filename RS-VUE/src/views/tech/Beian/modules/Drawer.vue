@@ -93,23 +93,23 @@
               <a-form-item label="负荷系数" :labelCol="labelCol" :wrapperCol="wrapperCol">
                 <a-input-number
                   v-decorator="['loadFactor', { rules: [{ required: true, message: '请输入负荷系数' }] }]"
-                  :precision="2"
+                  :precision="4"
                   :min="0"
-                  :max="9.99"
+                  :max="9.9998"
                   style="width:100%"
                   placeholder="请输入负荷系数"
                 />
               </a-form-item>
             </a-col>
             <a-col span="12">
-              <a-form-item label="运转率" :labelCol="labelCol" :wrapperCol="wrapperCol">
+              <a-form-item label="稼动率" :labelCol="labelCol" :wrapperCol="wrapperCol">
                 <a-input-number
-                  v-decorator="['runRate', { rules: [{ required: true, message: '请输入运转率' }] }]"
-                  :precision="2"
+                  v-decorator="['runRate', { rules: [{ required: true, message: '请输入稼动率' }] }]"
+                  :precision="4"
                   :min="0"
-                  :max="9.99"
+                  :max="9.9998"
                   style="width:100%"
-                  placeholder="请输入运转率"
+                  placeholder="请输入稼动率"
                 />
               </a-form-item>
             </a-col>

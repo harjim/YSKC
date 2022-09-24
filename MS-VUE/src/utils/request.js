@@ -8,7 +8,8 @@ import moment from 'moment'
 
 const Qs = require('qs')
 // eslint-disable-next-line camelcase
-const baseUrl = window.yskc.baseApiUrl
+// const baseUrl = window.yskc.baseApiUrl
+const baseUrl = '/api/'
 // 创建 axios 实例
 const service = axios.create({
   baseURL: baseUrl,

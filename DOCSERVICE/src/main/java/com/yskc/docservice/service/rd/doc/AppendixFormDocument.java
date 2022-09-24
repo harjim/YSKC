@@ -12,12 +12,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by hck
@@ -25,7 +25,7 @@ import java.util.*;
  * description:记录及附件
  */
 @Component("AppendixForm_Doc")
-@Scope("protoype")
+@Scope("prototype")
 public class AppendixFormDocument extends RDDocument {
     @Autowired
     private DocFileAttachmentDao docFileAttachmentDao;

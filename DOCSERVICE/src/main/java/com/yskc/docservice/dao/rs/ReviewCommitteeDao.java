@@ -21,4 +21,12 @@ public interface ReviewCommitteeDao {
      * @return
      */
     List<ProjectEmployeeInfo> getReviews(@Param("enumbers") List<String> enumbers, @Param("beginYear") Integer beginYear, @Param("companyId") Integer companyId);
+
+    /**
+     * 获取评审人员信息 过程文档
+     * @param enumbers
+     * @param companyId
+     * @return
+     */
+    List<ProjectEmployeeInfo> getEmployees(@Param("enumbers") List<String> enumbers,@Param("companyId") Integer companyId);
 }

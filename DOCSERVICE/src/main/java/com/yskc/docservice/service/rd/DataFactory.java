@@ -1,5 +1,6 @@
 package com.yskc.docservice.service.rd;
 
+import com.yskc.docservice.config.DocServiceConfig;
 import com.yskc.docservice.dao.rs.DocFileFooterDao;
 import com.yskc.docservice.dao.rs.RdDeptDao;
 import com.yskc.docservice.dao.rs.RdEmployeeDao;
@@ -19,11 +20,14 @@ import com.yskc.docservice.models.rs.docfile.PDataListFormModel;
 import com.yskc.docservice.models.rs.project.ProjectYearModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
+import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.net.MalformedURLException;
+import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -66,6 +70,7 @@ public class DataFactory {
             CompanyMember companyInfo = this.getCompanyInfo();
             this.projectMap.put("cname", companyInfo.getCompanyName());
             this.projectMap.put("companyName", companyInfo.getCompanyName());
+            // 项目负责人
         }
         return this.projectMap;
     }
@@ -174,15 +179,18 @@ public class DataFactory {
     @Autowired
     RdEmployeeDao rdEmployeeDao;
 
+    @Autowired
+    private DocServiceConfig docServiceConfig;
+
     Map<Integer, Map> footerMap = new HashMap<>();
 
-    Map getFooterMap(Integer year) {
+    Map getFooterMap(Integer year, String ftlPath) {
         if (!footerMap.containsKey(year)) {
             EmployeeSelectModel approval, audit, toCompile;
             approval = audit = toCompile = new EmployeeSelectModel();
             DocFileFooterEntity docFooter = docFileFooterDao.getFooter(this.docParam.getProjectId(), year);
             Map<String, EmployeeSelectModel> userMap = new HashMap<>();
-            if (docFooter != null) {
+            if (docFooter != null && !Objects.equals(false, docParam.getImportFooterName())) {
                 List<String> enumbers = new ArrayList<>();
                 if (StringUtils.hasLength(docFooter.getApprovalEnumber())) {
                     enumbers.add(docFooter.getApprovalEnumber());
@@ -196,7 +204,23 @@ public class DataFactory {
                 if (!CollectionUtils.isEmpty(enumbers)) {
                     List<EmployeeSelectModel> users = rdEmployeeDao.getEmployeeByEnumber(docFooter.getCompanyId(), enumbers);
                     if (!CollectionUtils.isEmpty(users)) {
-                        userMap = users.stream().collect(Collectors.toMap(e -> e.getEnumber(), e -> e));
+
+                        userMap = users.stream().collect(Collectors.toMap(e -> e.getEnumber(), e -> {
+                            if (StringUtils.hasText(e.getAutographUrl())) {
+                                String imgUrl = e.getAutographUrl().replace("/static/", ftlPath);
+                                String imgAbsUrl = e.getAutographUrl().replace("/static/", Paths.get(docServiceConfig.getResourcePath(), "/static/").toUri().toString());
+                                // 判断本地是否存在图片，无则不显示图片
+                                try {
+                                    if (!new UrlResource(imgAbsUrl).exists()) {
+                                        imgUrl = null;
+                                    }
+                                } catch (MalformedURLException ex) {
+                                    ex.printStackTrace();
+                                }
+                                e.setAutographUrl(imgUrl);
+                            }
+                            return e;
+                        }));
                     }
                 }
                 approval = userMap.get(docFooter.getApprovalEnumber());

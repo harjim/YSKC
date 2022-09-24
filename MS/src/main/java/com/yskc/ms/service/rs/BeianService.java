@@ -3,6 +3,7 @@ package com.yskc.ms.service.rs;
 import com.yskc.common.exception.OwnerException;
 import com.yskc.common.model.PageModel;
 import com.yskc.ms.models.DataPermModel;
+import com.yskc.ms.models.tech.BeianExportModel;
 import com.yskc.ms.models.tech.BeianInfoModel;
 import com.yskc.ms.models.tech.QueryBeianModel;
 
@@ -22,7 +23,7 @@ public interface BeianService {
      * @param dataPerm
      * @return
      */
-    PageModel<List<BeianInfoModel>> getList(QueryBeianModel query, DataPermModel dataPerm);
+    PageModel<List<BeianExportModel>> getList(QueryBeianModel query, DataPermModel dataPerm);
 
     /**
      * 导出备案列表

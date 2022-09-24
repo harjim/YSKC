@@ -11,7 +11,7 @@
     <div>
       <a-button type="primary" size="small" @click="onReturn">返回</a-button>
       <span style="margin-left: 8px;">
-        【{{ $attrs['record'].productName }} - {{ baseInfo.pname }}】
+        【{{ get($attrs, 'record.productName') }} - {{ baseInfo.pname }}】
       </span>
     </div>
     <a-tabs default-active-key="1" id="tabs-container" @change="callback">
@@ -32,6 +32,8 @@
 import BaseInfo from './BaseInfo.vue'
 import EquipmentList from './EquipmentList'
 import InvestDetail from './InvestDetail'
+import { get } from 'lodash'
+
 export default {
   name: 'Index',
   components: {
@@ -45,6 +47,7 @@ export default {
     }
   },
   methods: {
+    get,
     callback (activeKey) {
       if (activeKey * 1 === 1 && this.$refs.baseInfo && this.$refs.baseInfo.refresh) {
         this.$refs.baseInfo.refresh()

@@ -91,9 +91,11 @@
               <a-upload
                 :fileList="files['filePath']"
                 :multiple="false"
-                @preview="download('filePath')"
-                :beforeUpload="file => beforeUpload(file, 'filePath')"
+                @preview="preview"
+                @download="download('filePath')"
                 @change="file => handleChange(file, 'filePath')"
+                :beforeUpload="file => beforeUpload(file, 'filePath')"
+                :showUploadList="{ showPreviewIcon: true, showRemoveIcon: true, showDownloadIcon: true }"
                 v-decorator="[
                   'filePathUpload',
                   { rules: [{ required: true, type: 'array', transform: transformUpload, message: '请上传附件' }] }
@@ -169,27 +171,18 @@
             </template>
           </vxe-table-column>
           <vxe-table-column title="是否关联方购置" field="partPurchase" min-width="120" align="center" header-align="center">
-            <template #header>
-              <span class="required">*</span>是否关联方购置
-            </template>
             <template #default="{row}">
               <a-checkbox v-model="row.partPurchase" v-if="row.add" />
               <span v-else>{{ row.partPurchase ? '是' : '否' }}</span>
             </template>
           </vxe-table-column>
           <vxe-table-column title="是否二手" field="secondHand" min-width="120" align="center" header-align="center">
-            <template #header>
-              <span class="required">*</span>是否二手
-            </template>
             <template #default="{row}">
               <a-checkbox v-model="row.secondHand" v-if="row.add" />
               <span v-else>{{ row.secondHand ? '是' : '否' }}</span>
             </template>
           </vxe-table-column>
           <vxe-table-column title="是否经销商购置" field="secondHand" min-width="120" align="center" header-align="center">
-            <template #header>
-              <span class="required">*</span>是否经销商购置
-            </template>
             <template #default="{row}">
               <a-checkbox v-model="row.traderPurchase" v-if="row.add" />
               <span v-else>{{ row.traderPurchase ? '是' : '否' }}</span>
@@ -212,8 +205,9 @@
 </template>
 <script>
 import { getContractInfo, saveContract, verifyContract } from '@/api/tech/BeiAnGuanLi/Invest'
-import { trim } from 'lodash'
+import { trim, get } from 'lodash'
 import SearchSelect from '../SearchSelect'
+
 export default {
   name: 'AddContractModal',
   components: {
@@ -227,7 +221,7 @@ export default {
       }
     }
   },
-  data() {
+  data () {
     return {
       labelCol: {
         xs: { span: 24 },
@@ -250,29 +244,29 @@ export default {
     }
   },
   methods: {
-    vChange(v, row) {
+    vChange (v, row) {
       row.ename = v
     },
-    show(title) {
+    show (title) {
       this.form.resetFields()
       this.title = title
       this.isVisible = true
     },
-    edit(title, contractRecord) {
+    edit (title, contractRecord) {
       this.form.resetFields()
       this.title = title
       this.isVisible = true
       this.isVerify = false
       this.loaderContractData(contractRecord.contractId)
     },
-    onAdd() {
+    onAdd () {
       // if (!this.verifyTableRow()) {
       //   return
       // }
       const newRow = { add: true, ename: undefined, emodal: undefined }
       this.tableDatas.push(newRow)
     },
-    afterClose() {
+    afterClose () {
       this.isVisible = false
       this.title = ''
       this.isVerify = true
@@ -281,7 +275,7 @@ export default {
       this.updateId = 0
       this.files = { filePath: [] }
     },
-    onConfirm(record, index) {
+    onConfirm (record, index) {
       this.spinning = true
       this.tableDatas.splice(index, 1)
       this.spinning = false
@@ -305,7 +299,7 @@ export default {
       //   this.spinning = false
       // }
     },
-    handleSubmit() {
+    handleSubmit () {
       if (!(this.tableDatas && this.tableDatas.length)) {
         this.$message.warning('合同必须有明细项！')
         return
@@ -363,20 +357,20 @@ export default {
      * @param {*} 当前的值
      * @return {*} 验证的内容
      */
-    transformUpload(value) {
+    transformUpload (value) {
       if (value && value.fileList && value.fileList.length) {
         return value.fileList
       }
       return null
     },
-    changeContractNo(e) {
+    changeContractNo (e) {
       if (this.editContractObje && this.editContractObje.contractNo === e.target.value) {
         this.isVerify = false
       } else {
         this.isVerify = true
       }
     },
-    verifyContractNo(rule, value, callback) {
+    verifyContractNo (rule, value, callback) {
       if (value && this.isVerify) {
         verifyContract({ contractNo: value }).then(response => {
           if (!response.data) {
@@ -389,7 +383,7 @@ export default {
         return callback()
       }
     },
-    verifyTableRow() {
+    verifyTableRow () {
       if (this.tableDatas && this.tableDatas.length) {
         const verifyField = ['ename', 'emodal']
         const KV = { ename: '设备名称', emodal: '规格型号' }
@@ -410,7 +404,7 @@ export default {
         return true
       }
     },
-    loaderContractData(contractId) {
+    loaderContractData (contractId) {
       this.spinning = true
       getContractInfo({ contractId })
         .then(response => {
@@ -432,7 +426,7 @@ export default {
           this.spinning = false
         })
     },
-    initFormData(contractObje) {
+    initFormData (contractObje) {
       this.$nextTick(() => {
         for (const key in this.files) {
           if (contractObje[key]) {
@@ -457,7 +451,10 @@ export default {
         this.form.setFieldsValue({ filePathUpload: { fileList: this.files['filePath'] } })
       })
     },
-    beforeUpload(file, key) {
+    beforeUpload (file, key) {
+      if (!this.$checkFileSize(file, this.$message)) {
+        return
+      }
       const param = new FormData()
       param.append('file', file)
       const config = {
@@ -483,12 +480,21 @@ export default {
         .catch(res => {})
       return false
     },
-    handleChange(file, key) {
+    handleChange (file, key) {
       if (file.file.status === 'removed') {
         this.files[key] = file.fileList
       }
     },
-    download(key) {
+    preview (file) {
+      if (file.url) {
+        this.$preview({
+          filePath: file.url,
+          docName: get(file, 'name', ''),
+          visible: true
+        })
+      }
+    },
+    download (key) {
       const file = this.files[key][0]
       if (file) {
         const filePath = file.url

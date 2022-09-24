@@ -16,6 +16,15 @@
             where id = #{item.id}
         </foreach>
     </update>
+    <delete id="delList">
+        delete from t_beian_changed
+        where beianId = #{beianId} and companyId = #{companyId}
+          <if test="list!=null and list.size>0">
+              and id not in (<foreach collection="list" item="item" separator=",">
+                #{item}
+                </foreach>)
+          </if>
+    </delete>
 
     <select id="getByBeianId" resultType="com.yskc.rs.models.tech.BeianChangedModel">
         select id,companyId, beianId, changeLetterDate, changeContent, changeFilePath

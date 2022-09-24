@@ -307,7 +307,6 @@
       <!-- </a-spin> -->
       </div>
       <RelevanceProject ref="relevanceProject" @selected="selected" />
-      <PreviewModal url="/techAttachments/preview" ref="previewModal" />
       <UploadFileModal
         action="/highTech/upload"
         ref="uploadFileModal"
@@ -324,7 +323,6 @@ import config from './highTechDetailConfig'
 import { getTechInfo, saveDetail, delTechFile } from '@/api/highTech/highTech'
 import RelevanceProject from './RelevanceProject'
 import UploadFileModal from './UploadFileModal'
-import { PreviewModal } from '@/components'
 import { mapGetters } from 'vuex'
 export default {
   name: 'HighTechDetail',
@@ -336,8 +334,7 @@ export default {
   },
   components: {
     RelevanceProject,
-    UploadFileModal,
-    PreviewModal
+    UploadFileModal
   },
   watch: {
     record: {
@@ -577,7 +574,12 @@ export default {
       this.$exportData('beian/download', { filePath: file.filePath }, file.fileName, this.$message)
     },
     onEyeFile (file) {
-      this.$refs.previewModal.show(file.filePath, file.fileName)
+      this.$preview({
+        filePath: file.filePath,
+        docName: file.fileName,
+        visible: true,
+        url: '/techAttachments/preview'
+      })
     },
     onDelFile (type, file, index) {
       this.$confirm({

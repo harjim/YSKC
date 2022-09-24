@@ -239,9 +239,11 @@
             and pd.year =#{query.year}
         </if>
     </select>
-    <select id="getBeianProjects" resultType="com.yskc.ms.models.tech.BeianInfoModel">
-        select pd.productName,c.companyId,c.companyName,pd.year,p.id as projectId,pd.id,c.id as customerId
+    <select id="getBeianProjects" resultType="com.yskc.ms.models.tech.BeianExportModel">
+        select pd.productName,c.companyId,c.companyName,pd.year,p.id as projectId,pd.id,
+        c.id as customerId,yd.deptName,c.companyLevel,c.addressCode
         from project p
+        left join ys_dept yd on yd.id = p.deptId
         inner join product pd on p.productId=pd.id
         inner join customer c on p.customerId=c.id
         where pd.shouldRegister

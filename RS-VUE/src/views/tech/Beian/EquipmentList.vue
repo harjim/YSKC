@@ -63,13 +63,13 @@
           <vxe-table-column title="金额(元)" field="amount" width="120" header-align="center" align="right"/>
           <vxe-table-column title="额定功耗(kW)" field="usagePower" width="120" header-align="center" align="right"/>
           <vxe-table-column title="负荷系数(%)" field="loadFactor" width="120" header-align="center" align="right">
-            <template #default="{ row }">{{ (row.loadFactor * 100).toFixed(2) }}%</template>
+            <template #default="{ row }">{{ (row.loadFactor * 100).toFixed(2) }}</template>
           </vxe-table-column>
           <vxe-table-column title="稼动率(%)" field="runRate" width="120" header-align="center" align="right">
-            <template #default="{ row }">{{ (row.runRate * 100).toFixed(2) }}%</template>
+            <template #default="{ row }">{{ (row.runRate * 100).toFixed(2) }}</template>
           </vxe-table-column>
           <vxe-table-column title="运转时间(h)" field="workHour" width="120" header-align="center" align="right">
-            <template #default="{ row }">{{ row.workHour.toFixed(2) }}h</template>
+            <template #default="{ row }">{{ row.workHour.toFixed(2) }}</template>
           </vxe-table-column>
           <vxe-table-column title="用电(kW·h)" field="powerUsed" width="120" header-align="center" align="right" />
           <vxe-table-column

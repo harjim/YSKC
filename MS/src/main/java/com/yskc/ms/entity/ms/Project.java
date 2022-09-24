@@ -1,9 +1,9 @@
 package com.yskc.ms.entity.ms;
 
+import java.util.Date;
+
 import com.baomidou.mybatisplus.annotations.TableId;
 import com.baomidou.mybatisplus.annotations.TableName;
-
-import java.util.Date;
 
 /**
  * @Author: yzh

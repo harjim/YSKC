@@ -52,7 +52,11 @@
       </template>
       <vxe-table-column type="checkbox" width="60" align="center" header-align="center"></vxe-table-column>
       <vxe-table-column field="seq" title="序号" width="60" align="center" header-align="center"></vxe-table-column>
-      <vxe-table-column title="付款记账凭证字号" field="voucherNo" width="140" align="left" header-align="center"></vxe-table-column>
+      <vxe-table-column title="付款记账凭证字号" field="voucherNo" width="140" align="left" header-align="center">
+        <template #default="{row}">
+          <a @click="onEdit(row)" title="点击编辑付款">{{ row.voucherNo }}</a>
+        </template>
+      </vxe-table-column>
       <vxe-table-column title="记账日期" field="transferDate" width="120" align="left" header-align="center">
         <template #default="{row}">
           {{ moment(row.transferDate).format("YYYY-MM-DD") }}
@@ -85,8 +89,6 @@
       </vxe-table-column>
       <vxe-table-column title="操作" width="100" align="center" header-align="center" fixed="right">
         <template #default="{row}">
-          <a @click="onEdit(row)">编辑</a>
-          <a-divider type="vertical" />
           <a-popconfirm title="您确定要删除吗？" @confirm="onConfirmDel(row)">
             <a>删除</a>
           </a-popconfirm>
@@ -141,6 +143,7 @@ export default {
       this.handleSelected(data, this.selectedIds)
     },
     show (title, ids, parentTableData) {
+      this.queryParams.investmentId = this.investRecord.id
       this.isVisible = true
       this.title = title
       this.selectedIds = ids

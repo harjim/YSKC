@@ -8,13 +8,13 @@
 -->
 <template>
   <a-modal
-    :title="title"
+    :title="docName || '预览'"
     style="top: 20px;"
     :width="1200"
     :height="800"
     :maskClosable="false"
     :getContainer="popupContainer"
-    v-model="visible"
+    v-model="show"
   >
     <preview :filePath="filePath" :url="url" :docName="docName" />
     <template slot="footer">
@@ -25,6 +25,7 @@
 <script>
 import Preview from '../Preview/Preview'
 import { popupContainer } from '@/docTemplate/Templates/js/screenFullMountDom.js'
+
 export default {
   name: 'PreviewModal',
   components: {
@@ -32,10 +33,7 @@ export default {
   },
   data () {
     return {
-      title: '预览',
-      visible: false,
-      filePath: undefined,
-      docName: undefined,
+      show: this.visible,
       resData: undefined,
       errorMessage: undefined,
       fileLoading: false
@@ -45,18 +43,29 @@ export default {
     url: {
       type: String,
       default: '/document/preview'
+    },
+    filePath: {
+      type: String,
+      default: ''
+    },
+    docName: {
+      type: String,
+      default: ''
+    },
+    visible: {
+      type: Boolean,
+      default: false
+    }
+  },
+  watch: {
+    visible (newValue) {
+      this.show = newValue
     }
   },
   methods: {
     popupContainer,
-    handleCancel (e) {
-      this.visible = false
-    },
-    show (filePath, docName) {
-      this.title = docName
-      this.visible = true
-      this.filePath = filePath
-      this.docName = docName
+    handleCancel () {
+      Object.assign(this.$data, this.$options.data.call(this))
     }
   }
 

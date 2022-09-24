@@ -1,11 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.yskc.rs.dao.tech.BeianDao">
+    <update id="updateInfo">
+        update t_beian set pname = #{entity.pname},constructionPlace  = #{entity.constructionPlace}, economyType= #{entity.economyType},
+                           content= #{entity.content},beginDate= #{entity.beginDate}, endDate= #{entity.endDate},
+                           beianNo= #{entity.beianNo}, beianDate= #{entity.beianDate}, filePath= #{entity.filePath},
+                           scanFilePath= #{entity.scanFilePath},`change`= #{entity.change},remark= #{entity.remark},
+                           applicant= #{entity.applicant},accountName= #{entity.accountName},accountPassword= #{entity.accountPassword},
+                           changedCnt= #{entity.changedCnt}, energyUsed= #{entity.energyUsed},equipmentCnt= #{entity.equipmentCnt},
+                           equipmentQuantity= #{entity.equipmentQuantity}, powerUsed= #{entity.powerUsed},projectNo= #{entity.projectNo},
+                           changedDates= #{entity.changedDates}
+        where id = #{entity.id}
+    </update>
 
     <select id="getList" resultType="com.yskc.rs.models.tech.BeianInfoModel">
         select
         b.id,b.year,b.pname,b.constructionPlace,b.economyType,b.content,b.beginDate,b.endDate,b.beianNo,b.beianDate,
-        b.filePath,b.scanFilePath,b.change,b.sourceProjectId,b.remark,b.applicant,p.productName,b.changedDates,b.projectNo,
+        b.filePath,b.scanFilePath,b.change,b.sourceProjectId,b.remark,b.applicant,b.productId,p.productName,b.changedDates,b.projectNo,
         b.accountName,b.accountPassword,b.powerUsed,b.energyUsed,b.equipmentCnt,b.equipmentQuantity,
         bs.totalAmount, bs.totalAmountTax, bs.amount, bs.amountTax, bs.equipment, bs.equipmentTax, bs.initWorkCapital,
         bs.initWorkCapitalTax, bs.construction, bs.constructionTax
@@ -26,7 +37,7 @@
     <select id="getInfo" resultType="com.yskc.rs.models.tech.BeianInfoModel">
         select
         b.id,b.year,b.pname,b.constructionPlace,b.economyType,b.content,b.beginDate,b.endDate,b.beianNo,b.beianDate,
-        b.filePath,b.scanFilePath,b.change,b.sourceProjectId,b.remark,b.applicant,p.productName,b.changedDates,b.projectNo,
+        b.filePath,b.scanFilePath,b.change,b.sourceProjectId,b.remark,b.applicant,b.productId,p.productName,b.changedDates,b.projectNo,
         b.accountName,b.accountPassword,b.powerUsed,b.energyUsed,b.equipmentCnt,b.equipmentQuantity,
         bs.totalAmount, bs.totalAmountTax, bs.amount, bs.amountTax, bs.equipment, bs.equipmentTax, bs.initWorkCapital,
         bs.initWorkCapitalTax, bs.construction, bs.constructionTax

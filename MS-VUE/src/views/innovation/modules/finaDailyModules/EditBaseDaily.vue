@@ -190,48 +190,52 @@ export default {
     },
     /** 获取文件名 */
     getFileName (filePath) {
-      return filePath ? filePath.substring(filePath.lastIndexOf('/') + 1).replace(/\d+/, '') : ''
+      return filePath ? filePath.substring(filePath.lastIndexOf('/') + 14) : ''
     },
     /** 上传文件 */
     beforeUpload (file, key) {
-      // 是否超过限制大小
-      if (!this.$checkFileSize(file, this.$message)) {
-        return false
-      }
-      // 是否重复上传
-      const files = this.fileList.map((item) => item.name)
-      if (files.includes(file.name)) {
-        this.$message.error('文件名重复')
-        return false
-      }
-
-      const param = new FormData()
-      param.append('file', file)
-      param.append('dir', '/finaDaily/')
-      const config = {
-        // 添加请求头
-        headers: { 'Content-Type': 'multipart/form-data' }
-      }
-      this.$http.post('/document/upload', param, config).then(({ data, success, errorMessage }) => {
-        if (success) {
-          this.fileList.push(
-            {
-              uid: data[0].fileName,
-              name: data[0].fileName,
-              status: 'done',
-              url: data[0].filePath
-            }
-          )
-          // this.$refs.form.clearValidate('filepath')
-        } else {
-          this.$message.error(errorMessage)
+      // const self = this.fileList
+      return new Promise((resolve, reject) => {
+        // 是否超过限制大小
+        if (!this.$checkFileSize(file, this.$message)) {
+          // eslint-disable-next-line prefer-promise-reject-errors
+          return reject(false)
         }
+        // 是否重复上传
+        const files = this.fileList.map((item) => item.name)
+        if (files.includes(file.name)) {
+          this.$message.error('文件名重复')
+          // eslint-disable-next-line prefer-promise-reject-errors
+          return reject(false)
+        }
+
+        const param = new FormData()
+        param.append('file', file)
+        param.append('dir', '/finaDaily/')
+        const config = {
+        // 添加请求头
+          headers: { 'Content-Type': 'multipart/form-data' }
+        }
+        this.$http.post('/document/upload', param, config).then(({ data, success, errorMessage }) => {
+          if (success) {
+            this.fileList.push(
+              {
+                uid: data[0].fileName,
+                name: data[0].fileName,
+                status: 'done',
+                url: data[0].filePath
+              }
+            )
+          } else {
+            this.$message.error(errorMessage)
+          }
+        })
+        return reject(false)
       })
-      return false
     },
     /** 下载文件 */
     downloadFile (file) {
-      const fileName = this.getFileName(file.url)
+      const fileName = file.name || this.getFileName(file.url)
       this.$exportData('/document/downloadFile', { fileName, filePath: file.url }, fileName, this.$message)
     },
     /** 移除文件 */

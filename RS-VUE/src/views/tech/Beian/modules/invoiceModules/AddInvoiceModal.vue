@@ -102,9 +102,11 @@
               <a-upload
                 :fileList="files['invoicePath']"
                 :multiple="false"
-                @preview="download('invoicePath')"
-                :beforeUpload="file => beforeUpload(file, 'invoicePath')"
+                @preview="preview"
+                @download="download('invoicePath')"
                 @change="file => handleChange(file, 'invoicePath')"
+                :beforeUpload="file => beforeUpload(file, 'invoicePath')"
+                :showUploadList="{ showPreviewIcon: true, showRemoveIcon: true, showDownloadIcon: true }"
                 v-decorator="[
                   'invoicePathUpload',
                   { rules: [{ required: true, type: 'array', transform: transformUpload, message: '请上传附件' }] }
@@ -119,9 +121,11 @@
               <a-upload
                 :fileList="files['voucherPath']"
                 :multiple="false"
-                @preview="download('voucherPath')"
-                :beforeUpload="file => beforeUpload(file, 'voucherPath')"
+                @preview="preview"
+                @download="download('voucherPath')"
                 @change="file => handleChange(file, 'voucherPath')"
+                :beforeUpload="file => beforeUpload(file, 'voucherPath')"
+                :showUploadList="{ showPreviewIcon: true, showRemoveIcon: true, showDownloadIcon: true }"
                 v-decorator="['voucherPathUpload']"
               >
                 <a-button> <a-icon type="upload" />上传</a-button>
@@ -191,7 +195,6 @@
               <a-input-number
                 :min="0"
                 :max="100"
-                :step="0.5"
                 :precision="2"
                 style="width: 65px;"
                 v-if="row.add"
@@ -219,32 +222,31 @@
           </vxe-table-column>
           <vxe-table-column title="单价（元）" field="excludeTaxPrice" width="110" align="right" header-align="center">
             <template #default="{row}">
-              {{ setValue(row, 'excludeTaxPrice', ((row.taxPrice || 0) / (1 + (row.taxRate || 0) / 100))).toFixed(2) }}
+              {{ setValue(
+                row,
+                'excludeTaxPrice',
+                round(divide(get(row, 'taxPrice', 0), (1 + get(row, 'taxRate', 0))), 2)
+              )
+              }}
             </template>
           </vxe-table-column>
           <vxe-table-column title="金额(元/含税)" field="taxAmount" width="110" align="right" header-align="center">
             <template #default="{row}">
-              {{
-                setValue(
-                  row,
-                  'taxAmount',
-                  Math.round(((row.quantity ? row.quantity : 0) * (row.taxPrice ? row.taxPrice : 0)).toFixed(2) * 100) /
-                    100
-                )
+              {{ setValue(
+                row,
+                'taxAmount',
+                round(multiply(get(row, 'quantity', 0), get(row, 'taxPrice', 0)), 2)
+              )
               }}
             </template>
           </vxe-table-column>
           <vxe-table-column title="金额（元）" field="excludeTaxAmount" width="110" align="right" header-align="center">
             <template #default="{row}">
-              {{
-                setValue(
-                  row,
-                  'excludeTaxAmount',
-                  Math.round(
-                    ((row.excludeTaxPrice ? row.excludeTaxPrice : 0) * (row.quantity ? row.quantity : 0)).toFixed(2) *
-                      100
-                  ) / 100
-                )
+              {{ setValue(
+                row,
+                'excludeTaxAmount',
+                round(multiply(get(row, 'excludeTaxPrice', 0), get(row, 'quantity', 0)), 2)
+              )
               }}
             </template>
           </vxe-table-column>
@@ -267,7 +269,8 @@
 import { saveInvoice, getInvoiceInfo, verifyInvoice } from '@/api/tech/BeiAnGuanLi/Invest'
 import SearchSelect from '../SearchSelect'
 import moment from 'moment'
-import { trim } from 'lodash'
+import { trim, get, divide, round, multiply } from 'lodash'
+
 export default {
   name: 'AddInvoiceModal',
   components: {
@@ -306,6 +309,10 @@ export default {
   },
   methods: {
     moment,
+    get,
+    divide,
+    round,
+    multiply,
     vChange (v, row) {
       row.ename = v
     },
@@ -435,6 +442,9 @@ export default {
       })
     },
     beforeUpload (file, key) {
+      if (!this.$checkFileSize(file, this.$message)) {
+        return
+      }
       const param = new FormData()
       param.append('file', file)
       const config = {
@@ -447,7 +457,7 @@ export default {
           if (res.success) {
             this.files[key] = [
               {
-                uid: res.data.fileName,
+                uid: res.data.filePath,
                 name: res.data.fileName,
                 status: 'done',
                 url: res.data.filePath
@@ -463,6 +473,15 @@ export default {
     handleChange (file, key) {
       if (file.file.status === 'removed') {
         this.files[key] = file.fileList
+      }
+    },
+    preview (file) {
+      if (file.url) {
+        this.$preview({
+          filePath: file.url,
+          docName: get(file, 'name', ''),
+          visible: true
+        })
       }
     },
     download (key) {

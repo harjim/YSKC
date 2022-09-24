@@ -21,6 +21,12 @@ import java.util.List;
 @Repository
 public interface BeianDao extends BaseMapper<BeianEntity> {
     /**
+     * 编辑备案管理
+     * @param entity
+     * @return
+     */
+    Integer updateInfo(@Param("entity") BeianEntity entity);
+    /**
      * 获取备案管理列表
      * @param page
      * @param companyId

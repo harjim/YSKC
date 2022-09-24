@@ -9,6 +9,7 @@ import com.yskc.rs.models.UserInfo;
 import com.yskc.rs.models.tech.BeianInfoModel;
 import com.yskc.rs.models.tech.QueryBeianModel;
 import com.yskc.rs.service.BeianService;
+import com.yskc.rs.service.DocumentService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
@@ -43,6 +44,8 @@ public class BeianController extends BaseController {
     private BeianService beianService;
     @Autowired
     private RsConfig rsConfig;
+    @Autowired
+    private DocumentService documentService;
 
     @GetMapping("/getList")
     @PermissionRequired(perms = "tech:beian:basicInfo:view")
@@ -68,12 +71,12 @@ public class BeianController extends BaseController {
     }
 
     /**
-     * @param files
+     * @param
      * @return
      * @throws OwnerException
      */
     @PostMapping("/upload")
-    @PermissionRequired(perms = "tech:beian:basicInfo:save")
+//    @PermissionRequired(perms = "tech:beian:basicInfo:save")
     @SystemLog(description = "上传备案相关文件", mode = SystemLog.SAVE_DB)
     @ApiOperation(value = "上传备案相关文件", notes = "上传备案相关文件", response = String.class)
     public Map<String, String> uploadFile(@RequestParam("file") MultipartFile file) throws OwnerException {

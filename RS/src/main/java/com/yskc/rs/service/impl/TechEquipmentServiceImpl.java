@@ -77,7 +77,11 @@ public class TechEquipmentServiceImpl implements TechEquipmentService {
         if (CollectionUtils.isEmpty(ids)) {
             return true;
         }
-        return techEquipmentDao.deleteBatchIds(ids) > 0;
+        Boolean flag = techEquipmentDao.deleteBatchIds(ids) > 0;
+        if (flag) {
+            techEquipmentDao.updateBeianTable();
+        }
+        return flag;
     }
 
     @Override

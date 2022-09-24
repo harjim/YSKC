@@ -1,18 +1,10 @@
 package com.yskc.ms.controller.ms;
 
-import cn.hutool.core.io.FileUtil;
-import cn.hutool.core.io.IoUtil;
 import com.yskc.common.annotation.PermissionRequired;
 import com.yskc.common.annotation.SystemLog;
 import com.yskc.common.exception.OwnerException;
 import com.yskc.common.model.PageModel;
-import com.yskc.common.model.PageResult;
-import com.yskc.ms.config.Constant;
-import com.yskc.ms.config.MsConfig;
-import com.yskc.ms.entity.ms.CheckInstEntity;
-import com.yskc.ms.entity.rs.DocListEntity;
 import com.yskc.ms.models.BatchDeleteModel;
-import com.yskc.ms.models.UserInfo;
 import com.yskc.ms.models.checkInst.CheckInstModel;
 import com.yskc.ms.models.checkInst.QueryCheckInstModel;
 import com.yskc.ms.service.ms.CheckInstService;
@@ -23,12 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.*;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.text.MessageFormat;
 import java.util.List;
 
 /**

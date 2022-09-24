@@ -27,7 +27,7 @@
       <vxe-table-column field="seq" title="序号" width="60" align="center" header-align="center"></vxe-table-column>
       <vxe-table-column title="设备名称" field="ename" width="120" align="left" header-align="center">
         <template #default="{row}">
-          {{ row.ename }}
+          <a @click="onEdit(row)" title="点击编辑铭牌">{{ row.ename }}</a>
         </template>
       </vxe-table-column>
       <vxe-table-column title="规格型号" field="emodal" width="120" align="left" header-align="center">
@@ -44,8 +44,6 @@
       </vxe-table-column>
       <vxe-table-column title="操作" width="100" align="center" header-align="center" fixed="right">
         <template #default="{row,rowIndex}">
-          <a @click="onEdit(row)">编辑</a>
-          <a-divider type="vertical"></a-divider>
           <a-popconfirm title="您确定要删除吗？" @confirm="onConfirm(row,rowIndex)">
             <a>删除</a>
           </a-popconfirm>

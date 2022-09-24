@@ -78,7 +78,7 @@
         </foreach>
     </insert>
     <select id="getEmployeeByEnumber" resultType="com.yskc.docservice.models.rs.EmployeeSelectModel">
-        select enumber,ename from employee
+        select enumber, ename, autographUrl from employee
         where companyId = #{companyId} and enumber in
         <foreach collection="enumbers" item="enumber" separator="," open="(" close=")">
             #{enumber}

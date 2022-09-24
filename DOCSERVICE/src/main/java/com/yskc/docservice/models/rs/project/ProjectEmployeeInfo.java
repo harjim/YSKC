@@ -14,6 +14,7 @@ public class ProjectEmployeeInfo {
     private String deptName;
     private String specialities;
     private String rdDeptName;//研发部门
+    private String autographUrl;//签名图片
 
     public String getRdDeptName() {
         return rdDeptName;
@@ -77,5 +78,13 @@ public class ProjectEmployeeInfo {
 
     public void setDeptName(String deptName) {
         this.deptName = deptName;
+    }
+
+    public String getAutographUrl() {
+        return autographUrl;
+    }
+
+    public void setAutographUrl(String autographUrl) {
+        this.autographUrl = autographUrl;
     }
 }

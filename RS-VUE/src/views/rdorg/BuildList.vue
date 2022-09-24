@@ -190,7 +190,6 @@
       @onSuccess="success"
     />
     <add-doc-modal ref="addDocModal" @ok="search" @editOk="editOk"></add-doc-modal>
-    <preview-modal ref="previewModal"></preview-modal>
     <year-import-modal
       ref="yearImport"
       initName="建设事项"
@@ -206,14 +205,13 @@ import { isEditStatus } from '@/utils/processDoc/auditStatus'
 import { mapGetters } from 'vuex'
 import yearMiXin from '@/utils/yearMixin'
 import AddDocModal from '@/components/DocList/AddDocModal'
-import { UploadFile, PreviewModal } from '@/components'
+import { UploadFile } from '@/components'
 import YearImportModal from '@/views/project/init/YearImportModal'
 import SaveBuildConfigModal from '@/components/BuildConfig/SaveBuildConfigModal'
 export default {
   name: 'BuildList',
   components: {
     UploadFile,
-    PreviewModal,
     AddDocModal,
     YearImportModal,
     SaveBuildConfigModal
@@ -307,7 +305,11 @@ export default {
         this.$message.info('请先上传文件')
         return
       }
-      this.$refs.previewModal.show(file.filePath, file.fileName !== undefined ? file.fileName : '')
+      this.$preview({
+        filePath: file.filePath,
+        docName: file.fileName || '',
+        visible: true
+      })
     },
     downloadFile (file) {
       this.spin = true

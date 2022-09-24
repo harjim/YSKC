@@ -3,6 +3,8 @@ package com.yskc.docservice.service.impl.rs;
 import com.aspose.words.*;
 import com.yskc.common.exception.OwnerException;
 import com.yskc.docservice.config.DocServiceConfig;
+import com.yskc.docservice.dao.rs.EmployeeDao;
+import com.yskc.docservice.entity.rs.project.ProjectEntity;
 import com.yskc.docservice.models.DocParam;
 import com.yskc.docservice.models.rs.PDocFile;
 import com.yskc.docservice.models.rs.company.CompanyMember;
@@ -11,6 +13,8 @@ import com.yskc.docservice.service.rd.RDDocument;
 import com.yskc.docservice.service.rd.doc.DefaultDocument;
 import com.yskc.docservice.service.rs.RDFileService;
 import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +26,10 @@ import wordUtil.LicenseLoad;
 import javax.annotation.Resource;
 import java.io.*;
 import java.nio.file.Paths;
+import java.text.MessageFormat;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class RDFileServiceImpl implements RDFileService {
@@ -70,6 +77,9 @@ public class RDFileServiceImpl implements RDFileService {
                 docFileList) {
             // TODO: docParam 已经存在dataFactory中，是否可以不用单独放进去
             RDDocument rdDocument = this.getRDDocument(docFile, docParam, dataFactory, "/static/");
+/*            if (addFileName) {
+                rdDocument.appendData("ftlDocFileName", docFile.getDocFileName());
+            }*/
             sb.append(rdDocument.getHtml());
         }
         return sb.toString();
@@ -92,11 +102,34 @@ public class RDFileServiceImpl implements RDFileService {
         pageSetup.setLeftMargin(54);
         pageSetup.setRightMargin(54);
 
-        writeDocHeader(builder, companyInfo.getCompanyLogoPath(), companyInfo.getCompanyName());
+        // 写文档页眉
+        if (docParam.getHeader()) {
+            writeDocHeader(builder, companyInfo.getCompanyLogoPath(), companyInfo.getCompanyName());
+        }
+
         //将光标移到⽂档开始的位置
         builder.moveToDocumentStart();
+
+        //将光标移到⽂档开始的位置
+        // 写文档封面
+        if (docParam.getCover()) {
+            builder.getFont().setName("宋体");
+            String coverHtml = getCoverHtml(dataFactory, "/static/");
+            builder.insertHtml(coverHtml);
+            builder.insertBreak(BreakType.SECTION_BREAK_NEW_PAGE);
+//            builder.getPageSetup().setRestartPageNumbering(true);
+//            builder.getPageSetup().setPageStartingNumber(0);
+/*            builder.getPageSetup().getRestartPageNumbering();
+            doc.getFirstSection().getPageSetup().setRestartPageNumbering(true);*/
+//            doc.getChildNodes(NodeType.PARAGRAPH, true).get(1).getRange();
+
+        }
         // 写文档目录
-        this.writeDocIndex(doc, builder);
+        Boolean addCatalogue = docParam.getCatalogue() && docParam.getpDocFileId().length > 1;
+        if (addCatalogue) {
+            this.writeDocIndex(doc, builder);
+        }
+        // 写文档内容
         boolean isFirst = true;
         for (PDocFile docFile :
                 docFileList) {
@@ -117,13 +150,19 @@ public class RDFileServiceImpl implements RDFileService {
                     imgShape.setName("attachment"); // 附件插入的图片名设为attachment;
                 }
             } else {
-                if (!docFile.getDocFileId().equals(27)) {
+                /*Integer docFileId = docFile.getDocFileId();
+                Integer docTemplateId = docFile.getDocTemplateId();
+                if (!docFileId.equals(27) && !docFileId.equals(50) && !docFileId.equals(43) && !docTemplateId.equals(103)) {
                     rdDocument.appendData("ftlDocFileName", docFile.getDocFileName());
-                }
+                }*/
+                rdDocument.appendData("ftlDocFileName", docFile.getDocFileName());
                 builder.insertHtml(rdDocument.getHtml());
             }
         }
+        // 处理图片
         this.handleDocImage(doc, pageSetup);
+
+        // 处理表格
         NodeCollection<Table> tables = doc.getChildNodes(NodeType.TABLE, true);
         for (Table table :
                 tables) {
@@ -156,9 +195,14 @@ public class RDFileServiceImpl implements RDFileService {
         }
         */
 
-        this.writeDocFooter(doc);
+        // 页码
+        if (docParam.getPageNum()) {
+            this.writeDocFooter(doc);
+        }
         // 更新目录域
-        doc.updateFields();
+        if (addCatalogue) {
+            doc.updateFields();
+        }
         // 0 输出PDF, 1 输出word
         if (docParam.getExportType() != null && docParam.getExportType() == 0) {
             doc.updatePageLayout();
@@ -218,7 +262,7 @@ public class RDFileServiceImpl implements RDFileService {
         builder.getFont().setName("simsun");
         builder.getFont().setSize(16); // 三号字体
         builder.writeln("目 录");
-        //清清除所有样式设置
+        //清除所有样式设置
         builder.getParagraphFormat().clearFormatting();
         //⽬录居左
         builder.getParagraphFormat().setAlignment(ParagraphAlignment.LEFT);
@@ -295,5 +339,42 @@ public class RDFileServiceImpl implements RDFileService {
         rdDocument.init(docParam, docFile, dataFactory, ftlPath, freemarkerConfiguration);
 
         return rdDocument;
+    }
+
+    @Autowired
+    EmployeeDao employeeDao;
+    private String getCoverHtml(DataFactory dataFactory, String ftlPath) throws OwnerException {
+        Template template;
+        try (Writer writer = new StringWriter();
+        BufferedWriter bufferedWriter = new BufferedWriter(writer)) {
+            template = freemarkerConfiguration.getTemplate("ReportCourse.html");
+            Map dataModel = new HashMap<>();
+            CompanyMember companyInfo = dataFactory.getCompanyInfo();
+            dataModel.put("companyName", companyInfo.getCompanyName());
+
+            Map projectMap = dataFactory.getProject();
+            dataModel.put("pname", projectMap.get("pname"));
+
+            ProjectEntity projectInfo = dataFactory.getProjectInfo();
+            String durationTime = MessageFormat.format("{0, date,yyyy.MM}~{1, date,yyyy.MM}", projectInfo.getBeginDate(), projectInfo.getEndDate());
+            dataModel.put("durationTime" ,durationTime);
+            String ename = projectInfo.getMasterENumber();
+            if (StringUtils.hasText(ename)) {
+                ename = employeeDao.getByNumber(companyInfo.getCompanyId(), ename).getEname();
+            }
+            ename = ename == null ? "无" : ename;
+            dataModel.put("ename", ename);
+
+            dataModel.put("projectRdDept", projectMap.get("projectRdDept"));
+            dataModel.put("ftlPath", ftlPath);
+            template.process(dataModel, bufferedWriter);
+            return writer.toString();
+        } catch (TemplateNotFoundException e) {
+            logger.error("模板 ReportCourse 不存在!");
+            throw new OwnerException("模板文件不存在!");
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return null;
+        }
     }
 }

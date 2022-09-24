@@ -16,6 +16,7 @@ public class BeianExportModel extends BeianInfoModel {
     private String companyLevel;
     private String projectNo;//项目编号
     private Integer changedCnt;//变更次数
+    private String changedDates;//变更时间
     private String change;
     private Integer num;
 
@@ -44,6 +45,14 @@ public class BeianExportModel extends BeianInfoModel {
         }else {
             return BigDecimal.ZERO;
         }
+    }
+
+    public String getChangedDates() {
+        return changedDates;
+    }
+
+    public void setChangedDates(String changedDates) {
+        this.changedDates = changedDates;
     }
 
     public Integer getNum() {

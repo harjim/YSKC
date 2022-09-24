@@ -139,9 +139,11 @@
               <a-upload
                 :fileList="files['voucherPath']"
                 :multiple="false"
-                @preview="download('voucherPath')"
-                :beforeUpload="file => beforeUpload(file, 'voucherPath')"
+                @preview="preview"
+                @download="download('voucherPath')"
                 @change="file => handleChange(file, 'voucherPath')"
+                :beforeUpload="file => beforeUpload(file, 'voucherPath')"
+                :showUploadList="{ showPreviewIcon: true, showRemoveIcon: true, showDownloadIcon: true }"
                 v-decorator="[
                   'voucherPathUpload',
                   { rules: [{ required: true, type: 'array', transform: transformUpload, message: '请上传附件' }] }
@@ -156,9 +158,11 @@
               <a-upload
                 :fileList="files['bankReceiptPath']"
                 :multiple="false"
-                @preview="download('bankReceiptPath')"
-                :beforeUpload="file => beforeUpload(file, 'bankReceiptPath')"
+                @preview="preview"
+                @download="download('bankReceiptPath')"
                 @change="file => handleChange(file, 'bankReceiptPath')"
+                :beforeUpload="file => beforeUpload(file, 'bankReceiptPath')"
+                :showUploadList="{ showPreviewIcon: true, showRemoveIcon: true, showDownloadIcon: true }"
                 v-decorator="[
                   'bankReceiptPathUpload',
                   { rules: [{ required: true, type: 'array', transform: transformUpload, message: '请上传附件' }] }
@@ -177,6 +181,7 @@
 import { savePayment } from '@/api/tech/BeiAnGuanLi/Invest'
 import SearchSelect from '../SearchSelect'
 import { mapGetters } from 'vuex'
+import { get } from 'lodash'
 
 export default {
   name: 'AddBankReceiptModal',
@@ -191,7 +196,7 @@ export default {
       }
     }
   },
-  data() {
+  data () {
     return {
       labelCol: {
         xs: { span: 24 },
@@ -238,18 +243,18 @@ export default {
     ...mapGetters('common', ['getPayStageArr', 'getPayTypeArr'])
   },
   methods: {
-    show(title) {
+    show (title) {
       this.form.resetFields()
       this.title = title
       this.isVisible = true
     },
-    edit(title, bankReceiptRecord) {
+    edit (title, bankReceiptRecord) {
       this.form.resetFields()
       this.title = title
       this.isVisible = true
       this.loaderBankReceiptData(bankReceiptRecord)
     },
-    afterClose() {
+    afterClose () {
       this.isVisible = false
       this.title = ''
       this.tableDatas = []
@@ -257,7 +262,7 @@ export default {
       this.updateId = 0
       this.files = { filePath: [], voucherPath: [], bankReceiptPath: [] }
     },
-    handleSubmit() {
+    handleSubmit () {
       this.form.validateFields((error, values) => {
         if (!error) {
           this.spinning = true
@@ -299,12 +304,12 @@ export default {
         }
       })
     },
-    loaderBankReceiptData(bankReceiptRecord) {
+    loaderBankReceiptData (bankReceiptRecord) {
       this.updateId = bankReceiptRecord.id
       bankReceiptRecord.payee = [bankReceiptRecord.payee]
       this.initFormData(bankReceiptRecord)
     },
-    initFormData(bankReceiptRecord) {
+    initFormData (bankReceiptRecord) {
       this.$nextTick(() => {
         for (const key in this.files) {
           if (bankReceiptRecord[key]) {
@@ -328,7 +333,10 @@ export default {
         })
       })
     },
-    beforeUpload(file, key) {
+    beforeUpload (file, key) {
+      if (!this.$checkFileSize(file, this.$message)) {
+        return
+      }
       const param = new FormData()
       param.append('file', file)
       const config = {
@@ -354,12 +362,21 @@ export default {
         .catch(res => {})
       return false
     },
-    handleChange(file, key) {
+    handleChange (file, key) {
       if (file.file.status === 'removed') {
         this.files[key] = file.fileList
       }
     },
-    download(key) {
+    preview (file) {
+      if (file.url) {
+        this.$preview({
+          filePath: file.url,
+          docName: get(file, 'name', ''),
+          visible: true
+        })
+      }
+    },
+    download (key) {
       const file = this.files[key][0]
       if (file) {
         const filePath = file.url
@@ -378,7 +395,7 @@ export default {
      * @param {*} 当前的值
      * @return {*} 验证的内容
      */
-    transformUpload(value) {
+    transformUpload (value) {
       if (value && value.fileList && value.fileList.length) {
         return value.fileList
       }

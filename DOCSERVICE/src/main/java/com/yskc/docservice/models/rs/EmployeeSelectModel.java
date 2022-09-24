@@ -13,6 +13,7 @@ public class EmployeeSelectModel implements Serializable {
 
     private String enumber;
     private String ename;
+    private String autographUrl;
 
     public String getEnumber() {
         return enumber;
@@ -28,5 +29,13 @@ public class EmployeeSelectModel implements Serializable {
 
     public void setEname(String ename) {
         this.ename = ename;
+    }
+
+    public String getAutographUrl() {
+        return autographUrl;
+    }
+
+    public void setAutographUrl(String autographUrl) {
+        this.autographUrl = autographUrl;
     }
 }

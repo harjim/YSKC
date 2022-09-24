@@ -70,19 +70,17 @@
     </vxe-grid>
     <concept-detail-modal ref="conceptDetailModal" />
     <concept-files-modal ref="conceptFilesModal" @success="updateMonthList" />
-    <preview-modal ref="previewModal" url="/project/preview"/>
   </a-card>
 </template>
 <script>
 import yearMixin from '@/utils/yearMixin'
 import conceptDetailModal from './modules/ConceptDetailModal.vue'
 import conceptFilesModal from './modules/ConceptFilesModal.vue'
-import { PreviewModal } from '@/components'
+
 export default {
   components: {
     conceptDetailModal,
-    conceptFilesModal,
-    PreviewModal
+    conceptFilesModal
   },
   data () {
     return {
@@ -180,7 +178,12 @@ export default {
         this.$message.info('请先上传文件')
         return
       }
-      this.$refs.previewModal.show(path, name)
+      this.$preview({
+        filePath: path,
+        docName: name,
+        visible: true,
+        url: '/project/preview'
+      })
     },
     delFile (id, row) {
       this.$http.post('/project/delMeetingFile', { ids: [id] })

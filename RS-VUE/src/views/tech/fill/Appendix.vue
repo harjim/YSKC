@@ -34,11 +34,10 @@
       @onSuccess="success"
       @error="error"
     />
-    <preview-modal ref="previewModal"></preview-modal>
   </a-card>
 </template>
 <script>
-import { UploadFile, PreviewModal } from '@/components'
+import { UploadFile } from '@/components'
 
 const data = [{
   key: '2001',
@@ -77,8 +76,7 @@ const data = [{
 export default {
   name: 'Rules',
   components: {
-    UploadFile,
-    PreviewModal
+    UploadFile
   },
   props: {
     projectId: {
@@ -138,8 +136,12 @@ export default {
     this.initialize()
   },
   methods: {
-    preview (record) {
-      this.$refs.previewModal.show(this.filePath, this.formData[2001])
+    preview () {
+      this.$preview({
+        filePath: this.filePath,
+        docName: this.formData[2001],
+        visible: true
+      })
     },
     downloadFile (record) {
       this.$exportData('/sysDocument/downloadFile', { id: this.id }, this.formData[record.type], this.$message)

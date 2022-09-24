@@ -32,7 +32,8 @@
         payDate, payee, payStage, payRate, voucherPath, bankReceiptPath,taxRate,amountTax
         from t_payment
         where companyId=#{companyId}
-            and investmentId is null
+            and (investmentId is null
+          or investmentId = #{query.investmentId})
         <if test="query.voucherNo!=null and query.voucherNo!=''">
             and voucherNo like "%"#{query.voucherNo}"%"
         </if>
@@ -52,7 +53,7 @@
         </if>
     </select>
     <select id="countInfo" resultType="com.yskc.rs.models.tech.InvestmentInfoModel">
-        select sum(amount) as totalBank,investmentId
+        select sum(amountTax) as totalBank,investmentId
         from t_payment
         where companyId=#{companyId} and investmentId in
         <foreach collection="ids" item="id" open="(" separator="," close=")">

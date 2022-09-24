@@ -198,7 +198,6 @@
           </a-row>
         </a-form>
       </a-modal>
-      <preview-modal ref="previewModal"></preview-modal>
     </a-spin>
   </div>
 </template>
@@ -206,7 +205,6 @@
 <script>
 import ystable from '@/components/Table/ystable'
 import YsUpload from '@/components/YsUpload'
-import { PreviewModal } from '@/components'
 import { getAuth } from '@/utils/util'
 import { saveProposal, delProposal, auditProposal } from '@/api/proposalManagement'
 import yearMixin from '@/utils/yearMixin'
@@ -217,8 +215,7 @@ export default {
   name: 'ProposalManagement',
   components: {
     ystable,
-    YsUpload,
-    PreviewModal
+    YsUpload
   },
   computed: {
     isMsUser () {
@@ -371,7 +368,11 @@ export default {
         this.$message.info('请先上传文件')
         return
       }
-      this.$refs.previewModal.show(path, name)
+      this.$preview({
+        filePath: path,
+        docName: name || '',
+        visible: true
+      })
     },
     handleSubmit () {
       this.form.validateFields((errors, values) => {

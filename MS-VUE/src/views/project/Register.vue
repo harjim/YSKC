@@ -1,7 +1,7 @@
 <!--
  * @Author: ldx
  * @Date: 2020-08-06 10:59:39
- * @LastEditTime: 2022-09-19 14:07:12
+ * @LastEditTime: 2022-09-22 17:13:44
  * @LastEditors: error: git config user.name && git config user.email & please set dead value or install git
  * @Description: 技改备案管理
  * @FilePath: \MS-VUE\src\views\project\Register.vue
@@ -36,7 +36,7 @@
       :toolbar="{ refresh:true, zoom: true, custom: true, }" >
       <template #buttons>
         <span v-if="$auth('project:register:export')" style="padding-right: 10px">
-          <a-button type="primary" @click="exportDataList()">导出</a-button>
+          <a-button type="primary" @click="exportDataList()" :loading="exportLoad">导出</a-button>
         </span>
         <b>
           有效备案证数量:
@@ -56,7 +56,8 @@
         </b>
       </template>
       <vxe-table-column title="序号" type="seq" width="60" align="center" header-align="center"></vxe-table-column>
-      <vxe-table-column title="公司名称" field="companyName" width="200" align="left" header-align="center">
+      <vxe-table-column title="所属部门" field="deptName" width="100" align="left" header-align="center"></vxe-table-column>
+      <vxe-table-column title="企业名称" field="companyName" width="200" align="left" header-align="center">
         <template #default="{ row }">
           <a
             @click="requestCustomer(row)"
@@ -66,18 +67,29 @@
           <span v-else>{{ row.companyName }}</span>
         </template>
       </vxe-table-column>
+      <vxe-table-column title="客户所在地" field="address" width="200" align="left" header-align="center"></vxe-table-column>
+      <vxe-table-column title="级别" field="companyLevel" width="80" align="center" header-align="center"></vxe-table-column>
       <vxe-table-column title="申报项目名称" field="productName" width="200" align="left" header-align="center"></vxe-table-column>
       <vxe-table-column title="项目名称" field="pname" width="200" align="left" header-align="center"></vxe-table-column>
       <vxe-table-column title="年份" field="year" width="100" align="center" header-align="center"></vxe-table-column>
-      <vxe-table-column title="备案总金额" field="totalBudget" width="100" align="right" header-align="center"></vxe-table-column>
-      <vxe-table-column title="投资总金额" field="totalAmount" width="100" align="right" header-align="center"></vxe-table-column>
-      <vxe-table-column title="设备费" field="equipment" width="100" align="right" header-align="center"></vxe-table-column>
-      <vxe-table-column title="已完成设备费" field="equipmentCost" width="120" align="right" header-align="center"></vxe-table-column>
-      <vxe-table-column title="建设费" field="construction" width="100" align="right" header-align="center"></vxe-table-column>
-      <vxe-table-column title="已完成建设费" field="constructionCost" width="120" align="right" header-align="center"></vxe-table-column>
-      <vxe-table-column title="铺地流动资金" field="initWorkCapital" width="120" align="right" header-align="center"></vxe-table-column>
-      <vxe-table-column title="已完成铺地流动资金" field="initWorkCapitalCost" width="150" align="right" header-align="center"></vxe-table-column>
-      <vxe-table-column title="完成率" field="completeRate" width="100" align="right" header-align="center"></vxe-table-column>
+      <vxe-table-column title="备案总金额（含税：万元）" field="totalAmountTax" width="120" align="right" header-align="center"></vxe-table-column>
+      <vxe-table-column title="备案总金额（不含税：万元）" field="totalAmount" width="120" align="right" header-align="center"></vxe-table-column>
+      <vxe-table-column title="备案资产项数" field="equipmentCnt" width="120" align="right" header-align="center"></vxe-table-column>
+      <vxe-table-column title="备案资产数量" field="equipmentQuantity" width="120" align="right" header-align="center"></vxe-table-column>
+      <vxe-table-column title="项目签发日期" field="beianDate" width="120" align="center" header-align="center"></vxe-table-column>
+      <vxe-table-column title="项目计划周期" field="date" width="120" align="center" header-align="center"></vxe-table-column>
+      <vxe-table-column title="备案证号" field="beianNo" width="100" align="left" header-align="center"></vxe-table-column>
+      <vxe-table-column title="项目编号" field="projectNo" width="100" align="left" header-align="center"></vxe-table-column>
+      <vxe-table-column title="变更次数" field="changedCnt" width="100" align="center" header-align="center"></vxe-table-column>
+      <vxe-table-column title="变更时间" field="changedDates" width="160" align="left" header-align="center"></vxe-table-column>
+      <vxe-table-column title="发票总额（万元）" field="taxAmount" width="140" align="right" header-align="center"></vxe-table-column>
+      <vxe-table-column title="发票完工率（%）" field="taxAmountDetail" width="140" align="right" header-align="center"></vxe-table-column>
+      <vxe-table-column title="付款总额（万元）" field="amount" width="140" align="right" header-align="center"></vxe-table-column>
+      <vxe-table-column title="付款完工率（%）" field="amountDetail" width="140" align="right" header-align="center"></vxe-table-column>
+      <vxe-table-column title="备案账号" field="accountName" width="100" align="left" header-align="center"></vxe-table-column>
+      <vxe-table-column title="备案密码" field="accountPassword" width="100" align="left" header-align="center"></vxe-table-column>
+      <vxe-table-column title="项目用电（万kw*h）" field="powerUsed" width="160" align="right" header-align="center"></vxe-table-column>
+      <vxe-table-column title="项目用能（tce）" field="energyUsed" width="160" align="right" header-align="center"></vxe-table-column>
     </ystable>
   </a-card>
 </template>
@@ -105,7 +117,8 @@ export default {
       },
       tableData: [],
       editRow: undefined,
-      projectRow: undefined
+      projectRow: undefined,
+      exportLoad: false
     }
   },
   methods: {
@@ -154,8 +167,11 @@ export default {
     },
     exportDataList () {
       this.spin = true
+      this.exportLoad = true
       this.$exportData('/beian/export', this.getParams(), `备案列表.xlsx`, this.$message).then(res => {
         this.spin = false
+      }).finally(() => {
+        this.exportLoad = false
       })
     },
     /**

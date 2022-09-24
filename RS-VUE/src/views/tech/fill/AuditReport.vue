@@ -46,16 +46,14 @@
       @onSuccess="success"
       @error="error"
     />
-    <preview-modal ref="previewModal"></preview-modal>
   </a-card>
 </template>
 <script>
-import { STable, UploadFile, PreviewModal } from '@/components'
+import { STable, UploadFile } from '@/components'
 
 export default {
   name: 'Rules',
   components: {
-    PreviewModal,
     UploadFile,
     STable
   },
@@ -88,7 +86,11 @@ export default {
   },
   methods: {
     preview (record) {
-      this.$refs.previewModal.show(record.filePath, record.fileName)
+      this.$preview({
+        filePath: record.filePath,
+        docName: record.fileName,
+        visible: true
+      })
     },
     downloadFile (record) {
       this.$exportData('/sysDocument/downloadFile', { id: record.id }, record.fileName, this.$message)

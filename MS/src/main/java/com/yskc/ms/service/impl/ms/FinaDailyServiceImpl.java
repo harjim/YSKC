@@ -132,7 +132,7 @@ public class FinaDailyServiceImpl implements FinaDailyService {
         }
         Integer dailyId = model.getId();
         Boolean isAdd = dailyId == null;
-        Integer id = null;
+        Integer id;
         Integer userId = userInfo.getId();
         TransactionStatus transactionStatus = TransactionUtils.newTransaction(DataSourceEnum.MS);
         try {
@@ -142,7 +142,7 @@ public class FinaDailyServiceImpl implements FinaDailyService {
 
             id = flowInstanceService.submitForm(dailyId, userId, moduleId);
             TransactionUtils.commit(DataSourceEnum.MS, transactionStatus);
-        }catch (OwnerException e) {
+        } catch (OwnerException e) {
             logger.error(e.getMessage(), e);
             TransactionUtils.rollback(DataSourceEnum.MS, transactionStatus);
             throw e;

@@ -6,6 +6,7 @@ import com.yskc.common.model.PageModel;
 import com.yskc.ms.config.Constant;
 import com.yskc.ms.config.MsConfig;
 import com.yskc.ms.controller.ms.BaseController;
+import com.yskc.ms.models.tech.BeianExportModel;
 import com.yskc.ms.models.tech.BeianInfoModel;
 import com.yskc.ms.models.tech.QueryBeianModel;
 import com.yskc.ms.service.rs.BeianService;
@@ -41,7 +42,7 @@ public class BeianController extends BaseController {
     @GetMapping("/getList")
     @PermissionRequired(perms = "project:register:search")
     @ApiOperation(value = "获取备案列表", notes = "获取备案列表")
-    public PageModel<List<BeianInfoModel>> getList(QueryBeianModel query) throws OwnerException {
+    public PageModel<List<BeianExportModel>> getList(QueryBeianModel query) throws OwnerException {
         return beianService.getList(query, getDataPerm());
     }
 

@@ -123,8 +123,6 @@
     </div>
     <!-- 添加编辑 -->
     <addModal ref="addModal" :rdProjectList="rdProjectList" @ok="search"></addModal>
-    <!-- 预览 -->
-    <preview-modal ref="previewModal"></preview-modal>
     <!-- 导入 -->
     <upload-modal
       :showProgress="true"
@@ -143,13 +141,12 @@
 <script>
 import ystable from '@/components/Table/ystable'
 import addModal from './modules/AddSoftRegistrationModal.vue'
-import { PreviewModal, UploadModal } from '@/components'
+import { UploadModal } from '@/components'
 
 export default {
   components: {
     ystable,
     addModal,
-    PreviewModal,
     UploadModal
   },
   data () {
@@ -225,7 +222,11 @@ export default {
         this.$message.info('请先上传文件')
         return
       }
-      this.$refs.previewModal.show(path, name)
+      this.$preview({
+        filePath: path,
+        docName: name || '',
+        visible: true
+      })
     },
     transFormStrToAry (filePaths) {
       const files = []

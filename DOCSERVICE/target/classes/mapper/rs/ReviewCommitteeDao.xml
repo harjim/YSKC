@@ -10,4 +10,9 @@
         and pr.enumber in (<foreach collection="enumbers" item="enumber" separator=",">#{enumber}</foreach>)
         order by pr.seq,pr.enumber
     </select>
+    <select id="getEmployees" resultType="com.yskc.docservice.models.rs.project.ProjectEmployeeInfo">
+        select enumber,ename,position,deptName,autographUrl
+        from employee WHERE companyId = #{companyId}
+        and enumber in (<foreach collection="enumbers" item="enumber" separator=",">#{enumber}</foreach>)
+    </select>
 </mapper>

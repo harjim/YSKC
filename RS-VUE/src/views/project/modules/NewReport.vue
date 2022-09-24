@@ -105,18 +105,15 @@
         </vxe-table-column>
       </template>
     </ystable>
-    <preview-modal ref="previewModal"></preview-modal>
   </div>
 </template>
 
 <script>
-import { PreviewModal } from '@/components'
 import { isEditStatus } from '@/utils/processDoc/auditStatus'
 import ystable from '@/components/Table/ystable'
 export default {
   name: 'NewReport',
   components: {
-    PreviewModal,
     ystable
   },
   props: {
@@ -160,7 +157,11 @@ export default {
         this.$message.info('请先上传文件')
         return
       }
-      this.$refs.previewModal.show(row.filePath, row.fileName !== undefined ? row.fileName : '')
+      this.$preview({
+        filePath: row.filePath,
+        docName: row.fileName || '',
+        visible: true
+      })
     },
     downloadFile (row) {
       this.$exportData('/sysDocument/downloadFile', { id: row.id }, row.fileName, this.$message)

@@ -1,8 +1,8 @@
 <!--
  * @Author: ldx
  * @Date: 2021-01-22 13:36:51
- * @LastEditTime: 2022-05-14 08:54:52
- * @LastEditors: zdf
+ * @LastEditTime: 2022-09-23 15:19:03
+ * @LastEditors: hm
  * @Description: 过程文档审核Tab
  * @FilePath: \MS-VUE\src\views\customer\modules\AuditProgress\modules\DocTab.vue
 -->
@@ -164,6 +164,7 @@
               style="height: 100%"
               tip="加载中..."
             >
+              <p v-if="devTest" style="text-align: center; font-size: 24px; font-weight: 700; color: black;">{{ currentObj.item.docName }}</p>
               <new-report
                 v-if="currentObj.item.templateName === 'NewReportForm'"
                 :projectId="projectId"
@@ -187,7 +188,7 @@
               <div
                 v-else
                 ref="previewDoc"
-                class="preview_doc"
+                :class="devTest ? 'preview_docNew' : 'preview_doc'"
                 v-html="htmlData"
               />
             </a-spin>
@@ -235,6 +236,12 @@ import BatchAuditModal from './BatchAuditModal'
 import BatchActivateModal from './BatchActivateModal'
 import TabLayout from './TabLayout'
 import ExportDocFileModal from '@/components/DocList/ExportDocFileModal'
+
+const devTest = localStorage.getItem('dev_test') === 'true'
+const previewUrl = devTest ? '/doc/msRdfile/preview' : '/projectProgress/previewFile'
+const exportMultiUrl = devTest ? '/doc/msRdfile/export' : '/projectProgress/exportAllDoc'
+const exportFormat = devTest ? '.docx' : '.pdf'
+const pDocFileId = devTest ? 'pDocFileId' : 'pDocFileIds'
 
 export default {
   name: 'DocTab',
@@ -338,7 +345,8 @@ export default {
         }
       },
       hasProjectReport: false,
-      showScore: false
+      showScore: false,
+      devTest
     }
   },
   computed: {
@@ -488,18 +496,19 @@ export default {
       this.spinning = true
       this.isDownload = true
       const datas = {
-        url: '/projectProgress/exportAllDoc',
+        url: exportMultiUrl,
         params: {
           projectId: this.projectId,
-          pDocFileIds: this.exportIds,
+          // pDocFileIds: this.exportIds,
           currentYear: this.record.year
         },
-        filename: this.record.companyName + '-' + this.currentProject.rdTitle + '-' + this.currentProject.pname + '过程文件.pdf',
+        filename: this.record.companyName + '-' + this.currentProject.rdTitle + '-' + this.currentProject.pname + '过程文件' + exportFormat,
         rdTitle: this.currentProject.rdTitle,
         hasCatalogue: true,
         hasBudget: this.hasProjectReport,
         hasCover: true
       }
+      datas.params[pDocFileId] = this.exportIds
       this.$refs.exportDoc.show(datas)
     },
     exportOk () {
@@ -523,7 +532,7 @@ export default {
         companyId: this.record.companyId
       }
       this.contentSpinning = true
-      this.$http.get('/projectProgress/previewFile', { params: params }).then((res) => {
+      this.$http.get(previewUrl, { params: params }).then((res) => {
         if (res.data && res.success) {
           this.htmlData = res.data
         } else {

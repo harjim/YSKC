@@ -184,14 +184,12 @@
       </ystable>
     </div>
     <add-patent-plan-modal ref="addModal" @ok="search"></add-patent-plan-modal>
-    <preview-modal ref="previewModal"></preview-modal>
     <ApplyDataDrawer ref="applyDataDrawer" :openPreviewModal="openPreviewModal"></ApplyDataDrawer>
   </a-card>
 </template>
 <script>
 import ystable from '@/components/Table/ystable'
 import AddPatentPlanModal from './modules/AddPatentPlanModal'
-import { PreviewModal } from '@/components'
 import yearMiXin from '@/utils/yearMixin'
 import { submitPatents } from '@/api/patent/patent'
 import { isEditStatus, statusMap, isMsUser } from '@/utils/processDoc/auditStatus'
@@ -202,7 +200,6 @@ export default {
   components: {
     ystable,
     AddPatentPlanModal,
-    PreviewModal,
     ApplyDataDrawer
   },
   watch: {
@@ -300,14 +297,22 @@ export default {
         this.$message.info('请先上传文件')
         return
       }
-      this.$refs.previewModal.show(record.path, record.name !== undefined ? record.name : '')
+      this.$preview({
+        filePath: record.path,
+        docName: record.name,
+        visible: true
+      })
     },
     openPreviewModal (path, name) {
       if (path === '') {
         this.$message.info('请先上传文件')
         return
       }
-      this.$refs.previewModal.show(path, name)
+      this.$preview({
+        filePath: path,
+        docName: name,
+        visible: true
+      })
     },
     onShowApplyData (record) {
       this.$refs.applyDataDrawer.show(record)

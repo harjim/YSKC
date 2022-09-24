@@ -97,9 +97,6 @@
       accept="image/png,image/jpg,image/jpeg,image/gif,application/pdf"
       action="/docFileAttachment/upload"
       @success="success"></upload>
-    <preview-modal
-      ref="previewModal"
-      url="/document/appendixPreview"></preview-modal>
   </div>
 </template>
 <script>
@@ -108,7 +105,6 @@ import { cloneDeep } from 'lodash'
 import {
   getTemplateContent
 } from '@/docTemplate/Templates/js/templateContentType'
-import PreviewModal from '@/components/PreviewModal'
 import upload from '@/components/UploadModal/Upload.vue'
 import { getAttachments } from '@/api/doc/appendixForm'
 import moment from 'moment'
@@ -125,8 +121,7 @@ const fileTypeMap = {
 export default {
   name: 'AppendixForm',
   components: {
-    upload,
-    PreviewModal
+    upload
   },
   mixins: [yearMiXin, dateMixin],
   props: {
@@ -278,7 +273,12 @@ export default {
     },
     onPreview (record) {
       const txt = this.getExtension(record.filePath)
-      this.$refs.previewModal.show(record.filePath, record.fileName + txt)
+      this.$preview({
+        filePath: record.filePath,
+        docName: record.fileName + txt,
+        visible: true,
+        url: '/document/appendixPreview'
+      })
     },
     removeRow (record) {
       const tempRows = []

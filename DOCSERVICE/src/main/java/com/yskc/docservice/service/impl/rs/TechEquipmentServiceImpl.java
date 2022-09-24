@@ -42,10 +42,10 @@ public class TechEquipmentServiceImpl implements TechEquipmentService {
         Integer companyId = info.getCompanyId();
         for (int i = 0; i < models.size(); i++) {
             if (models.get(i).getLoadFactor().compareTo(temp) == 1) {
-                throw new OwnerException(MessageFormat.format("第【{0}】行负荷系数不能大于10", i+1));
+                throw new OwnerException(MessageFormat.format("第【{0}】行负荷系数应小于10", i+2));
             }
             if (models.get(i).getRunRate().compareTo(temp) == 1) {
-                throw new OwnerException(MessageFormat.format("第【{0}】行运转率不能大于10", i+1));
+                throw new OwnerException(MessageFormat.format("第【{0}】行运转率应小于10", i+2));
             }
             TechEquipment techEquipment = new TechEquipment();
             BeanUtils.copyProperties(models.get(i), techEquipment);

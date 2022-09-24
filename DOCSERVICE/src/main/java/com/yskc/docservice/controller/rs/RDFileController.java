@@ -2,12 +2,13 @@ package com.yskc.docservice.controller.rs;
 
 import com.yskc.common.exception.OwnerException;
 import com.yskc.docservice.models.DocParam;
-import com.yskc.docservice.service.rd.DataFactory;
 import com.yskc.docservice.service.rs.RDFileService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URLEncoder;
 

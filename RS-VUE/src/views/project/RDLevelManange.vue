@@ -109,7 +109,6 @@
                       </template>
                     </vxe-table-column> -->
                   </ystable>
-                  <preview-modal url="/document/appendixPreview" ref="previewModal"></preview-modal>
                   <!-- <upload
                     action="/docFileAttachment/upload"
                     ref="upload"
@@ -129,9 +128,7 @@
 
 <script>
 import ProjectSelect from '@/components/ProjectSelect/index.vue'
-import { getRdManagerMenu, getList } from '@/api/project/RDLevelManange' // delUploadFile
-import PreviewModal from '@/components/PreviewModal'
-// import Upload from '@/components/UploadModal/Upload.vue'
+import { getRdManagerMenu, getList } from '@/api/project/RDLevelManange'
 import { mapGetters } from 'vuex'
 import ystable from '@/components/Table/ystable'
 import moment from 'moment'
@@ -140,7 +137,6 @@ export default {
   name: 'RDLevelManange',
   components: {
     ystable,
-    PreviewModal,
     // Upload,
     ProjectSelect
   },
@@ -273,7 +269,12 @@ export default {
     },
     onPreview (record) {
       const txt = this.getExtension(record.filePath)
-      this.$refs.previewModal.show(record.filePath, record.fileName + txt)
+      this.$preview({
+        filePath: record.filePath,
+        docName: record.fileName + txt,
+        visible: true,
+        url: '/document/appendixPreview'
+      })
     },
     getExtension (path) {
       if (!path) return

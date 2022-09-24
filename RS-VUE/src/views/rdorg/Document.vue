@@ -46,12 +46,11 @@
       @onSuccess="success"
       @error="error"
     />
-    <preview-modal ref="previewModal"></preview-modal>
   </a-card>
 </template>
 <script>
 import DocEdit from './modules/DocEdit'
-import { STable, PreviewModal } from '@/components'
+import { STable } from '@/components'
 import yearMiXin from '@/utils/yearMixin'
 
 export default {
@@ -59,8 +58,7 @@ export default {
   name: 'Rules',
   components: {
     DocEdit,
-    STable,
-    PreviewModal
+    STable
   },
   props: {
     fileType: {
@@ -89,7 +87,11 @@ export default {
         this.$message.info('请先上传文件')
         return
       }
-      this.$refs.previewModal.show(record.filePath, record.fileName)
+      this.$preview({
+        filePath: record.filePath,
+        docName: record.fileName || '',
+        visible: true
+      })
     },
     search () {
       this.paramData.year = this.currentYear

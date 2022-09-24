@@ -63,20 +63,18 @@
         @onSuccess="success"
         @error="error"
       />
-      <preview-modal ref="previewModal"></preview-modal>
     </span>
   </a-card>
 </template>
 <script>
 import MonthlyReportUpload from './modules/MonthlyReportUpload'
-import { ystable, PreviewModal } from '@/components'
+import { ystable } from '@/components'
 import yearMiXin from '@/utils/yearMixin'
 
 export default {
   mixins: [yearMiXin],
   name: 'MonthlyReport',
   components: {
-    PreviewModal,
     MonthlyReportUpload,
     ystable
   },
@@ -105,7 +103,11 @@ export default {
         this.$message.warning('文件路径不对，请联系管理员')
         return
       }
-      this.$refs.previewModal.show(record.filePath, record.fileName)
+      this.$preview({
+        filePath: record.filePath,
+        docName: record.fileName,
+        visible: true
+      })
     },
     downloadFile (record) {
       this.$exportData('/sysDocument/downloadFile', { id: record.id }, record.fileName, this.$message)

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,5 +56,36 @@ public class ProjectCheckReportFormDocument extends RDDocument {
             }
         }
         return map;
+    }
+
+    @Override
+    protected Map getDocMap() throws IOException {
+        Map jsonMap = getJsonMap();
+        Map resultMap = new HashMap<>();
+        if (jsonMap.containsKey("list")) {
+            List<ProjectEmployeeInfo> employeeInfoList = JsonUtils.jsonToList(JsonUtils.objectToJson(jsonMap.get("list")), ProjectEmployeeInfo.class);
+            List<String> enumbers=employeeInfoList.stream().map(e->e.getEnumber()).collect(Collectors.toList());
+            Integer beginYear = this.dataFactory.getProjectInfo().getBeginYear();
+            Integer companyId = this.dataFactory.getCompanyInfo().getCompanyId();
+            if (!CollectionUtils.isEmpty(employeeInfoList)) {
+                List<ProjectEmployeeInfo> employeeInfos = reviewCommitteeDao.getEmployees(enumbers, companyId);
+                Map<String,ProjectEmployeeInfo> infoMap=new HashMap<>();
+                if(!CollectionUtils.isEmpty(employeeInfos)){
+                    infoMap=employeeInfos.stream().collect(Collectors.toMap(e->e.getEnumber(),e->e));
+                }
+                for (ProjectEmployeeInfo info:employeeInfoList){
+                    if(infoMap.containsKey(info.getEnumber())){
+                        ProjectEmployeeInfo employeeInfo=infoMap.get(info.getEnumber());
+                        info.setDeptName(employeeInfo.getDeptName());
+                        info.setPosition(employeeInfo.getPosition());
+                        info.setEname(employeeInfo.getEname());
+                        info.setAutographUrl(employeeInfo.getAutographUrl());
+                    }
+                }
+                resultMap.put("list",employeeInfoList);
+
+            }
+        }
+        return resultMap;
     }
 }

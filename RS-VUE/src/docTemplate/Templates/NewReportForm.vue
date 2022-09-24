@@ -56,7 +56,6 @@
           </vxe-table-column>
         </template>
       </vxe-grid>
-      <preview-modal ref="previewModal"></preview-modal>
     </div>
     <div class="operate">
       <a-button type="dashed" style="width: 100%" v-if="isEdit" icon="plus" @click="openUploadModal()">上传文件</a-button>
@@ -78,7 +77,6 @@
 <script>
 // TODO 提交问题、权限问题要处理
 import { mapGetters } from 'vuex'
-import { PreviewModal } from '@/components'
 import ResultUploadModal from '@/views/project/modules/ResultUploadModal'
 import { getTemplateContent } from '@/docTemplate/Templates/js/templateContentType'
 import { saveData } from '@/api/doc/index'
@@ -88,8 +86,7 @@ import { cloneDeep } from 'lodash'
 export default {
   name: 'NewReportForm',
   components: {
-    ResultUploadModal,
-    PreviewModal
+    ResultUploadModal
   },
   props: {
     projectId: {
@@ -174,7 +171,11 @@ export default {
         this.$message.info('请先上传文件')
         return
       }
-      this.$refs.previewModal.show(row.filePath, row.fileName !== undefined ? row.fileName : '')
+      this.$preview({
+        filePath: row.filePath,
+        docName: row.fileName || '',
+        visible: true
+      })
     },
     downloadFile (row) {
       this.$exportData('/sysDocument/downloadFile', { id: row.id }, row.fileName, this.$message)
