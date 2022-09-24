@@ -9,11 +9,10 @@
 
 <template>
   <a-modal v-model="visible" title="按RD导出">
-    <a-form :form="form" layout="inline">
+    <a-form :form="form" :label-col="{ span: 3 }" :wrapper-col="{ span: 20 }">
       <a-form-item label="项目">
         <a-tree-select
           show-search
-          style="min-width: 200px; max-width: 1120px;"
           placeholder="请选择导出项目"
           allow-clear
           multiple
