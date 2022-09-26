@@ -4,7 +4,7 @@
  * @FilePath      : \YSIS\RS-VUE\src\views\project\hourSummary\PersonnelHourSummaryTab.vue
  * @Description   : 人员设备工时表/人员工时记录
  * @LastEditors   : hzp
- * @LastEditTime  : 2022-09-24 11:30:28
+ * @LastEditTime  : 2022-09-26 14:14:42
  */
 
 <template>
@@ -15,7 +15,6 @@
           show-search
           style="min-width: 200px; max-width: 1120px;"
           placeholder="请选择项目"
-          allow-clear
           multiple
           tree-checkable
           treeDefaultExpandAll
@@ -23,7 +22,7 @@
           :show-checked-strategy="SHOW_PARENT"
           :dropdown-style="{ maxHeight: '400px', overflow: 'auto' }"
           :treeData="projects"
-          v-model="params.projects"
+          v-model="params.projectIds"
           @change="changeProjectChecked"
         ></a-tree-select>
       </a-form-item>
@@ -43,7 +42,6 @@
     <YsTable
       ref="xTable"
       border="full"
-      max-height="100%"
       queryUrl="/projectAttendance/getRdHourData"
       :params="params"
       highlight-hover-row
@@ -52,14 +50,23 @@
       auto-resize
       :toolbar="{ refresh: true, zoom: true, custom: true }"
     >
-      <vxe-table-column type="check" width="60" fixed="left"></vxe-table-column>
-      <vxe-table-column title="工号" field="enumber" width="100" fixed="left"></vxe-table-column>
-      <vxe-table-column title="姓名" field="ename" width="100" fixed="left"></vxe-table-column>
-      <vxe-table-column title="部门" field="deptName" width="100"></vxe-table-column>
-      <vxe-table-column title="人员类型" field="manType" width="100"></vxe-table-column>
-      <vxe-table-column title="总工时" field="totalHour" width="100"></vxe-table-column>
-      <vxe-table-column title="研发工时" field="rdHour" width="100"></vxe-table-column>
-      <vxe-table-column width="60" v-for="n in get(months, `[${params.months - 1}].days`, 0)" :key="n" :title="`${n}`" :field="`info[${n}]`"></vxe-table-column>
+      <vxe-table-column type="seq" width="60" fixed="left"></vxe-table-column>
+      <vxe-table-column title="RD" field="rdTitle" width="120" fixed="left" remoteSort></vxe-table-column>
+      <vxe-table-column title="项目名称" field="pname" width="140" fixed="left" remoteSort></vxe-table-column>
+      <vxe-table-column title="工号" field="enumber" width="100" fixed="left" remoteSort></vxe-table-column>
+      <vxe-table-column title="姓名" field="ename" width="120" fixed="left" remoteSort></vxe-table-column>
+      <vxe-table-column title="部门" field="deptName" width="120" remoteSort></vxe-table-column>
+      <vxe-table-column title="人员类型" field="typeDetail" width="120" remoteSort></vxe-table-column>
+      <vxe-table-column title="总工时" field="workHours" width="100" align="right"></vxe-table-column>
+      <vxe-table-column title="研发工时" field="rdHour" width="100" remoteSort align="right"></vxe-table-column>
+      <vxe-table-column
+        width="80"
+        v-for="n in get(months, `[${moment(params.months).format('MM') - 1}].days`, 0)"
+        :key="n"
+        :title="`${n}号`"
+        :field="`info[${n}]`"
+        remoteSort
+        align="right"></vxe-table-column>
     </YsTable>
   </div>
 </template>
@@ -68,6 +75,7 @@
 import YsTable from '@/components/Table/ystable'
 import { TreeSelect } from 'ant-design-vue'
 import { get, map } from 'lodash'
+import moment from 'moment'
 
 const SHOW_PARENT = TreeSelect.SHOW_PARENT
 
@@ -106,7 +114,8 @@ export default {
       immediate: true,
       handler (val) {
         if (get(val, '[0].children.length')) {
-          this.params.projects = [get(val, '[0].children[0].id')]
+          this.params.projectIds = [get(val, '[0].children[0].id')]
+          this.refresh(true)
         }
       }
     },
@@ -117,12 +126,15 @@ export default {
     months: {
       immediate: true,
       handler (val) {
-        if (get(val, '[0].value')) this.params.months = get(val, '[0].value')
+        if (get(val, '[0].value')) {
+          this.params.months = get(val, '[0].value')
+        }
       }
     }
   },
   methods: {
     get,
+    moment,
     /******
      * @description: 表格刷新
      * @param {Boolean} flag 是否刷回第一页，默认否
@@ -136,13 +148,13 @@ export default {
      * @param {Array} value
      * @return {*}
      */
-    changeProjectChecked (projects) {
-      if (projects.length === 1 && projects[0] === 0) {
-        projects = map(this.projects[0].children, item => item.value)
+    changeProjectChecked (projectIds) {
+      if (projectIds.length === 1 && projectIds[0] === 0) {
+        projectIds = map(this.projects[0].children, item => item.value)
       }
       this.params = {
         ...this.params,
-        projects
+        projectIds
       }
     },
     /** ****
@@ -159,7 +171,3 @@ export default {
   }
 }
 </script>
-
-<style lang="less" scoped>
-
-</style>

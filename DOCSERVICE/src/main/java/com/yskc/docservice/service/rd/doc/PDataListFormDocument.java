@@ -3,7 +3,6 @@ package com.yskc.docservice.service.rd.doc;
 import cn.hutool.core.util.StrUtil;
 import com.yskc.common.utils.JsonUtils;
 import com.yskc.docservice.dao.rs.company.CompanySettingDao;
-import com.yskc.docservice.dao.rs.project.ProjectDocFileDao;
 import com.yskc.docservice.entity.rs.company.CompanySettingEntity;
 import com.yskc.docservice.entity.rs.project.ProjectEntity;
 import com.yskc.docservice.models.rs.docfile.PDataListFormModel;
@@ -25,8 +24,8 @@ import java.util.*;
 @Scope("prototype")
 public class PDataListFormDocument extends RDDocument {
 
-    @Autowired
-    private ProjectDocFileDao projectDocFileDao;
+/*    @Autowired
+    private ProjectDocFileDao projectDocFileDao;*/
     @Autowired
     private CompanySettingDao companySettingDao;
 
@@ -78,7 +77,7 @@ public class PDataListFormDocument extends RDDocument {
     }*/
     public List<PDataListFormModel> getDocFileList() {
         ProjectEntity projectEntity = dataFactory.getProjectInfo();
-//        List<Integer> pDocFileIds = docParam.getpDocFileId() != null && docParam.getpDocFileId().length > 1 ? Arrays.asList(docParam.getpDocFileId()) : null;
+        List<Integer> pDocFileIds = docParam.getpDocFileId() != null && docParam.getpDocFileId().length > 1 ? Arrays.asList(docParam.getpDocFileId()) : null;
         List<PDataListFormModel> stageModelList = dataFactory.getAllFileStageList();
         if (!CollectionUtils.isEmpty(stageModelList)) {
             CompanySettingEntity companySetting = companySettingDao.getSetting(projectEntity.getCompanyId());

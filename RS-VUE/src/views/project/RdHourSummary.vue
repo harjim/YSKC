@@ -4,25 +4,28 @@
  * @FilePath      : \YSIS\RS-VUE\src\views\project\RdHourSummary.vue
  * @Description   : 人员设备工时表
  * @LastEditors   : hzp
- * @LastEditTime  : 2022-09-24 11:45:35
+ * @LastEditTime  : 2022-09-26 17:02:57
  */
 
 <template>
   <a-card>
-    <a-tabs v-model="activeKey">
-      <a-tab-pane tab="人员工时记录" :key="1">
-        <PersonnelHourSummaryTab :projects="projects" :months="months" :year="currentYear" />
-      </a-tab-pane>
-      <a-tab-pane tab="设备工时记录" :key="2">
-        <EquipmentHourSummaryTab :projects="projects" :months="months" :year="currentYear" />
-      </a-tab-pane>
-      <template slot="tabBarExtraContent">
-        <a-button type="primary" style="margin-left: 8px;" @click="$refs.ProjectsExportsModal.show()">按项目导出</a-button>
-        <a-button type="primary" style="margin-left: 8px;" @click="$refs.MonthsExportsModal.show()">按月份导出</a-button>
-      </template>
-    </a-tabs>
-    <MonthsExportsModal ref="MonthsExportsModal" />
-    <ProjectsExportsModal ref="ProjectsExportsModal" />
+    <template v-if="$auth('project:rdHourSummary:search')">
+      <a-tabs v-model="activeKey">
+        <a-tab-pane tab="人员工时记录" :key="1">
+          <PersonnelHourSummaryTab ref="PersonnelHourSummaryTab" :projects="projects" :months="months" :year="currentYear" />
+        </a-tab-pane>
+        <a-tab-pane tab="设备工时记录" :key="2">
+          <EquipmentHourSummaryTab ref="EquipmentHourSummaryTab" :projects="projects" :months="months" :year="currentYear" />
+        </a-tab-pane>
+        <template slot="tabBarExtraContent">
+          <a-button v-if="$auth('project:rdHourSummary:exportProjects')" type="primary" style="margin-left: 8px;" @click="showExportsModal('project')">按项目导出</a-button>
+          <a-button v-if="$auth('project:rdHourSummary:exportMonths')" type="primary" style="margin-left: 8px;" @click="showExportsModal('months')">按月份导出</a-button>
+        </template>
+      </a-tabs>
+      <MonthsExportsModal v-if="$auth('project:rdHourSummary:exportMonths')" ref="MonthsExportsModal" />
+      <ProjectsExportsModal v-if="$auth('project:rdHourSummary:exportProjects')" ref="ProjectsExportsModal" />
+    </template>
+    <a-empty v-else />
   </a-card>
 </template>
 
@@ -65,7 +68,7 @@ export default {
       const months = []
       for (let i = 0; i < 12; i++) {
         months.push({
-          value: i + 1,
+          value: moment(`${this.currentYear}-${padStart(i + 1, 2, '0')}-01`).format('YYYY-MM-DD HH:mm:ss'),
           label: `${i + 1}月`,
           days: moment(`${this.currentYear}-${padStart(i + 1, 2, '0')}`, 'YYYY-MM').daysInMonth()
         })
@@ -81,7 +84,7 @@ export default {
         if (success) {
           this.projects = [{
             value: 0,
-            label: `全选${data.length}`,
+            label: `所有项目${data.length}`,
             children: map(data, item => ({
               ...item,
               value: item.id,
@@ -92,11 +95,38 @@ export default {
           this.$message.error(errorMessage)
         }
       })
+    },
+    showExportsModal (flag) {
+      const temp = {
+        year: this.currentYear
+      }
+      this.wrapperQueryParams(temp)
+      switch (flag) {
+        case 'project':
+          temp.projects = this.projects
+          this.showExportsProjects(temp)
+          break
+        case 'months':
+          temp.months = this.months
+          this.showExportsMonths(temp)
+          break
+      }
+    },
+    wrapperQueryParams (queryParams) {
+      if (this.activeKey === 1) {
+        queryParams.enumber = this.$refs.PersonnelHourSummaryTab.params.enumber
+        queryParams.ename = this.$refs.PersonnelHourSummaryTab.params.ename
+      } else {
+        queryParams.ecode = this.$refs.EquipmentHourSummaryTab.params.ecode
+        queryParams.ename = this.$refs.EquipmentHourSummaryTab.params.ename
+      }
+    },
+    showExportsMonths (queryParams) {
+      this.$refs.MonthsExportsModal.show(queryParams, this.activeKey)
+    },
+    showExportsProjects (queryParams) {
+      this.$refs.ProjectsExportsModal.show(queryParams, this.activeKey)
     }
   }
 }
 </script>
-
-<style lang="less" scoped>
-
-</style>

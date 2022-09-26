@@ -180,10 +180,11 @@ public class DataFactory {
     RdEmployeeDao rdEmployeeDao;
 
     @Autowired
-    private DocServiceConfig docServiceConfig;
+    public DocServiceConfig docServiceConfig;
 
     Map<Integer, Map> footerMap = new HashMap<>();
 
+    // 获取底部审核
     Map getFooterMap(Integer year, String ftlPath) {
         if (!footerMap.containsKey(year)) {
             EmployeeSelectModel approval, audit, toCompile;

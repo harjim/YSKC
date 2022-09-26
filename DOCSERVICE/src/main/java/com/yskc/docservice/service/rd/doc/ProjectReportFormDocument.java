@@ -51,6 +51,11 @@ public class ProjectReportFormDocument extends RDDocument {
     private InitEquipmentDao initEquipmentDao;
 
     @Override
+    public boolean hasDocName() {
+        return false;
+    }
+
+    @Override
     protected Map getDocMap(ProjectEntity project, Integer currentYear) {
         String fileData = this.docFile.getData();
         List<Integer> memberIds = null;

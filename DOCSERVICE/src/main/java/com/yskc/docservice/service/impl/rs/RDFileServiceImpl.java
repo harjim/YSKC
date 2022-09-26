@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import wordUtil.LicenseLoad;
 
@@ -75,7 +76,6 @@ public class RDFileServiceImpl implements RDFileService {
         StringBuilder sb = new StringBuilder();
         for (PDocFile docFile :
                 docFileList) {
-            // TODO: docParam 已经存在dataFactory中，是否可以不用单独放进去
             RDDocument rdDocument = this.getRDDocument(docFile, docParam, dataFactory, "/static/");
 /*            if (addFileName) {
                 rdDocument.appendData("ftlDocFileName", docFile.getDocFileName());
@@ -112,22 +112,21 @@ public class RDFileServiceImpl implements RDFileService {
 
         //将光标移到⽂档开始的位置
         // 写文档封面
+        Integer pageSize = 0;
         if (docParam.getCover()) {
             builder.getFont().setName("宋体");
             String coverHtml = getCoverHtml(dataFactory, "/static/");
             builder.insertHtml(coverHtml);
             builder.insertBreak(BreakType.SECTION_BREAK_NEW_PAGE);
-//            builder.getPageSetup().setRestartPageNumbering(true);
-//            builder.getPageSetup().setPageStartingNumber(0);
-/*            builder.getPageSetup().getRestartPageNumbering();
-            doc.getFirstSection().getPageSetup().setRestartPageNumbering(true);*/
-//            doc.getChildNodes(NodeType.PARAGRAPH, true).get(1).getRange();
+            pageSize = 1;
 
         }
         // 写文档目录
         Boolean addCatalogue = docParam.getCatalogue() && docParam.getpDocFileId().length > 1;
         if (addCatalogue) {
             this.writeDocIndex(doc, builder);
+            pageSize = doc.getPageCount() - 1;
+            builder.getPageSetup().setRestartPageNumbering(true);
         }
         // 写文档内容
         boolean isFirst = true;
@@ -135,19 +134,23 @@ public class RDFileServiceImpl implements RDFileService {
                 docFileList) {
             if (!isFirst) {
                 builder.insertBreak(BreakType.SECTION_BREAK_NEW_PAGE);
+                builder.getPageSetup().setRestartPageNumbering(false);
             } else {
                 isFirst = false;
             }
-            RDDocument rdDocument = this.getRDDocument(docFile, docParam, dataFactory, Paths.get(docServiceConfig.getResourcePath(), "/static/").toUri().toString());
-            if (docFile.getDocFileId() == 15) {
+            RDDocument rdDocument = this.getRDDocument(docFile, docParam, dataFactory, Paths.get(docServiceConfig.getResourcePath(), "/static/").toAbsolutePath().toString() + System.getProperty("file.separator"));
+            if (rdDocument.isAttachment()) {
                 // 暂时未找到HTML设置可区别是否附件的方法,临时通过代码来设置
                 List<String> atts = rdDocument.getAttachments();
-                for (int i = 0; i < atts.size(); i++) {
-                    if (i > 0) {
-                        builder.insertBreak(BreakType.PAGE_BREAK);
+                // FIXME：判空
+                if (!CollectionUtils.isEmpty(atts)) {
+                    for (int i = 0; i < atts.size(); i++) {
+                        if (i > 0) {
+                            builder.insertBreak(BreakType.PAGE_BREAK);
+                        }
+                        Shape imgShape = builder.insertImage(atts.get(i));
+                        imgShape.setName("attachment"); // 附件插入的图片名设为attachment;
                     }
-                    Shape imgShape = builder.insertImage(atts.get(i));
-                    imgShape.setName("attachment"); // 附件插入的图片名设为attachment;
                 }
             } else {
                 /*Integer docFileId = docFile.getDocFileId();
@@ -155,7 +158,9 @@ public class RDFileServiceImpl implements RDFileService {
                 if (!docFileId.equals(27) && !docFileId.equals(50) && !docFileId.equals(43) && !docTemplateId.equals(103)) {
                     rdDocument.appendData("ftlDocFileName", docFile.getDocFileName());
                 }*/
-                rdDocument.appendData("ftlDocFileName", docFile.getDocFileName());
+                if (rdDocument.hasDocName()) {
+                    rdDocument.appendData("ftlDocFileName", docFile.getDocFileName());
+                }
                 builder.insertHtml(rdDocument.getHtml());
             }
         }
@@ -197,7 +202,7 @@ public class RDFileServiceImpl implements RDFileService {
 
         // 页码
         if (docParam.getPageNum()) {
-            this.writeDocFooter(doc);
+            this.writeDocFooter(doc, pageSize);
         }
         // 更新目录域
         if (addCatalogue) {
@@ -304,9 +309,10 @@ public class RDFileServiceImpl implements RDFileService {
         borderHeader.setLineStyle(LineStyle.SINGLE);
     }
 
-    private void writeDocFooter(Document doc) throws Exception {
+    private void writeDocFooter(Document doc, Integer pageSize) throws Exception {
         HeaderFooter footer = new HeaderFooter(doc, HeaderFooterType.FOOTER_PRIMARY);
-        doc.getFirstSection().getHeadersFooters().add(footer);
+//        doc.getFirstSection().getHeadersFooters().add(footer);
+        doc.getSections().get(pageSize).getHeadersFooters().add(footer);
         //页脚段落
         Paragraph footerpara = new Paragraph(doc);
         footerpara.getParagraphFormat().setAlignment(ParagraphAlignment.CENTER);

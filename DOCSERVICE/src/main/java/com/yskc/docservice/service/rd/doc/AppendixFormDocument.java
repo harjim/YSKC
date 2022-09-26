@@ -1,7 +1,5 @@
 package com.yskc.docservice.service.rd.doc;
 
-import com.aspose.pdf.devices.JpegDevice;
-import com.aspose.pdf.devices.Resolution;
 import com.yskc.docservice.dao.rs.project.DocFileAttachmentDao;
 import com.yskc.docservice.entity.rs.project.ProjectEntity;
 import com.yskc.docservice.models.rs.docfile.AttachmentModel;
@@ -10,9 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,6 +35,11 @@ public class AppendixFormDocument extends RDDocument {
     }
 
     @Override
+    public boolean isAttachment() {
+        return true;
+    }
+
+    @Override
     public List<String> getAttachments() throws IOException {
         ProjectEntity projectInfo = this.dataFactory.getProjectInfo();
         List<AttachmentModel> models = docFileAttachmentDao.getByDocFile(projectInfo.getId(), this.docFile.getId());
@@ -46,7 +48,12 @@ public class AppendixFormDocument extends RDDocument {
             for (AttachmentModel model : models) {
                 String fPath = model.getFilePath();
                 String realPath = fPath.replace("/static/", ftlPath);
-                if (fPath.endsWith(".pdf")) {
+                String uriPath = fPath.replace("/static/", this.uriFilePath);
+                String imgPath = this.pdfToImg(fPath, realPath, uriPath);
+                if (StringUtils.hasText(imgPath)) {
+                    imgUrls.add(imgPath);
+                }
+                /*if (fPath.endsWith(".pdf")) {
                     File pdfFile = new File(realPath);
                     if (pdfFile.exists()) {
                         File file = new File(pdfFile.getAbsolutePath().replace(".pdf", ""), "1.jpg");
@@ -76,7 +83,7 @@ public class AppendixFormDocument extends RDDocument {
                     }
                 } else {
                     imgUrls.add(realPath);
-                }
+                }*/
             }
             return imgUrls;
         }

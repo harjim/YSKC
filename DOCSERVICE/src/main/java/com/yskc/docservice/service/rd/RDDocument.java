@@ -1,5 +1,7 @@
 package com.yskc.docservice.service.rd;
 
+import com.aspose.pdf.devices.JpegDevice;
+import com.aspose.pdf.devices.Resolution;
 import com.yskc.common.exception.OwnerException;
 import com.yskc.common.utils.JsonUtils;
 import com.yskc.docservice.entity.rs.StageEntity;
@@ -11,11 +13,11 @@ import freemarker.template.Template;
 import freemarker.template.TemplateNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.UrlResource;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
+import java.io.*;
+import java.net.MalformedURLException;
+import java.nio.file.Paths;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -24,11 +26,13 @@ import java.util.Map;
 public abstract class RDDocument {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
+
     protected Configuration freemarkerConfiguration;
     protected DataFactory dataFactory;
     protected PDocFile docFile;
     protected DocParam docParam;
     protected String ftlPath;
+    protected String uriFilePath;
 
     protected Map dataMap = new HashMap();
 
@@ -39,6 +43,7 @@ public abstract class RDDocument {
         this.dataFactory = dataFactory;
         this.ftlPath = ftlPath;
         this.freemarkerConfiguration = freemarkerConfiguration;
+        this.uriFilePath = Paths.get(dataFactory.docServiceConfig.getResourcePath(), "/static/").toUri().toString();
         // this.tplFile = docFile.getDocTemplateName()+".html";
     }
 
@@ -162,6 +167,70 @@ public abstract class RDDocument {
 
     protected Map getDocMap() throws IOException {
         return null;
+    }
+
+    /**
+     * 是否是附件类型
+     * @return
+     */
+    public boolean isAttachment(){
+        return false;
+    }
+    /**
+     * 是否显示文档名
+     */
+    public boolean hasDocName() {
+        return true;
+    }
+
+    /**
+     * pdf 转 img
+     * @param fPath img 或 pdf 存储路径
+     * @param realPath 真实路径
+     * @param uriPath
+     * @return imgPaht
+     * @throws IOException
+     */
+    protected String pdfToImg(String fPath, String realPath, String uriPath) throws IOException {
+        String imgPath = null;
+        if (fPath.endsWith(".pdf")) {
+            File pdfFile = new File(realPath);
+            if (pdfFile.exists()) {
+                File file = new File(pdfFile.getAbsolutePath().replace(".pdf", ""), "1.jpg");
+                if (!file.exists()) {
+                    file.getParentFile().mkdir();
+                    com.aspose.pdf.Document doc1 = new com.aspose.pdf.Document(realPath);
+                    Resolution resolution = new Resolution(96);
+                    JpegDevice jpegDevice = new JpegDevice(resolution, 100);
+                    for (int index = 1; index <= doc1.getPages().size(); index++) {
+                        // 输出路径
+                        file = new File(file.getParentFile().getAbsolutePath(), index + ".jpg");
+                        if (!file.getParentFile().exists()) {
+                            file.getParentFile().mkdir();
+                        }
+                        FileOutputStream fileOs = new FileOutputStream(file);
+                        jpegDevice.process(doc1.getPages().get_Item(index), fileOs);
+                        fileOs.close();
+                        imgPath = file.getAbsolutePath();
+                    }
+                } else {
+                    File[] files = file.getParentFile().listFiles();
+                    for (int i = 1; i <= files.length; i++) {
+                        imgPath = file.getParentFile().getAbsolutePath() + "/" + i + ".jpg";
+                    }
+                }
+
+            }
+        } else {
+            try {
+                if (new UrlResource(uriPath).exists()) {
+                    imgPath = realPath;
+                }
+            } catch (MalformedURLException ex) {
+                ex.printStackTrace();
+            }
+        }
+        return imgPath;
     }
 
 }
